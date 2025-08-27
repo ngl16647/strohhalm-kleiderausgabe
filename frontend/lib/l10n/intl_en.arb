@@ -1,4 +1,62 @@
 {
+  "@@locale": "en",
+
+  "cancel": "Cancel",
+  "accept": "Accept",
+  "confirm": "Confirm",
+  "yes": "Yes",
+  "no": "No",
+  "delete": "Delete",
+  "back": "Back",
+  "close": "Close",
+
+  "application_name": "Strohhalm Clothing Distribution",
   "language_de": "German",
-  "language_en": "English"
+  "language_en": "English",
+  "language_ru": "Russian",
+
+  "add_user_requiredFields": "* Required fields",
+  "add_user_firstName": "First name*",
+  "add_user_lastName": "Last name*",
+  "add_user_birthDay": "Select birth date*",
+  "add_user_miscellaneous": "Miscellaneous",
+  "add_user_deleteMessage": "Are you sure you want to permanently delete this user?",
+  "add_user_requiredFieldMissing": "One of the required fields is empty",
+
+  "barCode_scanner_error": "Please scan a barcode",
+  "barCode_scanner_success": "Barcode scanned successfully",
+
+  "qr_code_print": "Print QR Code",
+  "qr_code_share": "Share QR Code",
+  "print": "Print",
+
+  "customer_tile_lastVisit_1": "Was ",
+  "customer_tile_lastVisit_2": "here today",
+  "customer_tile_lastVisit_3": "here on the",
+  "customer_tile_lastVisit_4": "never here",
+  "customer_tile_lastVisit_5": "",
+  "customer_tile_deleteLastEntry": "Delete entry",
+  "customer_tile_addNewEntry": "{visitMoreThan14Days, select, true{Add new visit} false{Add Visit anyway}}",
+
+  "main_page_languages": "Languages",
+  "main_page_searchUsers": "Search users",
+  "main_page_add": "Add",
+  "main_page_isListView": "{isListView, select, true{Show as tiles?} false{Show as list?}}",
+  "main_page_statistic": "Statistics",
+  "main_page_emptyUserListText": "Search by name or scan a code to display users",
+  "main_page_noUserWithUUID": "No matching user found!",
+  "main_page_scanQrCode": "Scan QR Code",
+
+  "stat_page_country": "Country of origin:",
+  "stat_page_children": "Has children:",
+  "stat_page_visits": "Total visits:",
+  "stat_page_miscellaneous": "Miscellaneous:",
+  "stat_page_alreadyGotToday": "Already received something today",
+  "stat_page_savedVisit": "Visit recorded!",
+  "stat_page_removeLastVisit": "Delete last\nvisit",
+  "stat_page_removeLastVisitConfirmation": "Are you sure you want to delete the last visit?",
+  "stat_page_lastTimeTookClothes": "Last time clothes borrowed:",
+
+  "statistic_page_dayOfMonth": "Day of the month",
+  "statistic_page_numberOfVisits": "Number of visits"
 }

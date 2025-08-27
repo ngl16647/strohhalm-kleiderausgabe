@@ -3,6 +3,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:strohhalm_app/main.dart';
 
+import 'generated/l10n.dart';
+
 ///QR-Code Scanner Seite
 class BarcodeScannerSimple extends StatefulWidget {
 
@@ -21,13 +23,13 @@ class _BarcodeScannerSimpleState extends State<BarcodeScannerSimple> {
   Widget _buildBarcode(Barcode? value) {
     if (value == null) {
       return Text(
-        "FEHLER",
+       S.of(context).barCode_scanner_error,
         overflow: TextOverflow.fade,
       );
     }
 
     return Text(
-      "SUCCESS",
+      S.of(context).barCode_scanner_success,
       overflow: TextOverflow.fade,
     );
   }
@@ -106,7 +108,7 @@ class _BarcodeScannerSimpleState extends State<BarcodeScannerSimple> {
                     minimumSize: Size(double.infinity, 30),
                     backgroundColor: Color.fromRGBO(169, 171, 25, 0.4)
                   ),
-                  child: Text("Back"),
+                  child: Text(S.of(context).back),
                 )
               ],
             )

@@ -20,9 +20,110 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'de';
 
+  static String m0(visitMoreThan14Days) =>
+      "${Intl.select(visitMoreThan14Days, {'true': 'Neuen Besuch vermerken', 'false': 'Trotzdem vermerken'})}";
+
+  static String m1(isListView) =>
+      "${Intl.select(isListView, {'true': 'Als Kacheln anzeigen?', 'false': 'Als Liste anzeigen?'})}";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+    "accept": MessageLookupByLibrary.simpleMessage("Akzeptieren"),
+    "add_user_birthDay": MessageLookupByLibrary.simpleMessage(
+      "Geburtsdatum wählen*",
+    ),
+    "add_user_deleteMessage": MessageLookupByLibrary.simpleMessage(
+      "Bist du Sicher, dass du den Benutzer unwiderruflich löschen willst?",
+    ),
+    "add_user_firstName": MessageLookupByLibrary.simpleMessage("Vorname*"),
+    "add_user_lastName": MessageLookupByLibrary.simpleMessage("Nachname*"),
+    "add_user_miscellaneous": MessageLookupByLibrary.simpleMessage("Sonstiges"),
+    "add_user_requiredFieldMissing": MessageLookupByLibrary.simpleMessage(
+      "Eines der Pflichtfelder ist leer",
+    ),
+    "add_user_requiredFields": MessageLookupByLibrary.simpleMessage(
+      "* Pflicht Felder",
+    ),
+    "application_name": MessageLookupByLibrary.simpleMessage(
+      "Strohhalm Kleiderausgabe",
+    ),
+    "back": MessageLookupByLibrary.simpleMessage("Zurück"),
+    "barCode_scanner_error": MessageLookupByLibrary.simpleMessage(
+      "Scanne einen BarCode!",
+    ),
+    "barCode_scanner_success": MessageLookupByLibrary.simpleMessage(
+      "Barcode erfolgreich gescannt",
+    ),
+    "cancel": MessageLookupByLibrary.simpleMessage("Abbrechen"),
+    "close": MessageLookupByLibrary.simpleMessage("Schließen"),
+    "confirm": MessageLookupByLibrary.simpleMessage("Bestätigen"),
+    "customer_tile_addNewEntry": m0,
+    "customer_tile_deleteLastEntry": MessageLookupByLibrary.simpleMessage(
+      "Vermerk löschen",
+    ),
+    "customer_tile_lastVisit_1": MessageLookupByLibrary.simpleMessage("War "),
+    "customer_tile_lastVisit_2": MessageLookupByLibrary.simpleMessage("heute"),
+    "customer_tile_lastVisit_3": MessageLookupByLibrary.simpleMessage(
+      "zuletzt am",
+    ),
+    "customer_tile_lastVisit_4": MessageLookupByLibrary.simpleMessage(
+      "noch nie",
+    ),
+    "customer_tile_lastVisit_5": MessageLookupByLibrary.simpleMessage(" da"),
+    "delete": MessageLookupByLibrary.simpleMessage("Löschen"),
     "language_de": MessageLookupByLibrary.simpleMessage("Deutsch"),
     "language_en": MessageLookupByLibrary.simpleMessage("Englisch"),
+    "language_ru": MessageLookupByLibrary.simpleMessage("Russisch"),
+    "main_page_add": MessageLookupByLibrary.simpleMessage("Hinzufügen"),
+    "main_page_emptyUserListText": MessageLookupByLibrary.simpleMessage(
+      "Suche nach einem Namen oder Scanne einen Code um Benutzer anzuzeigen",
+    ),
+    "main_page_isListView": m1,
+    "main_page_languages": MessageLookupByLibrary.simpleMessage("Sprachen"),
+    "main_page_noUserWithUUID": MessageLookupByLibrary.simpleMessage(
+      "Es konnte kein passender Benutzer gefunden werden!",
+    ),
+    "main_page_scanQrCode": MessageLookupByLibrary.simpleMessage(
+      "QR-Code scannen",
+    ),
+    "main_page_searchUsers": MessageLookupByLibrary.simpleMessage(
+      "Benutzer durchsuchen",
+    ),
+    "main_page_statistic": MessageLookupByLibrary.simpleMessage("Statistiken"),
+    "no": MessageLookupByLibrary.simpleMessage("Nein"),
+    "print": MessageLookupByLibrary.simpleMessage("Drucken"),
+    "qr_code_print": MessageLookupByLibrary.simpleMessage("QR-Code Drucken"),
+    "qr_code_share": MessageLookupByLibrary.simpleMessage("QR-Code Teilen"),
+    "stat_page_alreadyGotToday": MessageLookupByLibrary.simpleMessage(
+      "Hat heute schon was bekommen",
+    ),
+    "stat_page_children": MessageLookupByLibrary.simpleMessage("Hat Kinder:"),
+    "stat_page_country": MessageLookupByLibrary.simpleMessage("Herkunftsland:"),
+    "stat_page_lastTimeTookClothes": MessageLookupByLibrary.simpleMessage(
+      "Das letzte mal Kleidung ausgeliehen am:",
+    ),
+    "stat_page_miscellaneous": MessageLookupByLibrary.simpleMessage(
+      "Sonstiges:",
+    ),
+    "stat_page_removeLastVisit": MessageLookupByLibrary.simpleMessage(
+      "Letzten\nBesuch löschen",
+    ),
+    "stat_page_removeLastVisitConfirmation":
+        MessageLookupByLibrary.simpleMessage(
+          "Bist du sicher, dass du den letzten Besuch löschen willst?",
+        ),
+    "stat_page_savedVisit": MessageLookupByLibrary.simpleMessage(
+      "Besuch eingetragen!",
+    ),
+    "stat_page_visits": MessageLookupByLibrary.simpleMessage(
+      "Besuche insgesamt:",
+    ),
+    "statistic_page_dayOfMonth": MessageLookupByLibrary.simpleMessage(
+      "Tag des Monats",
+    ),
+    "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
+      "Anzahl an Besuchen",
+    ),
+    "yes": MessageLookupByLibrary.simpleMessage("Ja"),
   };
 }

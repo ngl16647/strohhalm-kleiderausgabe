@@ -50,6 +50,12 @@ class DatabaseHelper {
       version: 1,
     );
   }
+  
+  Future<int> countAllVisits() async{
+    final db = await database;
+    int result = Sqflite.firstIntValue(await db.rawQuery("SELECT COUNT(*) as count FROM tookItems")) ?? 0;
+    return result;
+  }
 
   Future<Map<String, double>> getBirthCountries() async {
     final db = await database;

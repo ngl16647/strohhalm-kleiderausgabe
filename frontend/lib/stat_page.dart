@@ -10,6 +10,8 @@ import 'package:strohhalm_app/user.dart';
 import 'package:strohhalm_app/utilities.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+import 'generated/l10n.dart';
+
 class StatPage extends StatefulWidget {
   final User user;
 
@@ -70,7 +72,7 @@ class StatPageState extends State<StatPage>{
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Last Time took clothes"),
+                    Text(S.of(context).stat_page_lastTimeTookClothes),
                     Text(
                       widget.user.lastVisit == -1
                           ? "Never"
@@ -85,7 +87,7 @@ class StatPageState extends State<StatPage>{
                 onPressed: () async {
                   bool? result = await Utilities().dialogConfirmation(
                       context,
-                      "Bist du sicher, dass du den letzten Besuch löschen willst?");
+                      S.of(context).stat_page_removeLastVisitConfirmation);
                   if (result != null) {
                     int? newVisit = await DatabaseHelper()
                         .updateUserLastVisited(widget.user);
@@ -98,7 +100,7 @@ class StatPageState extends State<StatPage>{
                     }
                   }
                 },
-                label: Text("Remove\nlast Visit"),
+                label: Text(S.of(context).stat_page_removeLastVisit),
                 icon: Icon(Icons.delete),
               )
                   : SizedBox.shrink(),
@@ -106,7 +108,7 @@ class StatPageState extends State<StatPage>{
           ),
         ),
       ),
-      Expanded(
+      /*Expanded(
         child: Container(
           decoration: BoxDecoration(
             color: lastBedSheetItem == null
@@ -145,7 +147,7 @@ class StatPageState extends State<StatPage>{
             ],
           ),
         ),
-      ),
+      ),*/
     ];
   }
 
@@ -167,7 +169,7 @@ class StatPageState extends State<StatPage>{
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     GridView.count(
-                      crossAxisCount: (MediaQuery.of(context).size.width / 150).floor().clamp(1, 10),
+                      crossAxisCount: (MediaQuery.of(context).size.width / 180).floor().clamp(1, 10),
                       crossAxisSpacing: 20,
                       mainAxisSpacing: 20,
                       childAspectRatio: isMobile ? 1.5 : 1,
@@ -214,26 +216,26 @@ class StatPageState extends State<StatPage>{
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             SizedBox(height: 10,),
-                            Text("Birth Country"),
+                            Text(S.of(context).stat_page_country),
                             Text(Country.tryParse(widget.user.birthCountry)!.name, style: TextStyle(color: Colors.grey)),
                           ],
                         ),
                         // Has Children
+                        //Column(
+                        //  crossAxisAlignment: CrossAxisAlignment.start,
+                        //  mainAxisAlignment: MainAxisAlignment.start,
+                        //  children: [
+                        //    SizedBox(height: 10,),
+                        //    Text(S.of(context).children),
+                        //    Text(widget.user.hasChild ? "Ja" : "Nein", style: TextStyle(color: Colors.grey)),
+                        //  ],
+                        //),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             SizedBox(height: 10,),
-                            Text("Has Children:"),
-                            Text(widget.user.hasChild ? "Ja" : "Nein", style: TextStyle(color: Colors.grey)),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 10,),
-                            Text("Overall Visists"),
+                            Text(S.of(context).stat_page_visits),
                             Text(numberOfVisits.toString(), style: TextStyle(color: Colors.grey)),
                           ],
                         ),
@@ -242,14 +244,14 @@ class StatPageState extends State<StatPage>{
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Sonstiges:"),
+                        Text(S.of(context).stat_page_miscellaneous),
                         Text(widget.user.miscellaneous ?? "")
                       ],
                     ),
                     TextButton.icon(
                       onPressed: () => CreateQRCode().printQrCode(context, widget.user), //CreateQRCode().showQrCode(context, widget.user),
                       icon: Icon(Icons.qr_code),
-                      label: Text("Print QR-Code"),
+                      label: Text(S.of(context).qr_code_print),
                       style: TextButton.styleFrom(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           backgroundColor: Colors.lime.withAlpha(70),
@@ -275,7 +277,7 @@ class StatPageState extends State<StatPage>{
             Row(
               spacing: 10,
               children: [
-                Expanded(
+                /*Expanded(
                     flex: 1,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -291,7 +293,7 @@ class StatPageState extends State<StatPage>{
                               });
                             })
                       ],
-                    )),
+                    )),*/
                 Expanded(
                     flex: 2,
                     child: TextButton(
@@ -299,7 +301,7 @@ class StatPageState extends State<StatPage>{
                           if(_tookItems.any((item) => isSameDay(DateTime.fromMillisecondsSinceEpoch(item.tookTime), DateTime.now()))) {
                             if(context.mounted){
                               ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text("Already received something today!"))
+                                  SnackBar(content: Text(S.of(context).stat_page_alreadyGotToday))
                               );
                             }
                             return;
@@ -307,7 +309,7 @@ class StatPageState extends State<StatPage>{
                           await DatabaseHelper().addVisit(widget.user.id, takesBedsheet);
                           if(context.mounted){
                             ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Saved Visit"))
+                                SnackBar(content: Text(S.of(context).stat_page_savedVisit))
                             );
                             navigatorKey.currentState?.pop(true);
                           }
@@ -317,7 +319,7 @@ class StatPageState extends State<StatPage>{
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             minimumSize: Size(double.infinity, 75)
                         ),
-                        child: Text(isMoreThan14Days ? "Besuch vormerken" : "Besuch trotzdem vormerken")))
+                        child: Text(S.of(context).customer_tile_addNewEntry(isMoreThan14Days))))
               ],
             )
           ],

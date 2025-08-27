@@ -6,6 +6,9 @@ import 'package:strohhalm_app/database_helper.dart';
 import 'package:strohhalm_app/user.dart';
 import 'package:strohhalm_app/utilities.dart';
 
+import 'generated/l10n.dart';
+
+//TODO: Maybe combine List and Grid_Tile in a single Class
 class CustomerListviewItem extends StatefulWidget {
   final User user;
   final VoidCallback click;
@@ -34,7 +37,7 @@ class CustomerListviewItemState extends State<CustomerListviewItem>{
   }
 
   DateTime get lastVisit => DateTime.fromMillisecondsSinceEpoch(user.lastVisit);
-  bool get visitLessThan14Days => DateTime.now().difference(lastVisit).inDays > 13;
+  bool get visitMoreThan14Days => DateTime.now().difference(lastVisit).inDays > 13;
 
   @override
   Widget build(BuildContext context) {
@@ -92,31 +95,31 @@ class CustomerListviewItemState extends State<CustomerListviewItem>{
                       padding: EdgeInsets.all(2),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
-                        color: visitLessThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
+                        color: visitMoreThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(visitLessThan14Days ? Icons.check_circle : Icons.error),
+                          Icon(visitMoreThan14Days ? Icons.check_circle : Icons.error),
                           SizedBox(width: 5),
                           Flexible(
                             child: Text.rich(
                               softWrap: true,
                               TextSpan(
                                 children: [
-                                  TextSpan(text: "War "),
+                                  TextSpan(text: S.of(context).customer_tile_lastVisit_1),
                                   if (user.lastVisit != -1)
                                     Utilities().isSameDay(DateTime.now(), lastVisit)
-                                        ? TextSpan(text: "heute", style: TextStyle(fontWeight: FontWeight.bold))
-                                        : TextSpan(text: "zuletzt am "),
+                                        ? TextSpan(text:  S.of(context).customer_tile_lastVisit_2, style: TextStyle(fontWeight: FontWeight.bold))
+                                        : TextSpan(text:  S.of(context).customer_tile_lastVisit_3),
                                   if (user.lastVisit != -1 && !Utilities().isSameDay(DateTime.now(), lastVisit))
                                     TextSpan(
                                       text: DateFormat("dd.MM.yyyy").format(lastVisit),
                                       style: TextStyle(fontWeight: FontWeight.bold),
                                     ),
-                                  if (user.lastVisit == -1) TextSpan(text: "noch nie"),
-                                  TextSpan(text: " da"),
+                                  if (user.lastVisit == -1) TextSpan(text: S.of(context).customer_tile_lastVisit_4, style: TextStyle(fontWeight: FontWeight.bold)),
+                                  TextSpan(text: S.of(context).customer_tile_lastVisit_5),
                                 ],
                               ),
                               overflow: TextOverflow.fade,
@@ -151,7 +154,7 @@ class CustomerListviewItemState extends State<CustomerListviewItem>{
                                         borderRadius: BorderRadius.circular(8)
                                     )
                                 ),
-                                child: Text("Vermerk löschen", textAlign: TextAlign.center,),
+                                child: Text(S.of(context).customer_tile_deleteLastEntry, textAlign: TextAlign.center,),
                               )
                             : TextButton(
                                 onPressed: () async {
@@ -166,7 +169,7 @@ class CustomerListviewItemState extends State<CustomerListviewItem>{
                                         borderRadius: BorderRadius.circular(8)
                                     )
                                 ),
-                                child: Text(visitLessThan14Days ? "Neuen Besuch vormerken" : "Trotzdem vermerken", textAlign: TextAlign.center,),
+                                child: Text(S.of(context).customer_tile_addNewEntry(visitMoreThan14Days), textAlign: TextAlign.center,),
                               ),
                         ),
                         SizedBox(width: 10,),

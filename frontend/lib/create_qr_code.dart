@@ -8,6 +8,8 @@ import 'package:pdf/widgets.dart' as wg;
 import 'package:pdf/pdf.dart';
 import 'package:image/image.dart' as img;
 
+import 'generated/l10n.dart';
+
 ///Klasse für alle möglichen nützlichen funktionen, die Appübergreifend genutzt werden können aber keine eigene Klasse rechtfertigen
 
 class CreateQRCode{
@@ -74,7 +76,7 @@ class CreateQRCode{
                         onPressed: (){
                           printQrCode(context, user);
                         },
-                        label: Text("Print QR-Code"),
+                        label: Text(S.of(context).qr_code_print),
                         icon: Icon(Icons.print),),
                     )
                   ],
@@ -97,6 +99,7 @@ class CreateQRCode{
 
     final pdfImage = wg.MemoryImage(bwBytes);
 
+    //TODO: Layout der Karte überlegen
     doc.addPage(
       wg.Page(
         pageFormat: PdfPageFormat(85 * PdfPageFormat.mm, 54 * PdfPageFormat.mm), //Hier kann man die dimension theoretisch für den Drucker anpassen
@@ -158,20 +161,22 @@ class CreateQRCode{
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(child: PdfPreview(
+                Expanded(
+                  child: PdfPreview(
                   build: (format) async => doc.save(),
                   allowPrinting: false,
                   allowSharing: false,
                   canChangeOrientation: false,
                   canChangePageFormat: false,
-                ),),
+                  ),
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Expanded(
                       child:  ElevatedButton.icon(
                         icon: Icon(Icons.print),
-                        label: Text("Print"),
+                        label: Text(S.of(context).print),
                         onPressed: () async {
                           await Printing.layoutPdf(
                               onLayout: (format) async => doc.save(),
@@ -183,11 +188,11 @@ class CreateQRCode{
                     Expanded(
                       child: ElevatedButton.icon(
                         icon: Icon(Icons.share),
-                        label: Text("Share"),
+                        label: Text(S.of(context).qr_code_share),
                         onPressed: () async {
                           await Printing.sharePdf(
                             bytes: await doc.save(),
-                            filename: "label.pdf",
+                            filename: "${user.id}_${user.uuId}.pdf",
                           );
                         },
                       ),)

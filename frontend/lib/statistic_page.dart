@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:strohhalm_app/database_helper.dart';
+import 'generated/l10n.dart';
 import 'main.dart';
 
 class StatisticPage extends StatefulWidget {
@@ -20,6 +21,7 @@ class StatisticPageState extends State<StatisticPage> {
   int cutOffNumber = 5;
   int monthBackNumber = 0;
   int overAllThisMonth = 0;
+  int overAllVisits = 0;
   Map<String, double> _countryData = {};
   Map<String, int> visitsLastMonth = {};
   final List<Color> presetColors = [
@@ -46,6 +48,7 @@ class StatisticPageState extends State<StatisticPage> {
       limitCountryNumber();
       visitsLastMonth = await DatabaseHelper().getAllVisitsInLastMonths(monthBackNumber);
       overAllThisMonth = visitsLastMonth.entries.toList().fold(0, (sum, element) => sum + element.value);
+      overAllVisits = await DatabaseHelper().countAllVisits(); //TODO: Decide where to put information
       setState(() {
         chartLoaded = true;
       });
@@ -108,7 +111,7 @@ class StatisticPageState extends State<StatisticPage> {
     return Column(
             children: [
               SizedBox(height: 20,),
-              Text("Statistics"),
+              Text(S.of(context).main_page_statistic),
               Expanded(
                 child: !chartLoaded ? Center(
                   child: SizedBox(
@@ -237,7 +240,7 @@ class StatisticPageState extends State<StatisticPage> {
                                 },
                                 icon: Icon(Icons.arrow_left)
                             ),
-                            Text("${DateFormat.MMMM("de_DE").format(DateTime.now().subtract(Duration(days: 31 * monthBackNumber)))}: $overAllThisMonth Besuche",),
+                            Text("${DateFormat.MMMM(MyApp.of(context).getLocale()!.countryCode).format(DateTime.now().subtract(Duration(days: 31 * monthBackNumber)))}: $overAllThisMonth Besuche",),
                             IconButton(
                                 onPressed: () async {
                                   monthBackNumber--;
@@ -299,7 +302,7 @@ class StatisticPageState extends State<StatisticPage> {
           sideTitles: SideTitles(showTitles: false),
         ),
         bottomTitles: AxisTitles(
-          axisNameWidget: Text("Day of Month"),
+          axisNameWidget: Text(S.of(context).statistic_page_dayOfMonth),
           sideTitles: SideTitles(
             showTitles: true,
             reservedSize: 30,
@@ -313,7 +316,7 @@ class StatisticPageState extends State<StatisticPage> {
           ),
         ),
         leftTitles: AxisTitles(
-          axisNameWidget: Text("Anzahl an Besuchen"),
+          axisNameWidget: Text(S.current.statistic_page_numberOfVisits),
           sideTitles: SideTitles(
             showTitles: true,
             interval: 1,
@@ -349,70 +352,5 @@ class StatisticPageState extends State<StatisticPage> {
         ),
       ],
     );
-  }
-
-  List<PieChartSectionData> showingSections() {
-    return List.generate(4, (i) {
-      final isTouched = i == touchedIndex;
-      final fontSize = isTouched ? 25.0 : 16.0;
-      final radius = isTouched ? 60.0 : 50.0;
-      const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
-      switch (i) {
-        case 0:
-          return PieChartSectionData(
-            color: Colors.blue,
-            value: 40,
-            title: '40%',
-            radius: radius,
-            titleStyle: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-              shadows: shadows,
-            ),
-          );
-        case 1:
-          return PieChartSectionData(
-            color: Colors.yellow,
-            value: 30,
-            title: '30%',
-            radius: radius,
-            titleStyle: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-              shadows: shadows,
-            ),
-          );
-        case 2:
-          return PieChartSectionData(
-            color: Colors.purple,
-            value: 15,
-            title: '15%',
-            radius: radius,
-            titleStyle: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-              color:  Colors.black87,
-              shadows: shadows,
-            ),
-          );
-        case 3:
-          return PieChartSectionData(
-            color: Colors.green,
-            value: 15,
-            title: '15%',
-            radius: radius,
-            titleStyle: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-              shadows: shadows,
-            ),
-          );
-        default:
-          throw Error();
-      }
-    });
   }
 }

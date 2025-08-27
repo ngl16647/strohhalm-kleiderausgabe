@@ -77,6 +77,8 @@ class MyAppState extends State<MyApp> {
     });
   }
 
+  Locale? getLocale() => _locale;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -92,6 +94,7 @@ class MyAppState extends State<MyApp> {
       supportedLocales: [
         Locale("en", ""),
         Locale("de", ""),
+        Locale("ru", ""),
       ],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -150,8 +153,6 @@ class MyAppState extends State<MyApp> {
       themeMode = themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     });
   }
-
-
 }
 
 

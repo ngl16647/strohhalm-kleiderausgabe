@@ -5,6 +5,7 @@ import 'package:strohhalm_app/main.dart';
 import 'package:strohhalm_app/user.dart';
 import 'package:strohhalm_app/utilities.dart';
 import 'database_helper.dart';
+import 'generated/l10n.dart';
 
 class AddUserDialog extends StatefulWidget {
   final User? user;
@@ -71,11 +72,11 @@ class AddUserDialogState extends State<AddUserDialog> {
               children: [
                 Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: Text("* required Fields", style: TextStyle(color: Theme.of(context).textTheme.titleSmall!.color?.withAlpha(100)), textAlign: TextAlign.start,),
+                  child: Text(S.of(context).add_user_requiredFields, style: TextStyle(color: Theme.of(context).textTheme.titleSmall!.color?.withAlpha(100)), textAlign: TextAlign.start,),
                 ),
                 TextField(
                   decoration: InputDecoration(
-                    hintText: "First Name*",
+                    hintText: S.of(context).add_user_firstName,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -84,7 +85,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                 ),
                 TextField(
                   decoration: InputDecoration(
-                    hintText: "Last Name*",
+                    hintText: S.of(context).add_user_lastName,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -106,7 +107,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                         Text(
                           selectedDate != null
                               ? DateFormat("dd.MM.yyyy").format(selectedDate!)
-                              : "Geburtsdatum wählen*",
+                              : S.of(context).add_user_birthDay,
                           style: TextStyle(
                             color: Theme.of(context).textTheme.bodyMedium!.color?.withAlpha(150),
                           ),
@@ -166,7 +167,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                 //),
                 TextField(
                   decoration: InputDecoration(
-                    hintText: "Sonstiges",
+                    hintText: S.of(context).add_user_miscellaneous,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -178,12 +179,12 @@ class AddUserDialogState extends State<AddUserDialog> {
             const SizedBox(height: 20),
             if(widget.user != null) TextButton.icon(
                 onPressed: () async {
-                  bool? result = await Utilities().dialogConfirmation(context, "Bist du Sicher, dass du den Benutzer unwiderruflich löschen willst?");
+                  bool? result = await Utilities().dialogConfirmation(context, S.of(context).add_user_deleteMessage);
                   if(result != null){
                     navigatorKey.currentState?.pop([widget.user, true]);
                   }
                 },
-                label: Text("Delete"),
+                label: Text(S.of(context).delete),
               icon: Icon(Icons.delete),
               style: TextButton.styleFrom(
                 minimumSize: Size(double.infinity, 50),
@@ -196,7 +197,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                 Expanded(
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(null),
-                    child: const Text("Cancel"),
+                    child: Text(S.of(context).cancel),
                   ),
                 ),
                 Expanded(
@@ -204,7 +205,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                     onPressed: () async {
                       if(firstNameController.text.isEmpty || lastNameController.text.isEmpty || selectedDate == null){
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("One of the required Fields wasn't filled out"))
+                          SnackBar(content: Text(S.of(context).add_user_requiredFieldMissing))
                         );
                         return;
                       }
@@ -231,7 +232,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                         if(context.mounted) navigatorKey.currentState?.pop([user, false]);
                         }
                       },
-                    child: const Text("Confirm"),
+                    child: Text(S.of(context).confirm),
                   ),
                 ),
               ],

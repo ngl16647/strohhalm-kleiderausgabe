@@ -109,20 +109,26 @@ class MainPageState extends State<MainPage> {
     _searchController.text = "${user.firstName} ${user.lastName}";
   }
 
+  Future<void> changeLanguage(String localeId) async {
+    widget.onLocaleChange(Locale(localeId));
+
+    // Warte auf rebuild
+    WidgetsBinding.instance.addPostFrameCallback((duration) async {
+      if (!mounted) return;
+      await windowManager.setTitle(S.of(context).application_name);
+      setState(() {});
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     var languages = [
-      LanguageOption(code: "de", label: S.of(context).language_de, onPressed: () {
-        widget.onLocaleChange(Locale("de"));
-      }),
-      LanguageOption(code: "en", label: S.of(context).language_en, onPressed: () {
-        widget.onLocaleChange(Locale("en"));
-      }),
-      LanguageOption(code: "ru", label: "Russisch", onPressed: () {}),
-      LanguageOption(code: "ro", label: "Rumänien", onPressed: () {}),
+      LanguageOption(code: "de", label: S.of(context).language_de, onPressed: () => changeLanguage("de")),
+      LanguageOption(code: "en", label: S.of(context).language_en, onPressed: () => changeLanguage("en")),
+      LanguageOption(code: "ru", label: S.of(context).language_ru, onPressed: () => changeLanguage("ru")),
       //Here one can add new Languages if necessary (code = Country-Code from http://www.lingoes.net/en/translator/langcode.htm)
     ];
-
+    double width = MediaQuery.of(context).size.width;
     return Scaffold(
       body: SafeArea(child: Padding(
         padding: EdgeInsets.all(10),
@@ -203,8 +209,8 @@ class MainPageState extends State<MainPage> {
                                   },
                                   label: Row(
                                     children: [
-                                   // Icon(Icons.language),  //TODO: Icon or no Icon?
-                                    Text("Sprachen")],),
+                                    // Icon(Icons.language),  //TODO: Icon or no Icon?
+                                    Text(S.of(context).main_page_languages)],),
                                   icon: Icon(controller.isOpen ? Icons.expand_less : Icons.expand_more),
                                 );
                               },
@@ -220,7 +226,7 @@ class MainPageState extends State<MainPage> {
                               child: TextField(
                                 controller: _searchController,
                                 decoration: InputDecoration(
-                                  hintText: "Search Users",
+                                  hintText:S.of(context).main_page_searchUsers,
                                   border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12)
                                   ),
@@ -253,7 +259,7 @@ class MainPageState extends State<MainPage> {
                       ),
                       Expanded(
                           flex: 2,
-                          child: !isMobile ? TextButton.icon(
+                          child: !isMobile && width > 850 ? TextButton.icon(
                             onPressed: (){
                               addOrEditUser();
                             },
@@ -263,7 +269,7 @@ class MainPageState extends State<MainPage> {
                                 foregroundColor: Colors.black87,
                                 minimumSize: Size(double.infinity, 64)
                             ),
-                            label: Text("Hinzufügen"),
+                            label: Text(S.of(context).main_page_add),
                             icon: Icon(Icons.person_add_alt_1, color: Colors.black87),
                           ) : IconButton(
                             onPressed: (){
@@ -294,7 +300,7 @@ class MainPageState extends State<MainPage> {
                           });
                         },
                         icon: Icon(isListView ? Icons.grid_on : Icons.list),
-                      label: Text(isListView ? "Als Kacheln anzeigen?" : "Als Liste anzeigen?"),
+                      label: Text(S.of(context).main_page_isListView(isListView)),
                     ),
                   ),
                   TextButton.icon(
@@ -320,14 +326,14 @@ class MainPageState extends State<MainPage> {
                           },
                         );
                       },
-                      label: Text("Statistics"),
+                      label: Text(S.of(context).main_page_statistic),
                       icon: Icon(Icons.bar_chart),
                   )
                 ],
               ),
               Expanded(
                   child: _userList.isEmpty
-                      ? Center(child: Text("Enter a Name or Scan a BarCode to view Users"),)
+                      ? Center(child: Text(S.of(context).main_page_emptyUserListText),)
                       : LayoutBuilder(
                     builder: (context, constraints) {
                       if (constraints.maxWidth > 682 && isListView) {
@@ -366,7 +372,7 @@ class MainPageState extends State<MainPage> {
                             itemCount: _userList.length,
                             itemBuilder: (context, index){
                               User user = _userList[index];
-                              return CustomerTile(
+                              return CustomerGridviewItem(
                                 key: ObjectKey(user),
                                 user: user,
                                 click: (){
@@ -384,7 +390,8 @@ class MainPageState extends State<MainPage> {
                               ) .animate(delay: (index * 50).ms)
                                   .fadeIn(duration: 500.ms)
                                   .slideX(begin: -0.2, end: 0);
-                            });
+                            }
+                        );
                       }
                     },
                   )
@@ -414,13 +421,13 @@ class MainPageState extends State<MainPage> {
                       context: context,
                       builder: (context){
                         return AlertDialog(
-                          content: Text("Es konnte kein passender Benutzer gefunden werden!"),
+                          content: Text(S.of(context).main_page_noUserWithUUID),
                           actions: [
                             TextButton(
                                 onPressed: (){
                                   Navigator.of(context).pop();
                                 },
-                                child: Text("Close"))
+                                child: Text(S.of(context).close))
                           ],
                         );
                       });
@@ -429,7 +436,7 @@ class MainPageState extends State<MainPage> {
               }
             }
           },
-          label: Text("Scan QR-Code"),
+          label: Text(S.of(context).main_page_scanQrCode),
           icon: Icon(Icons.qr_code_scanner)),
     );
   }
@@ -443,7 +450,7 @@ class LanguageOption {
   LanguageOption({required this.code, required this.label, required this.onPressed});
 }
 
-//Maybe over the SearchBar? I dont like the Positioning of the Fullscreen, darkmode, languages...
+//TODO: Maybe over the SearchBar? I don't like the Positioning of the Fullscreen, darkmode, languages...
 /*
 Row(
                 children: [

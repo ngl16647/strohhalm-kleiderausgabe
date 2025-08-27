@@ -1,0 +1,62 @@
+{
+  "@@locale": "ru",
+
+  "cancel": "Отмена",
+  "accept": "Принять",
+  "confirm": "Подтвердить",
+  "yes": "Да",
+  "no": "Нет",
+  "delete": "Удалить",
+  "back": "Назад",
+  "close": "Закрыть",
+
+  "application_name": "Распределение одежды Straw",
+  "language_de": "Немецкий",
+  "language_en": "Английский",
+  "language_ru": "Русский",
+
+  "add_user_requiredFields": "* Обязательные поля",
+  "add_user_firstName": "Имя*",
+  "add_user_lastName": "Фамилия*",
+  "add_user_birthDay": "Выберите дату рождения*",
+  "add_user_miscellaneous": "Разное",
+  "add_user_deleteMessage": "Вы уверены, что хотите безвозвратно удалить пользователя?",
+  "add_user_requiredFieldMissing": "Одно из обязательных полей пустое",
+
+  "barCode_scanner_error": "Пожалуйста, отсканируйте штрихкод!",
+  "barCode_scanner_success": "Штрихкод успешно отсканирован",
+
+  "qr_code_print": "Печать QR-кода",
+  "qr_code_share": "Поделиться QR-кодом",
+  "print": "Печать",
+
+  "customer_tile_lastVisit_1": "Был ",
+  "customer_tile_lastVisit_2": "сегодня",
+  "customer_tile_lastVisit_3": "в последний раз",
+  "customer_tile_lastVisit_4": "никогда",
+  "customer_tile_lastVisit_5": " там",
+  "customer_tile_deleteLastEntry": "Удалить запись",
+  "customer_tile_addNewEntry": "{visitMoreThan14Days, select, true{Запланировать новый визит} false{Все равно отметить}}",
+
+  "main_page_languages": "Языки",
+  "main_page_searchUsers": "Поиск пользователей",
+  "main_page_add": "Добавить",
+  "main_page_isListView": "{isListView, select, true{Показывать как плитки?} false{Показывать как список?}}",
+  "main_page_statistic": "Статистика",
+  "main_page_emptyUserListText": "Поиск по имени или сканирование кода для отображения пользователей",
+  "main_page_noUserWithUUID": "Соответствующий пользователь не найден!",
+  "main_page_scanQrCode": "Сканировать QR-код",
+
+  "stat_page_country": "Страна происхождения:",
+  "stat_page_children": "Есть дети:",
+  "stat_page_visits": "Всего визитов:",
+  "stat_page_miscellaneous": "Разное:",
+  "stat_page_alreadyGotToday": "Сегодня уже получил что-то",
+  "stat_page_savedVisit": "Визит зафиксирован!",
+  "stat_page_removeLastVisit": "Удалить последний\nвизит",
+  "stat_page_removeLastVisitConfirmation": "Вы уверены, что хотите удалить последний визит?",
+  "stat_page_lastTimeTookClothes": "Последний раз брал одежду:",
+
+  "statistic_page_dayOfMonth": "День месяца",
+  "statistic_page_numberOfVisits": "Количество визитов"
+}

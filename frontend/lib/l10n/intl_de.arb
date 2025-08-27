@@ -1,4 +1,62 @@
 {
+  "@@locale": "de",
+
+  "cancel": "Abbrechen",
+  "accept": "Akzeptieren",
+  "confirm": "Bestätigen",
+  "yes": "Ja",
+  "no": "Nein",
+  "delete": "Löschen",
+  "back": "Zurück",
+  "close": "Schließen",
+
+  "application_name": "Strohhalm Kleiderausgabe",
   "language_de": "Deutsch",
-  "language_en": "Englisch"
+  "language_en": "Englisch",
+  "language_ru": "Russisch",
+
+  "add_user_requiredFields": "* Pflicht Felder",
+  "add_user_firstName": "Vorname*",
+  "add_user_lastName": "Nachname*",
+  "add_user_birthDay": "Geburtsdatum wählen*",
+  "add_user_miscellaneous" : "Sonstiges",
+  "add_user_deleteMessage": "Bist du Sicher, dass du den Benutzer unwiderruflich löschen willst?",
+  "add_user_requiredFieldMissing": "Eines der Pflichtfelder ist leer",
+
+  "barCode_scanner_error": "Scanne einen BarCode!",
+  "barCode_scanner_success": "Barcode erfolgreich gescannt",
+
+  "qr_code_print": "QR-Code Drucken",
+  "qr_code_share": "QR-Code Teilen",
+  "print": "Drucken",
+
+  "customer_tile_lastVisit_1": "War ",
+  "customer_tile_lastVisit_2": "heute",
+  "customer_tile_lastVisit_3": "zuletzt am",
+  "customer_tile_lastVisit_4": "noch nie",
+  "customer_tile_lastVisit_5": " da",
+  "customer_tile_deleteLastEntry": "Vermerk löschen",
+  "customer_tile_addNewEntry": "{visitMoreThan14Days, select, true{Neuen Besuch vermerken} false{Trotzdem vermerken}}",
+
+  "main_page_languages": "Sprachen",
+  "main_page_searchUsers": "Benutzer durchsuchen",
+  "main_page_add": "Hinzufügen",
+  "main_page_isListView": "{isListView, select, true{Als Kacheln anzeigen?} false{Als Liste anzeigen?}}",
+  "main_page_statistic": "Statistiken",
+  "main_page_emptyUserListText": "Suche nach einem Namen oder Scanne einen Code um Benutzer anzuzeigen",
+  "main_page_noUserWithUUID": "Es konnte kein passender Benutzer gefunden werden!",
+  "main_page_scanQrCode": "QR-Code scannen",
+
+  "stat_page_country": "Herkunftsland:",
+  "stat_page_children": "Hat Kinder:",
+  "stat_page_visits": "Besuche insgesamt:",
+  "stat_page_miscellaneous": "Sonstiges:",
+  "stat_page_alreadyGotToday": "Hat heute schon was bekommen",
+  "stat_page_savedVisit": "Besuch eingetragen!",
+  "stat_page_removeLastVisit": "Letzten\nBesuch löschen",
+  "stat_page_removeLastVisitConfirmation": "Bist du sicher, dass du den letzten Besuch löschen willst?",
+  "stat_page_lastTimeTookClothes": "Das letzte mal Kleidung ausgeliehen am:",
+
+  "statistic_page_dayOfMonth": "Tag des Monats",
+  "statistic_page_numberOfVisits": "Anzahl an Besuchen"
 }

@@ -5,14 +5,15 @@ import 'package:strohhalm_app/user.dart';
 import 'package:strohhalm_app/utilities.dart';
 import 'create_qr_code.dart';
 import 'database_helper.dart';
+import 'generated/l10n.dart';
 
-class CustomerTile extends StatefulWidget {
+class CustomerGridviewItem extends StatefulWidget {
   final User user;
   final VoidCallback click;
   final VoidCallback delete;
   final VoidCallback update;
 
-  const CustomerTile({
+  const CustomerGridviewItem({
     super.key,
     required this.user,
     required this.click,
@@ -23,7 +24,7 @@ class CustomerTile extends StatefulWidget {
   CustomerListTileState createState() => CustomerListTileState();
 }
 
-class CustomerListTileState extends State<CustomerTile>{
+class CustomerListTileState extends State<CustomerGridviewItem>{
   late User user;
   bool mouseIsOver = false;
 
@@ -34,7 +35,7 @@ class CustomerListTileState extends State<CustomerTile>{
   }
 
   DateTime get lastVisit => DateTime.fromMillisecondsSinceEpoch(user.lastVisit);
-  bool get visitLessThan14Days => DateTime.now().difference(lastVisit).inDays > 13;
+  bool get visitMoreThan14Days => DateTime.now().difference(lastVisit).inDays > 13;
 
   @override
   Widget build(BuildContext context) {
@@ -81,33 +82,34 @@ class CustomerListTileState extends State<CustomerTile>{
                   padding:  EdgeInsets.all(5),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    color: visitLessThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
+                    color: visitMoreThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
                   ),
                   constraints: BoxConstraints(minHeight: 50),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(visitLessThan14Days ? Icons.check_circle : Icons.error),
+                      Icon(visitMoreThan14Days ? Icons.check_circle : Icons.error),
                       SizedBox(width: 5),
                       Expanded(
-                        child: Text.rich(
+                        child:
+                        Text.rich(
                           softWrap: true,
                           textAlign: TextAlign.center,
                           TextSpan(
                             children: [
-                              TextSpan(text: "War "),
+                              TextSpan(text: S.of(context).customer_tile_lastVisit_1),
                               if (user.lastVisit != -1)
                                 Utilities().isSameDay(DateTime.now(), lastVisit)
-                                    ? TextSpan(text: "heute", style: TextStyle(fontWeight: FontWeight.bold))
-                                    : TextSpan(text: "zuletzt am\n"),
+                                    ? TextSpan(text:  S.of(context).customer_tile_lastVisit_2, style: TextStyle(fontWeight: FontWeight.bold))
+                                    : TextSpan(text:  "${S.of(context).customer_tile_lastVisit_3}\n"),
                               if (user.lastVisit != -1 && !Utilities().isSameDay(DateTime.now(), lastVisit))
                                 TextSpan(
                                   text: DateFormat("dd.MM.yyyy").format(lastVisit),
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
-                              if (user.lastVisit == -1) TextSpan(text: "noch nie"),
-                              TextSpan(text: " da"),
+                              if (user.lastVisit == -1) TextSpan(text: S.of(context).customer_tile_lastVisit_4, style: TextStyle(fontWeight: FontWeight.bold)),
+                              TextSpan(text: S.of(context).customer_tile_lastVisit_5),
                             ],
                           ),
                           overflow: TextOverflow.visible,
@@ -122,7 +124,7 @@ class CustomerListTileState extends State<CustomerTile>{
                     mainAxisAlignment: MainAxisAlignment.end,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
+                      Expanded( //TODO: adapt logic of buttons -> if lessThan14Days, last Entry should be deletable AND should be able to override, else dont show
                         child: Utilities().isSameDay(DateTime.now(), lastVisit)
                             ? TextButton(
                           onPressed: () async {
@@ -139,7 +141,7 @@ class CustomerListTileState extends State<CustomerTile>{
                                   borderRadius: BorderRadius.circular(8)
                               )
                           ),
-                          child: Text("Vermerk löschen"),
+                          child: Text(S.of(context).customer_tile_deleteLastEntry),
                         )
                             : TextButton(
                           onPressed: () async {
@@ -155,7 +157,7 @@ class CustomerListTileState extends State<CustomerTile>{
                                   borderRadius: BorderRadius.circular(8)
                               )
                           ),
-                          child: Text(visitLessThan14Days ? "Neuen Besuch vormerken" : "Trotzdem vermerken", textAlign: TextAlign.center,),
+                          child: Text(S.of(context).customer_tile_addNewEntry(visitMoreThan14Days), textAlign: TextAlign.center,),
                         ),
                       ),
 
@@ -180,7 +182,8 @@ class CustomerListTileState extends State<CustomerTile>{
                             widget.update();
                           },
                           icon: Icon(Icons.edit)),
-                      //IconButton(
+                      // TODO: Decide where to put delete-Button(s)
+                      // IconButton(
                       //    onPressed: (){
                       //      widget.delete();
                       //    },
