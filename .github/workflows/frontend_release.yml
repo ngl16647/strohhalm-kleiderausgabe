@@ -21,7 +21,7 @@ jobs:
       with:
         channel: stable
         flutter-version-file: $WORK_DIR/pubspec.yaml
-      run: flutter --version
+    - run: flutter --version
 
     - name: Install dependencies
       run: flutter pub get
