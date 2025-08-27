@@ -3,18 +3,20 @@ package db
 import "time"
 
 type Customer struct {
-	Id        int    `json:"id"`
+	Id        int64  `json:"id"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 }
 
 type CustomerVisit struct {
-	Id                int       `json:"id"`
-	CustomerId        int       `json:"customerId"`
+	Id                int64     `json:"id"`
+	CustomerId        int64     `json:"customerId"`
 	CustomerFirstName string    `json:"customerFirstName"`
 	CustomerLastName  string    `json:"customerLastName"`
 	VisitDate         time.Time `json:"visitDate"`
 }
+
+const DateFormat = "2006-01-02"
 
 const (
 	CustomerInitStr = `
