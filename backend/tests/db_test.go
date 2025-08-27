@@ -1,4 +1,4 @@
-package main
+package tests
 
 import (
 	"log"
@@ -8,11 +8,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func TestMain(m *testing.M) {
-	db.InitDatabase(":memory:")
-	m.Run()
-}
-
 func fatalErr(t *testing.T, err error) {
 	if err != nil {
 		t.Fatal(err)
@@ -20,6 +15,7 @@ func fatalErr(t *testing.T, err error) {
 }
 
 func TestAddCustomer(t *testing.T) {
+	db.InitDatabase(":memory:")
 	id, err := db.AddCustomer("A", "Customer")
 	fatalErr(t, err)
 
@@ -36,6 +32,7 @@ func TestAddCustomer(t *testing.T) {
 }
 
 func TestAddVisit(t *testing.T) {
+	db.InitDatabase(":memory:")
 	cid, err := db.AddCustomer("Another", "Customer")
 	fatalErr(t, err)
 

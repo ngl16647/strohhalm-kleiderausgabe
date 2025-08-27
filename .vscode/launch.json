@@ -1,11 +1,11 @@
 {
     "configurations": [
         {
-            "name": "Debug",
+            "name": "Debug Backend",
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}",
+            "program": "${workspaceFolder}/backend",
             "args": [],
             "env": {},
             "buildFlags": ""
