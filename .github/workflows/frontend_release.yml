@@ -1,0 +1,36 @@
+name: Frontend Release
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+env:
+  WORK_DIR: frontend
+  VERSION: ${{ github.ref_name }}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: stable
+        flutter-version-file: $WORK_DIR/pubspec.yaml
+      run: flutter --version
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Build Windows release
+      run: flutter build windows --release
+
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        name: windows-release
+        path: build/windows/runner/Release/
