@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"strohalm-backend/db"
+	"strohhalm-backend/db"
 	"testing"
 )
 

@@ -2,7 +2,7 @@ package tests
 
 import (
 	"log"
-	"strohalm-backend/db"
+	"strohhalm-backend/db"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"

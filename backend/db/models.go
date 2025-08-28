@@ -4,8 +4,8 @@ type Customer struct {
 	Id        int64  `json:"id"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
-	Birthday  string `json:"birthday"`
-	Notes     string `json:"notes"`
+	Birthday  string `json:"birthday,omitempty"`
+	Notes     string `json:"notes,omitempty"`
 }
 
 type CustomerVisit struct {
@@ -14,7 +14,7 @@ type CustomerVisit struct {
 	CustomerFirstName string `json:"customerFirstName"`
 	CustomerLastName  string `json:"customerLastName"`
 	VisitDate         string `json:"visitDate"`
-	Notes             string `json:"notes"`
+	Notes             string `json:"notes,omitempty"`
 }
 
 const DateFormat = "2006-01-02"

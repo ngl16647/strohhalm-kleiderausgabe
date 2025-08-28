@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 	"net/http"
-	"strohalm-backend/db"
-	"strohalm-backend/routes"
+	"strohhalm-backend/db"
+	"strohhalm-backend/routes"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
