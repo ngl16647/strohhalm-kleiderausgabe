@@ -1,4 +1,49 @@
 {
+  "@@locale": "en",
+
   "language_de": "German",
-  "language_en": "English"
+  "language_en": "English",
+
+  "fullscreen": "Fullscreen",
+  "theme": "Mode",
+  "search_hint": "Search recipients",
+
+  "add_user": "Add",
+  "required_fields": "* Required fields",
+  "firt_name": "First name*",
+  "last_name": "Last name*",
+  "birthdate": "Date of birth*",
+  "country": "Nationality",
+  "other": "Other",
+  "dialog_cancel": "Cancel",
+  "dialog_confirm_button": "Confirm",
+  "dialog_delete_button": "Delete",
+  "delete_confirm": "Are you sure you want to delete this recipient?",
+  "required_fields": "One of the required fields wasn't filled out",
+
+
+  "tiles": "Tile view",
+  "was": "Was ",
+  "today": "today",
+  "last_time": "last time ",
+  "never": "never",
+  "there": " there",
+  "delete_note": "delete note",
+  "mark_new_visit": "Mark new visit",
+  "still_note": "Still note",
+
+  "list": "List view",
+
+  "statistics": "Statistics",
+  "visits": " Visits",
+  "day_of_month": "Day of month",
+  "visit_counts": "Number of visits",
+
+
+  "no_items_text": "Enter a name or scan a barcode",
+
+  "scan_code": "Scan barcode",
+  "print_code": "Print BarCode",
+  "print": "Print",
+  "share": "Share"
 }

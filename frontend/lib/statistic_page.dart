@@ -1,9 +1,11 @@
 import 'dart:collection';
 import 'package:country_picker/country_picker.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:strohhalm_app/database_helper.dart';
+import 'generated/l10n.dart';
 import 'main.dart';
 
 class StatisticPage extends StatefulWidget {
@@ -37,7 +39,8 @@ class StatisticPageState extends State<StatisticPage> {
 
   @override
   void initState() {
-    isMobile = MyApp().getDeviceType() == DeviceType.mobile;
+    isMobile = defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
     getCountryData();
     super.initState();
   }
@@ -66,7 +69,7 @@ class StatisticPageState extends State<StatisticPage> {
 
       final Map<String, double> limited = {
         for (var entry in top10) Country.tryParse(entry.key)!.name : entry.value,
-        "Sonstiges": restSum,
+        S.of(context).other: restSum,
       };
 
       var sortedLimitedList = limited.entries.toList()
@@ -108,7 +111,7 @@ class StatisticPageState extends State<StatisticPage> {
     return Column(
             children: [
               SizedBox(height: 20,),
-              Text("Statistics"),
+              Text(S.of(context).statistics),
               Expanded(
                 child: !chartLoaded ? Center(
                   child: SizedBox(
@@ -237,7 +240,7 @@ class StatisticPageState extends State<StatisticPage> {
                                 },
                                 icon: Icon(Icons.arrow_left)
                             ),
-                            Text("${DateFormat.MMMM("de_DE").format(DateTime.now().subtract(Duration(days: 31 * monthBackNumber)))}: $overAllThisMonth Besuche",),
+                            Text("${DateFormat.MMMM("de_DE").format(DateTime.now().subtract(Duration(days: 31 * monthBackNumber)))}: $overAllThisMonth" + S.of(context).visits),
                             IconButton(
                                 onPressed: () async {
                                   monthBackNumber--;
@@ -299,7 +302,7 @@ class StatisticPageState extends State<StatisticPage> {
           sideTitles: SideTitles(showTitles: false),
         ),
         bottomTitles: AxisTitles(
-          axisNameWidget: Text("Day of Month"),
+          axisNameWidget: Text(S.of(context).day_of_month),
           sideTitles: SideTitles(
             showTitles: true,
             reservedSize: 30,
@@ -313,7 +316,7 @@ class StatisticPageState extends State<StatisticPage> {
           ),
         ),
         leftTitles: AxisTitles(
-          axisNameWidget: Text("Anzahl an Besuchen"),
+          axisNameWidget: Text(S.of(context).visit_counts),
           sideTitles: SideTitles(
             showTitles: true,
             interval: 1,

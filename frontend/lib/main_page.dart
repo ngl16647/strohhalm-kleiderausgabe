@@ -1,5 +1,6 @@
 import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:strohhalm_app/add_user_dialog.dart';
 import 'package:strohhalm_app/customer_listview_item.dart';
@@ -33,7 +34,9 @@ class MainPageState extends State<MainPage> {
 
   @override
   void initState() {
-    isMobile = MyApp().getDeviceType() == DeviceType.mobile;
+    // More reliable way to detect mobile platforms
+    isMobile = defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
     searchUsers("");
     super.initState();
   }
@@ -130,23 +133,23 @@ class MainPageState extends State<MainPage> {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          Image.asset(
-            isMobile
-                ? "assets/images/strohalm_header_image_mobile.png"
-                : "assets/images/strohalm_header_image.png",
-          ),
-        ],
-      ),
+      // appBar: AppBar(
+      //   actions: [
+      //     Image.asset(
+      //       isMobile
+      //           ? "assets/images/strohalm_header_image_mobile.png"
+      //           : "assets/images/strohalm_header_image.png",
+      //     ),
+      //   ],
+      // ),
       body: SafeArea(
           child: Padding(
         padding: EdgeInsets.all(10),
         child: Column(
           spacing: 10,
           children: [
-            Container(
-              width: double.infinity, // Ensure finite width
+            SizedBox(
+              width: double.infinity, // Ensure infinite width
               child: Wrap(
                 direction: Axis.horizontal,
                 spacing: 8,
@@ -169,7 +172,7 @@ class MainPageState extends State<MainPage> {
                               Icons.fullscreen); // Default icon while loading
                         },
                       ),
-                      label: Text("Fullscreen"),
+                      label: Text(S.of(context).fullscreen),
                       onPressed: () async {
                         bool isFullScreen = await windowManager.isFullScreen();
                         windowManager.setFullScreen(!isFullScreen);
@@ -184,7 +187,7 @@ class MainPageState extends State<MainPage> {
                     avatar: (Theme.of(context).brightness == Brightness.dark)
                         ? Icon(Icons.dark_mode)
                         : Icon(Icons.light_mode),
-                    label: Text("Theme"),
+                    label: Text(S.of(context).theme),
                     onPressed: () async {
                       MyApp.of(context).changeTheme();
                       setState(() {});
@@ -220,7 +223,7 @@ class MainPageState extends State<MainPage> {
                           child: TextField(
                             controller: _searchController,
                             decoration: InputDecoration(
-                              hintText: "Search Users",
+                              hintText: S.of(context).search_hint,
                               border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12)),
                             ),
@@ -263,7 +266,7 @@ class MainPageState extends State<MainPage> {
                                       Color.fromRGBO(169, 171, 25, 1.0),
                                   foregroundColor: Colors.black87,
                                   minimumSize: Size(double.infinity, 64)),
-                              label: Text("Hinzufügen"),
+                              label: Text(S.of(context).add_user),
                               icon: Icon(Icons.person_add_alt_1,
                                   color: Colors.black87),
                             )
@@ -298,8 +301,8 @@ class MainPageState extends State<MainPage> {
                       },
                       icon: Icon(isListView ? Icons.grid_on : Icons.list),
                       label: Text(isListView
-                          ? "Als Kacheln anzeigen?"
-                          : "Als Liste anzeigen?"),
+                          ? S.of(context).tiles
+                          : S.of(context).list),
                     ),
                   ),
                 TextButton.icon(
@@ -325,7 +328,7 @@ class MainPageState extends State<MainPage> {
                       },
                     );
                   },
-                  label: Text("Statistics"),
+                  label: Text(S.of(context).statistics),
                   icon: Icon(Icons.bar_chart),
                 )
               ],
@@ -333,8 +336,7 @@ class MainPageState extends State<MainPage> {
             Expanded(
                 child: _userList.isEmpty
                     ? Center(
-                        child: Text(
-                            "Enter a Name or Scan a BarCode to view Users"),
+                        child: Text(S.of(context).no_items_text),
                       )
                     : LayoutBuilder(
                         builder: (context, constraints) {
@@ -428,14 +430,13 @@ class MainPageState extends State<MainPage> {
                         context: context,
                         builder: (context) {
                           return AlertDialog(
-                            content: Text(
-                                "Es konnte kein passender Benutzer gefunden werden!"),
+                            content: Text(S.of(context).no_items_text),
                             actions: [
                               TextButton(
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                   },
-                                  child: Text("Close"))
+                                  child: Text(S.of(context).dialog_cancel))
                             ],
                           );
                         });
@@ -444,7 +445,7 @@ class MainPageState extends State<MainPage> {
               }
             }
           },
-          label: Text("Scan QR-Code"),
+          label: Text(S.of(context).scan_code),
           icon: Icon(Icons.qr_code_scanner)),
     );
   }

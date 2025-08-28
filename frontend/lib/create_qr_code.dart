@@ -8,6 +8,8 @@ import 'package:pdf/widgets.dart' as wg;
 import 'package:pdf/pdf.dart';
 import 'package:image/image.dart' as img;
 
+import 'generated/l10n.dart';
+
 ///Klasse für alle möglichen nützlichen funktionen, die Appübergreifend genutzt werden können aber keine eigene Klasse rechtfertigen
 
 class CreateQRCode{
@@ -74,7 +76,7 @@ class CreateQRCode{
                         onPressed: (){
                           printQrCode(context, user);
                         },
-                        label: Text("Print QR-Code"),
+                        label: Text(S.of(context).print_code),
                         icon: Icon(Icons.print),),
                     )
                   ],
@@ -171,7 +173,7 @@ class CreateQRCode{
                     Expanded(
                       child:  ElevatedButton.icon(
                         icon: Icon(Icons.print),
-                        label: Text("Print"),
+                        label: Text(S.of(context).print),
                         onPressed: () async {
                           await Printing.layoutPdf(
                               onLayout: (format) async => doc.save(),
@@ -183,10 +185,11 @@ class CreateQRCode{
                     Expanded(
                       child: ElevatedButton.icon(
                         icon: Icon(Icons.share),
-                        label: Text("Share"),
+                        label: Text(S.of(context).share),
                         onPressed: () async {
                           await Printing.sharePdf(
                             bytes: await doc.save(),
+                            //TODO: Responsive filename
                             filename: "label.pdf",
                           );
                         },

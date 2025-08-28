@@ -6,6 +6,8 @@ import 'package:strohhalm_app/database_helper.dart';
 import 'package:strohhalm_app/user.dart';
 import 'package:strohhalm_app/utilities.dart';
 
+import 'generated/l10n.dart';
+
 class CustomerListviewItem extends StatefulWidget {
   final User user;
   final VoidCallback click;
@@ -105,18 +107,18 @@ class CustomerListviewItemState extends State<CustomerListviewItem>{
                               softWrap: true,
                               TextSpan(
                                 children: [
-                                  TextSpan(text: "War "),
+                                  TextSpan(text: S.of(context).was),
                                   if (user.lastVisit != -1)
                                     Utilities().isSameDay(DateTime.now(), lastVisit)
-                                        ? TextSpan(text: "heute", style: TextStyle(fontWeight: FontWeight.bold))
-                                        : TextSpan(text: "zuletzt am "),
+                                        ? TextSpan(text: S.of(context).today, style: TextStyle(fontWeight: FontWeight.bold))
+                                        : TextSpan(text: S.of(context).last_time),
                                   if (user.lastVisit != -1 && !Utilities().isSameDay(DateTime.now(), lastVisit))
                                     TextSpan(
                                       text: DateFormat("dd.MM.yyyy").format(lastVisit),
                                       style: TextStyle(fontWeight: FontWeight.bold),
                                     ),
-                                  if (user.lastVisit == -1) TextSpan(text: "noch nie"),
-                                  TextSpan(text: " da"),
+                                  if (user.lastVisit == -1) TextSpan(text: S.of(context).never),
+                                  TextSpan(text: S.of(context).there),
                                 ],
                               ),
                               overflow: TextOverflow.fade,
@@ -151,7 +153,7 @@ class CustomerListviewItemState extends State<CustomerListviewItem>{
                                         borderRadius: BorderRadius.circular(8)
                                     )
                                 ),
-                                child: Text("Vermerk löschen", textAlign: TextAlign.center,),
+                                child: Text(S.of(context).delete_note, textAlign: TextAlign.center,),
                               )
                             : TextButton(
                                 onPressed: () async {
@@ -166,7 +168,7 @@ class CustomerListviewItemState extends State<CustomerListviewItem>{
                                         borderRadius: BorderRadius.circular(8)
                                     )
                                 ),
-                                child: Text(visitLessThan14Days ? "Neuen Besuch vormerken" : "Trotzdem vermerken", textAlign: TextAlign.center,),
+                                child: Text(visitLessThan14Days ? S.of(context).mark_new_visit : S.of(context).still_note, textAlign: TextAlign.center,),
                               ),
                         ),
                         SizedBox(width: 10,),

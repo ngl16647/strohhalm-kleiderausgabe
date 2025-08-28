@@ -1,4 +1,48 @@
 {
+  "@@locale": "de",
+
   "language_de": "Deutsch",
-  "language_en": "Englisch"
+  "language_en": "Englisch",
+  "fullscreen": "Vollbild",
+  "theme": "Modus",
+  "search_hint": "Bedürftige Suchen",
+
+  "add_user": "Hinzufügen",
+  "required_fields": "* Plichtfelder",
+  "firt_name": "Vorname*",
+  "last_name": "Nachname*",
+  "birthdate": "Geburtsdatum*",
+  "country": "Nationalität",
+  "other": "Sonstiges",
+  "dialog_cancel": "Abbrechen",
+  "dialog_confirm_button": "Bestätigen",
+  "dialog_delete_button": "Löschen",
+  "delete_confirm": "Bist Du sicher das Du diesen Bedürftigen löschen willst?",
+  "required_fields": "Eines der Pflichtfelder wurde nicht ausgefüllt",
+
+
+  "tiles": "Kachelansicht",
+  "was": "War ",
+  "today": "heute",
+  "last_time": "zuletzt am ",
+  "never": "noch nie",
+  "there": " da",
+  "delete_note": "Vermerk löschen",
+  "mark_new_visit": "Neuen Besuch vormerken",
+  "still_note": "Trotzdem vermerken",
+
+  "list": "Listenansicht",
+
+  "statistics": "Statistiken",
+  "visits": " Besuche",
+  "day_of_month": "Tag des Monats",
+  "visit_counts": "Anzahl an Besuchen",
+
+
+  "no_items_text": "Gib einen Namen ein oder Scanne einen BarCode",
+
+  "scan_code": "BarCode Scannen",
+  "print_code": "BarCode drucken",
+  "print": "Drucken",
+  "share": "Teilen"
 }

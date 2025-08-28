@@ -5,6 +5,7 @@ import 'package:strohhalm_app/main.dart';
 import 'package:strohhalm_app/user.dart';
 import 'package:strohhalm_app/utilities.dart';
 import 'database_helper.dart';
+import 'generated/l10n.dart';
 
 class AddUserDialog extends StatefulWidget {
   final User? user;
@@ -28,14 +29,15 @@ class AddUserDialogState extends State<AddUserDialog> {
 
   @override
   void initState() {
-    if(widget.user != null){
+    if (widget.user != null) {
       firstNameController.text = widget.user!.firstName;
       lastNameController.text = widget.user!.lastName;
       miscellaneousController.text = widget.user!.miscellaneous ?? "";
 
       selectedDate = DateTime.fromMillisecondsSinceEpoch(widget.user!.birthDay);
       hasChild = widget.user!.hasChild;
-      selectedCountry = Country.tryParse(widget.user!.birthCountry) ?? Country.worldWide;
+      selectedCountry =
+          Country.tryParse(widget.user!.birthCountry) ?? Country.worldWide;
     }
     super.initState();
   }
@@ -71,11 +73,20 @@ class AddUserDialogState extends State<AddUserDialog> {
               children: [
                 Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: Text("* required Fields", style: TextStyle(color: Theme.of(context).textTheme.titleSmall!.color?.withAlpha(100)), textAlign: TextAlign.start,),
+                  child: Text(
+                    S.of(context).required_fields,
+                    style: TextStyle(
+                        color: Theme.of(context)
+                            .textTheme
+                            .titleSmall!
+                            .color
+                            ?.withAlpha(100)),
+                    textAlign: TextAlign.start,
+                  ),
                 ),
                 TextField(
                   decoration: InputDecoration(
-                    hintText: "First Name*",
+                    hintText: S.of(context).firt_name,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -84,7 +95,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                 ),
                 TextField(
                   decoration: InputDecoration(
-                    hintText: "Last Name*",
+                    hintText: S.of(context).last_name,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -95,7 +106,8 @@ class AddUserDialogState extends State<AddUserDialog> {
                   onTap: _pickDate,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 16),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey),
                       borderRadius: BorderRadius.circular(12),
@@ -106,9 +118,13 @@ class AddUserDialogState extends State<AddUserDialog> {
                         Text(
                           selectedDate != null
                               ? DateFormat("dd.MM.yyyy").format(selectedDate!)
-                              : "Geburtsdatum wählen*",
+                              : S.of(context).birthdate,
                           style: TextStyle(
-                            color: Theme.of(context).textTheme.bodyMedium!.color?.withAlpha(150),
+                            color: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .color
+                                ?.withAlpha(150),
                           ),
                         ),
                         const Icon(Icons.calendar_today),
@@ -117,7 +133,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                   ),
                 ),
                 InkWell(
-                  onTap: (){
+                  onTap: () {
                     showCountryPicker(
                       context: context,
                       showSearch: true,
@@ -125,14 +141,14 @@ class AddUserDialogState extends State<AddUserDialog> {
                       onSelect: (Country country) {
                         setState(() {
                           selectedCountry = country;
-
                         });
                       },
                     );
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 16),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey),
                       borderRadius: BorderRadius.circular(12),
@@ -143,7 +159,11 @@ class AddUserDialogState extends State<AddUserDialog> {
                         Text(
                           selectedCountry.name,
                           style: TextStyle(
-                            color: Theme.of(context).textTheme.bodyMedium!.color?.withAlpha(150),
+                            color: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .color
+                                ?.withAlpha(150),
                           ),
                         ),
                         const Icon(Icons.calendar_today),
@@ -166,7 +186,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                 //),
                 TextField(
                   decoration: InputDecoration(
-                    hintText: "Sonstiges",
+                    hintText: S.of(context).other,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -176,49 +196,53 @@ class AddUserDialogState extends State<AddUserDialog> {
               ],
             ),
             const SizedBox(height: 20),
-            if(widget.user != null) TextButton.icon(
+            if (widget.user != null)
+              TextButton.icon(
                 onPressed: () async {
-                  bool? result = await Utilities().dialogConfirmation(context, "Bist du Sicher, dass du den Benutzer unwiderruflich löschen willst?");
-                  if(result != null){
+                  bool? result = await Utilities().dialogConfirmation(
+                      context, S.of(context).delete_confirm);
+                  if (result != null) {
                     navigatorKey.currentState?.pop([widget.user, true]);
                   }
                 },
-                label: Text("Delete"),
-              icon: Icon(Icons.delete),
-              style: TextButton.styleFrom(
-                minimumSize: Size(double.infinity, 50),
-                backgroundColor: Colors.redAccent.withAlpha(100)
+                label: Text(S.of(context).dialog_delete_button),
+                icon: Icon(Icons.delete),
+                style: TextButton.styleFrom(
+                    minimumSize: Size(double.infinity, 50),
+                    backgroundColor: Colors.redAccent.withAlpha(100)),
               ),
+            SizedBox(
+              height: 15,
             ),
-            SizedBox(height: 15,),
             Row(
               children: [
                 Expanded(
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(null),
-                    child: const Text("Cancel"),
+                    child: Text(S.of(context).dialog_cancel),
                   ),
                 ),
                 Expanded(
                   child: TextButton(
                     onPressed: () async {
-                      if(firstNameController.text.isEmpty || lastNameController.text.isEmpty || selectedDate == null){
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("One of the required Fields wasn't filled out"))
-                        );
+                      if (firstNameController.text.isEmpty ||
+                          lastNameController.text.isEmpty ||
+                          selectedDate == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(S.of(context).required_fields)));
                         return;
                       }
-                      if(widget.user != null){
+                      if (widget.user != null) {
                         User user = widget.user!.copyWith(
                             firstName: firstNameController.text,
                             lastName: lastNameController.text,
                             birthDay: selectedDate!.millisecondsSinceEpoch,
                             birthCountry: selectedCountry.countryCode,
                             hasChild: hasChild,
-                            miscellaneous: miscellaneousController.text
-                        );
+                            miscellaneous: miscellaneousController.text);
                         await DatabaseHelper().updateUser(user);
-                        if(context.mounted) navigatorKey.currentState?.pop([user, false]);
+                        if (context.mounted)
+                          navigatorKey.currentState?.pop([user, false]);
                       } else {
                         User? user = await DatabaseHelper().addUser(
                             firstNameController.text,
@@ -226,12 +250,12 @@ class AddUserDialogState extends State<AddUserDialog> {
                             selectedDate!.millisecondsSinceEpoch,
                             selectedCountry.countryCode,
                             hasChild,
-                            miscellaneousController.text
-                        );
-                        if(context.mounted) navigatorKey.currentState?.pop([user, false]);
-                        }
-                      },
-                    child: const Text("Confirm"),
+                            miscellaneousController.text);
+                        if (context.mounted)
+                          navigatorKey.currentState?.pop([user, false]);
+                      }
+                    },
+                    child: Text(S.of(context).dialog_confirm_button),
                   ),
                 ),
               ],
