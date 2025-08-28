@@ -29,16 +29,19 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m2(isListView) =>
       "${Intl.select(isListView, {'true': 'Показывать как плитки?', 'false': 'Показывать как список?'})}";
 
-  static String m3(cutOffNumber, overAllNumberOfCountries) =>
+  static String m3(isDarkMode) =>
+      "${Intl.select(isDarkMode, {'true': 'Светлая тема', 'false': 'Тёмная тема'})}";
+
+  static String m4(cutOffNumber, overAllNumberOfCountries) =>
       "Показать топ ${cutOffNumber} стран из ${overAllNumberOfCountries}";
 
-  static String m4(showYear) =>
+  static String m5(showYear) =>
       "${Intl.select(showYear, {'true': 'к просмотру по месяцам', 'false': 'к просмотру по годам'})}";
 
-  static String m5(count) =>
-      "${Intl.plural(count, one: 'Посещение', few: 'Посещения', many: 'Посещений', other: 'Посещения')}";
+  static String m6(count) =>
+      "${Intl.plural(count, one: 'Посещение', other: 'Посещения')}";
 
-  static String m6(showYear) =>
+  static String m7(showYear) =>
       "${Intl.select(showYear, {'true': 'Месяц', 'false': 'День'})}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -91,6 +94,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_emptyUserListText": MessageLookupByLibrary.simpleMessage(
       "Поиск по имени или сканирование кода для отображения пользователей",
     ),
+    "main_page_fullScreen": MessageLookupByLibrary.simpleMessage(
+      "Полноэкранный режим",
+    ),
     "main_page_isListView": m2,
     "main_page_languages": MessageLookupByLibrary.simpleMessage("Языки"),
     "main_page_noUserWithUUID": MessageLookupByLibrary.simpleMessage(
@@ -103,6 +109,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Поиск пользователей",
     ),
     "main_page_statistic": MessageLookupByLibrary.simpleMessage("Статистика"),
+    "main_page_theme": m3,
     "no": MessageLookupByLibrary.simpleMessage("Нет"),
     "print": MessageLookupByLibrary.simpleMessage("Печать"),
     "qr_code_print": MessageLookupByLibrary.simpleMessage("Печать QR-кода"),
@@ -132,12 +139,12 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "stat_page_visits": MessageLookupByLibrary.simpleMessage("Всего визитов:"),
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
-      "Количество визитов",
+      "Количество посещений",
     ),
-    "statistic_page_show_top_countries": m3,
-    "statistic_page_switchYearDisplay": m4,
-    "statistic_page_visits": m5,
-    "statistic_page_xAxis": m6,
+    "statistic_page_show_top_countries": m4,
+    "statistic_page_switchYearDisplay": m5,
+    "statistic_page_visits": m6,
+    "statistic_page_xAxis": m7,
     "yes": MessageLookupByLibrary.simpleMessage("Да"),
   };
 }

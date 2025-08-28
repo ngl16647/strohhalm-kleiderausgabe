@@ -29,16 +29,19 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m2(isListView) =>
       "${Intl.select(isListView, {'true': 'Als Kacheln anzeigen?', 'false': 'Als Liste anzeigen?'})}";
 
-  static String m3(cutOffNumber, overAllNumberOfCountries) =>
+  static String m3(isDarkMode) =>
+      "${Intl.select(isDarkMode, {'true': 'Helle Ansicht', 'false': 'Dunkle Ansicht'})}";
+
+  static String m4(cutOffNumber, overAllNumberOfCountries) =>
       "Zeige die Top ${cutOffNumber} Länder von ${overAllNumberOfCountries}";
 
-  static String m4(showYear) =>
+  static String m5(showYear) =>
       "${Intl.select(showYear, {'true': 'zur Monatsansicht', 'false': 'zur Jahresansicht'})}";
 
-  static String m5(count) =>
+  static String m6(count) =>
       "${Intl.plural(count, one: 'Besuch', other: 'Besuche')}";
 
-  static String m6(showYear) =>
+  static String m7(showYear) =>
       "${Intl.select(showYear, {'true': 'Monat', 'false': 'Tag'})}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -48,7 +51,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Geburtsdatum wählen*",
     ),
     "add_user_deleteMessage": MessageLookupByLibrary.simpleMessage(
-      "Bist du Sicher, dass du den Benutzer unwiderruflich löschen willst?",
+      "Bist du Sicher, dass du diese Person unwiderruflich löschen willst?",
     ),
     "add_user_firstName": MessageLookupByLibrary.simpleMessage("Vorname*"),
     "add_user_lastName": MessageLookupByLibrary.simpleMessage("Nachname*"),
@@ -89,20 +92,22 @@ class MessageLookup extends MessageLookupByLibrary {
     "language_ru": MessageLookupByLibrary.simpleMessage("Russisch"),
     "main_page_add": MessageLookupByLibrary.simpleMessage("Hinzufügen"),
     "main_page_emptyUserListText": MessageLookupByLibrary.simpleMessage(
-      "Suche nach einem Namen oder Scanne einen Code um Benutzer anzuzeigen",
+      "Suche nach einem Namen oder Scanne einen Code um Besucher anzuzeigen",
     ),
+    "main_page_fullScreen": MessageLookupByLibrary.simpleMessage("Vollbild"),
     "main_page_isListView": m2,
     "main_page_languages": MessageLookupByLibrary.simpleMessage("Sprachen"),
     "main_page_noUserWithUUID": MessageLookupByLibrary.simpleMessage(
-      "Es konnte kein passender Benutzer gefunden werden!",
+      "Es konnte keine passende Person gefunden werden!",
     ),
     "main_page_scanQrCode": MessageLookupByLibrary.simpleMessage(
       "QR-Code scannen",
     ),
     "main_page_searchUsers": MessageLookupByLibrary.simpleMessage(
-      "Benutzer durchsuchen",
+      "Personen durchsuchen",
     ),
     "main_page_statistic": MessageLookupByLibrary.simpleMessage("Statistiken"),
+    "main_page_theme": m3,
     "no": MessageLookupByLibrary.simpleMessage("Nein"),
     "print": MessageLookupByLibrary.simpleMessage("Drucken"),
     "qr_code_print": MessageLookupByLibrary.simpleMessage("QR-Code Drucken"),
@@ -134,10 +139,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Anzahl an Besuchen",
     ),
-    "statistic_page_show_top_countries": m3,
-    "statistic_page_switchYearDisplay": m4,
-    "statistic_page_visits": m5,
-    "statistic_page_xAxis": m6,
+    "statistic_page_show_top_countries": m4,
+    "statistic_page_switchYearDisplay": m5,
+    "statistic_page_visits": m6,
+    "statistic_page_xAxis": m7,
     "yes": MessageLookupByLibrary.simpleMessage("Ja"),
   };
 }

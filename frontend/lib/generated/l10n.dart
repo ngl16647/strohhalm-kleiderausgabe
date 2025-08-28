@@ -170,10 +170,10 @@ class S {
     );
   }
 
-  /// `Are you sure you want to permanently delete this user?`
+  /// `Are you sure you want to permanently delete this person?`
   String get add_user_deleteMessage {
     return Intl.message(
-      'Are you sure you want to permanently delete this user?',
+      'Are you sure you want to permanently delete this person?',
       name: 'add_user_deleteMessage',
       desc: '',
       args: [],
@@ -296,10 +296,10 @@ class S {
     );
   }
 
-  /// `Search users`
+  /// `Search persons`
   String get main_page_searchUsers {
     return Intl.message(
-      'Search users',
+      'Search persons',
       name: 'main_page_searchUsers',
       desc: '',
       args: [],
@@ -332,20 +332,20 @@ class S {
     );
   }
 
-  /// `Search by name or scan a code to display users`
+  /// `Search by name or scan a code to display persons`
   String get main_page_emptyUserListText {
     return Intl.message(
-      'Search by name or scan a code to display users',
+      'Search by name or scan a code to display persons',
       name: 'main_page_emptyUserListText',
       desc: '',
       args: [],
     );
   }
 
-  /// `No matching user found!`
+  /// `No matching person found!`
   String get main_page_noUserWithUUID {
     return Intl.message(
-      'No matching user found!',
+      'No matching person found!',
       name: 'main_page_noUserWithUUID',
       desc: '',
       args: [],
@@ -357,6 +357,27 @@ class S {
     return Intl.message(
       'Scan QR Code',
       name: 'main_page_scanQrCode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{isDarkMode, select, true{Light Theme} false{Dark Theme}}`
+  String main_page_theme(Object isDarkMode) {
+    return Intl.select(
+      isDarkMode,
+      {'true': 'Light Theme', 'false': 'Dark Theme'},
+      name: 'main_page_theme',
+      desc: '',
+      args: [isDarkMode],
+    );
+  }
+
+  /// `Fullscreen`
+  String get main_page_fullScreen {
+    return Intl.message(
+      'Fullscreen',
+      name: 'main_page_fullScreen',
       desc: '',
       args: [],
     );
@@ -452,11 +473,11 @@ class S {
     );
   }
 
-  /// `{showYear, select, true{Monat} false{Tag}}`
+  /// `{showYear, select, true{Month} false{Day}}`
   String statistic_page_xAxis(Object showYear) {
     return Intl.select(
       showYear,
-      {'true': 'Monat', 'false': 'Tag'},
+      {'true': 'Month', 'false': 'Day'},
       name: 'statistic_page_xAxis',
       desc: '',
       args: [showYear],
@@ -473,23 +494,23 @@ class S {
     );
   }
 
-  /// `{count, plural, one{Besuch} other{Besuche}}`
+  /// `{count, plural, one{Visit} other{Visits}}`
   String statistic_page_visits(num count) {
     return Intl.plural(
       count,
-      one: 'Besuch',
-      other: 'Besuche',
+      one: 'Visit',
+      other: 'Visits',
       name: 'statistic_page_visits',
       desc: '',
       args: [count],
     );
   }
 
-  /// `{showYear, select, true{zur Monatsansicht} false{zur Jahresansicht}}`
+  /// `{showYear, select, true{To month view} false{To year view}}`
   String statistic_page_switchYearDisplay(Object showYear) {
     return Intl.select(
       showYear,
-      {'true': 'zur Monatsansicht', 'false': 'zur Jahresansicht'},
+      {'true': 'To month view', 'false': 'To year view'},
       name: 'statistic_page_switchYearDisplay',
       desc: '',
       args: [showYear],

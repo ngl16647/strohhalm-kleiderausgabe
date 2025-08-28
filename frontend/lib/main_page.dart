@@ -140,6 +140,87 @@ class MainPageState extends State<MainPage> {
                     : "assets/images/strohalm_header_image.png",
                 width: double.infinity,
               ),
+              SizedBox(
+                width: double.infinity, // Ensure finite width
+                child: Row(
+                  spacing: 8,
+                  children: [
+                    if (!isMobile)
+                      ActionChip(
+                        avatar: FutureBuilder<bool>(
+                          future: windowManager.isFullScreen(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.done &&
+                                snapshot.hasData) {
+                              return snapshot.data!
+                                  ? Icon(Icons.close_fullscreen)
+                                  : Icon(Icons.fullscreen);
+                            }
+                            return Icon(Icons.fullscreen); // Default icon while loading
+                          },
+                        ),
+                        label: Text(S.of(context).main_page_fullScreen),
+                        onPressed: () async {
+                          bool isFullScreen = await windowManager.isFullScreen();
+                          windowManager.setFullScreen(!isFullScreen);
+                          setState(() {
+                            fullScreenIcon = !isFullScreen
+                                ? Icon(Icons.close_fullscreen)
+                                : Icon(Icons.aspect_ratio);
+                          });
+                        },
+                      ),
+                    Spacer(),
+                    ActionChip(
+                      avatar: !(Theme.of(context).brightness == Brightness.dark)
+                          ? Icon(Icons.dark_mode)
+                          : Icon(Icons.light_mode),
+                      label: Text(S.of(context).main_page_theme((Theme.of(context).brightness == Brightness.dark))),
+                      onPressed: () async {
+                        MyApp.of(context).changeTheme();
+                        setState(() {});
+                      },
+                    ),
+                    MenuAnchor(
+                        style: MenuStyle(
+                          padding: WidgetStateProperty.all(
+                            EdgeInsets.all(5),
+                          ),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        menuChildren: languages.map((lang) {
+                          return MenuItemButton(
+                            onPressed: lang.onPressed,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CountryFlag.fromLanguageCode(lang.code, height: 15, width: 25),
+                                const SizedBox(width: 5),
+                                Text(lang.label),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        builder: (BuildContext context, MenuController controller, Widget? child) {
+                          return ActionChip(
+                            label: Text(S.of(context).main_page_languages),
+                            //backgroundColor: Color.fromRGBO(169, 171, 25, 0.3),
+                            avatar: Icon(controller.isOpen ? Icons.expand_less : Icons.expand_more, size: 18),
+                            onPressed: () {
+                              if (controller.isOpen) {
+                                controller.close();
+                              } else {
+                                controller.open();
+                              }
+                            },
+                          );
+                        },
+                        child: Icon(Icons.language)
+                    )
+                  ],
+                ),
+              ),
               Container(
                 constraints: BoxConstraints(
                   minHeight: 32,
@@ -151,71 +232,6 @@ class MainPageState extends State<MainPage> {
                     spacing: 10,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      //TODO: Maybe over the SearchBar? I don't like the Positioning of the Fullscreen, darkmode, languages...
-                      if(!isMobile) Expanded(
-                          flex: 0,
-                          child:  IconButton(
-                              onPressed: () async {
-                                bool isFullScreen = await windowManager.isFullScreen();
-                                windowManager.setFullScreen(!isFullScreen);
-                                setState(() {
-                                  fullScreenIcon = !isFullScreen ? Icon(Icons.close_fullscreen) : Icon(Icons.aspect_ratio);
-                                });
-                              },
-                              icon: fullScreenIcon
-                          )
-                      ),
-                      Expanded(
-                          flex: 0,
-                          child:  IconButton(
-                              onPressed: () async {
-                                MyApp.of(context).changeTheme();
-                              },
-                              icon: Icon(Icons.dark_mode)
-                          )
-                      ),
-                      Expanded(
-                          flex: 0,
-                          child: MenuAnchor(
-                            style: MenuStyle(
-                              padding: WidgetStateProperty.all(
-                                EdgeInsets.all(5),
-                              ),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                            menuChildren: languages.map((lang) {
-                              return MenuItemButton(
-                                onPressed: lang.onPressed,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    CountryFlag.fromLanguageCode(lang.code, height: 15, width: 25),
-                                    const SizedBox(width: 5),
-                                    Text(lang.label),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                              builder: (BuildContext context, MenuController controller, Widget? child) {
-                                return TextButton.icon(
-                                  focusNode: FocusNode(),
-                                  onPressed: () {
-                                    if (controller.isOpen) {
-                                      controller.close();
-                                    } else {
-                                      controller.open();
-                                    }
-                                  },
-                                  label: Row(
-                                    children: [
-                                    // Icon(Icons.language),  //TODO: Icon or no Icon?
-                                    Text(S.of(context).main_page_languages)],),
-                                  icon: Icon(controller.isOpen ? Icons.expand_less : Icons.expand_more),
-                                );
-                              },
-                            child: Icon(Icons.language)
-                          )
-                      ),
                       Expanded(
                         flex: 10,
                         child: Stack(

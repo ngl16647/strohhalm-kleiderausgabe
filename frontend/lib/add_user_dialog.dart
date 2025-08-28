@@ -20,23 +20,23 @@ class AddUserDialog extends StatefulWidget {
 }
 
 class AddUserDialogState extends State<AddUserDialog> {
-  final firstNameController = TextEditingController();
-  final lastNameController = TextEditingController();
-  final miscellaneousController = TextEditingController();
-  bool hasChild = false;
-  DateTime? selectedDate;
-  Country selectedCountry = Country.worldWide;
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _miscellaneousController = TextEditingController();
+  bool _hasChild = false;
+  DateTime? _selectedDate;
+  Country _selectedCountry = Country.worldWide;
 
   @override
   void initState() {
     if(widget.user != null){
-      firstNameController.text = widget.user!.firstName;
-      lastNameController.text = widget.user!.lastName;
-      miscellaneousController.text = widget.user!.miscellaneous ?? "";
+      _firstNameController.text = widget.user!.firstName;
+      _lastNameController.text = widget.user!.lastName;
+      _miscellaneousController.text = widget.user!.miscellaneous ?? "";
 
-      selectedDate = DateTime.fromMillisecondsSinceEpoch(widget.user!.birthDay);
-      hasChild = widget.user!.hasChild;
-      selectedCountry = Country.tryParse(widget.user!.birthCountry) ?? Country.worldWide;
+      _selectedDate = DateTime.fromMillisecondsSinceEpoch(widget.user!.birthDay);
+      _hasChild = widget.user!.hasChild;
+      _selectedCountry = Country.tryParse(widget.user!.birthCountry) ?? Country.worldWide;
     }
     super.initState();
   }
@@ -46,13 +46,13 @@ class AddUserDialogState extends State<AddUserDialog> {
       context: context,
       firstDate: DateTime(1900),
       lastDate: DateTime.now().add(const Duration(days: 31)),
-      initialDate: selectedDate ?? DateTime.now(),
+      initialDate: _selectedDate ?? DateTime.now(),
       initialEntryMode: DatePickerEntryMode.calendarOnly,
     );
 
-    if (picked != null && picked != selectedDate) {
+    if (picked != null && picked != _selectedDate) {
       setState(() {
-        selectedDate = picked;
+        _selectedDate = picked;
       });
     }
   }
@@ -62,7 +62,7 @@ class AddUserDialogState extends State<AddUserDialog> {
     return Dialog(
       backgroundColor: Theme.of(context).listTileTheme.tileColor,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -81,7 +81,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  controller: firstNameController,
+                  controller: _firstNameController,
                 ),
                 TextField(
                   decoration: InputDecoration(
@@ -90,13 +90,13 @@ class AddUserDialogState extends State<AddUserDialog> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  controller: lastNameController,
+                  controller: _lastNameController,
                 ),
                 InkWell(
                   onTap: _pickDate,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey),
                       borderRadius: BorderRadius.circular(12),
@@ -105,8 +105,8 @@ class AddUserDialogState extends State<AddUserDialog> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          selectedDate != null
-                              ? DateFormat("dd.MM.yyyy").format(selectedDate!)
+                          _selectedDate != null
+                              ? DateFormat("dd.MM.yyyy").format(_selectedDate!)
                               : S.of(context).add_user_birthDay,
                           style: TextStyle(
                             color: Theme.of(context).textTheme.bodyMedium!.color?.withAlpha(150),
@@ -125,15 +125,14 @@ class AddUserDialogState extends State<AddUserDialog> {
                       showWorldWide: true,
                       onSelect: (Country country) {
                         setState(() {
-                          selectedCountry = country;
-
+                          _selectedCountry = country;
                         });
                       },
                     );
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey),
                       borderRadius: BorderRadius.circular(12),
@@ -142,12 +141,12 @@ class AddUserDialogState extends State<AddUserDialog> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          selectedCountry.name,
+                        CountryLocalizations.of(context)?.countryName(countryCode: _selectedCountry.countryCode) ?? _selectedCountry.name,
                           style: TextStyle(
                             color: Theme.of(context).textTheme.bodyMedium!.color?.withAlpha(150),
                           ),
                         ),
-                        const Icon(Icons.calendar_today),
+                        Icon(Icons.calendar_today),
                       ],
                     ),
                   ),
@@ -172,7 +171,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  controller: miscellaneousController,
+                  controller: _miscellaneousController,
                 ),
               ],
             ),
@@ -203,7 +202,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                 Expanded(
                   child: TextButton(
                     onPressed: () async {
-                      if(firstNameController.text.isEmpty || lastNameController.text.isEmpty || selectedDate == null){
+                      if(_firstNameController.text.isEmpty || _lastNameController.text.isEmpty || _selectedDate == null){
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text(S.of(context).add_user_requiredFieldMissing))
                         );
@@ -211,23 +210,23 @@ class AddUserDialogState extends State<AddUserDialog> {
                       }
                       if(widget.user != null){
                         User user = widget.user!.copyWith(
-                            firstName: firstNameController.text,
-                            lastName: lastNameController.text,
-                            birthDay: selectedDate!.millisecondsSinceEpoch,
-                            birthCountry: selectedCountry.countryCode,
-                            hasChild: hasChild,
-                            miscellaneous: miscellaneousController.text
+                            firstName: _firstNameController.text,
+                            lastName: _lastNameController.text,
+                            birthDay: _selectedDate!.millisecondsSinceEpoch,
+                            birthCountry: _selectedCountry.countryCode,
+                            hasChild: _hasChild,
+                            miscellaneous: _miscellaneousController.text
                         );
                         await DatabaseHelper().updateUser(user);
                         if(context.mounted) navigatorKey.currentState?.pop([user, false]);
                       } else {
                         User? user = await DatabaseHelper().addUser(
-                            firstNameController.text,
-                            lastNameController.text,
-                            selectedDate!.millisecondsSinceEpoch,
-                            selectedCountry.countryCode,
-                            hasChild,
-                            miscellaneousController.text
+                            _firstNameController.text,
+                            _lastNameController.text,
+                            _selectedDate!.millisecondsSinceEpoch,
+                            _selectedCountry.countryCode,
+                            _hasChild,
+                            _miscellaneousController.text
                         );
                         if(context.mounted) navigatorKey.currentState?.pop([user, false]);
                         }

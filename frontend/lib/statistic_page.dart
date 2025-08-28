@@ -54,14 +54,16 @@ class StatisticPageState extends State<StatisticPage> {
     var countryDataLong = await DatabaseHelper().getBirthCountries();
     _overAllNumberOfCountries = countryDataLong.length;
     final sortedEntries = countryDataLong.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    if(!mounted) return;
     if (sortedEntries.length > _cutOffNumber) { //sortedEntries.length-1 so if "Sonstiges" would be comprised of only one country, the actual name would show
       final topList = sortedEntries.take(_cutOffNumber).toList();
 
       final rest = sortedEntries.skip(_cutOffNumber);
       final restSum = rest.fold<double>(0, (sum, entry) => sum + entry.value);
 
+      print(Country.tryParse(topList.first.key)!.nameLocalized ?? "NOPE");
       final Map<String, double> limited = {
-        for (var entry in topList) Country.tryParse(entry.key)!.name : entry.value,
+        for (var entry in topList) CountryLocalizations.of(context)?.countryName(countryCode: entry.key) ?? Country.tryParse(entry.key)!.name : entry.value,
         mounted
             ? S.of(context).add_user_miscellaneous
             : S.current.add_user_miscellaneous: restSum,
@@ -75,7 +77,7 @@ class StatisticPageState extends State<StatisticPage> {
       _countryData = sortedLimited;
     } else {
       final Map<String, double> limited = {
-        for (var entry in sortedEntries) Country.tryParse(entry.key)!.name : entry.value
+        for (var entry in sortedEntries) CountryLocalizations.of(context)?.countryName(countryCode: entry.key) ?? Country.tryParse(entry.key)!.name : entry.value
       };
       _countryData = limited;
     }
@@ -254,7 +256,7 @@ class StatisticPageState extends State<StatisticPage> {
                                 children: [
                                   ActionChip(
                                     label: Text(S.of(context).statistic_page_switchYearDisplay(_showYear)),
-                                    avatar: Icon(_showYear ? Icons.calendar_view_month : Icons.calendar_view_month),
+                                    avatar: Icon(_showYear ? Icons.calendar_view_month : Icons.calendar_month),
                                     onPressed: () async {
                                       setState(() {
                                         _showYear = !_showYear;
@@ -309,7 +311,7 @@ class StatisticPageState extends State<StatisticPage> {
     int overAllInPeriod = _visitsInPeriod.entries.toList().fold(0, (sum, element) => sum + element.value);
     String visits =  S.of(context).statistic_page_visits(overAllInPeriod);
     if (_showYear) {
-      return "${DateTime.now().year-_monthBackNumber}: $overAllInPeriod  $visits";
+      return "${DateTime.now().year-_monthBackNumber}: $overAllInPeriod $visits";
     }
 
     final locale = MyApp.of(context).getLocale()?.countryCode;

@@ -222,7 +222,7 @@ class StatPageState extends State<StatPage>{
                                 children: [
                                   SizedBox(height: 10,),
                                   Text(S.of(context).stat_page_country),
-                                  Text(Country.tryParse(widget.user.birthCountry)!.name, style: TextStyle(color: Colors.grey)),
+                                  Text(CountryLocalizations.of(context)?.countryName(countryCode: widget.user.birthCountry) ?? Country.tryParse(widget.user.birthCountry)!.name, style: TextStyle(color: Colors.grey)),
                                 ],
                               ),
                               // Has Children

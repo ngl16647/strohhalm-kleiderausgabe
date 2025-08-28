@@ -100,7 +100,7 @@ class CustomerListviewItemState extends State<CustomerListviewItem>{
                           ),
                           SizedBox(width: 10),
                           Text(
-                            Country.tryParse(user.birthCountry)!.name,
+                            CountryLocalizations.of(context)?.countryName(countryCode: user.birthCountry) ?? Country.tryParse(user.birthCountry)!.name,
                             style: TextStyle(color: Theme.of(context).textTheme.headlineSmall!.color?.withAlpha(170)),
                           ),
                         ],
@@ -166,8 +166,8 @@ class CustomerListviewItemState extends State<CustomerListviewItem>{
                             child: Text(S.of(context).customer_tile_deleteLastEntry, textAlign: TextAlign.center,),
                           ),
                         ),
-                        if(!visitMoreThan14Days && !Utilities().isSameDay(DateTime.now(), lastVisitDateTime.add(Duration(days: -1)))) SizedBox(width: 5,),
-                        if(!Utilities().isSameDay(DateTime.now(), lastVisitDateTime.add(Duration(days: -1))))
+                        if(!visitMoreThan14Days && !Utilities().isSameDay(DateTime.now(), lastVisitDateTime)) SizedBox(width: 5,),
+                        if(!Utilities().isSameDay(DateTime.now(), lastVisitDateTime))
                           Expanded(
                           child: TextButton(
                             onPressed: () async {

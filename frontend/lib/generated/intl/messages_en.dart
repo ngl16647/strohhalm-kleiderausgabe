@@ -28,17 +28,20 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m2(isListView) =>
       "${Intl.select(isListView, {'true': 'Show as tiles?', 'false': 'Show as list?'})}";
 
-  static String m3(cutOffNumber, overAllNumberOfCountries) =>
+  static String m3(isDarkMode) =>
+      "${Intl.select(isDarkMode, {'true': 'Light Theme', 'false': 'Dark Theme'})}";
+
+  static String m4(cutOffNumber, overAllNumberOfCountries) =>
       "Show top ${cutOffNumber} countries of ${overAllNumberOfCountries}";
 
-  static String m4(showYear) =>
-      "${Intl.select(showYear, {'true': 'zur Monatsansicht', 'false': 'zur Jahresansicht'})}";
+  static String m5(showYear) =>
+      "${Intl.select(showYear, {'true': 'To month view', 'false': 'To year view'})}";
 
-  static String m5(count) =>
-      "${Intl.plural(count, one: 'Besuch', other: 'Besuche')}";
+  static String m6(count) =>
+      "${Intl.plural(count, one: 'Visit', other: 'Visits')}";
 
-  static String m6(showYear) =>
-      "${Intl.select(showYear, {'true': 'Monat', 'false': 'Tag'})}";
+  static String m7(showYear) =>
+      "${Intl.select(showYear, {'true': 'Month', 'false': 'Day'})}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -47,7 +50,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Select birth date*",
     ),
     "add_user_deleteMessage": MessageLookupByLibrary.simpleMessage(
-      "Are you sure you want to permanently delete this user?",
+      "Are you sure you want to permanently delete this person?",
     ),
     "add_user_firstName": MessageLookupByLibrary.simpleMessage("First name*"),
     "add_user_lastName": MessageLookupByLibrary.simpleMessage("Last name*"),
@@ -90,20 +93,22 @@ class MessageLookup extends MessageLookupByLibrary {
     "language_ru": MessageLookupByLibrary.simpleMessage("Russian"),
     "main_page_add": MessageLookupByLibrary.simpleMessage("Add"),
     "main_page_emptyUserListText": MessageLookupByLibrary.simpleMessage(
-      "Search by name or scan a code to display users",
+      "Search by name or scan a code to display persons",
     ),
+    "main_page_fullScreen": MessageLookupByLibrary.simpleMessage("Fullscreen"),
     "main_page_isListView": m2,
     "main_page_languages": MessageLookupByLibrary.simpleMessage("Languages"),
     "main_page_noUserWithUUID": MessageLookupByLibrary.simpleMessage(
-      "No matching user found!",
+      "No matching person found!",
     ),
     "main_page_scanQrCode": MessageLookupByLibrary.simpleMessage(
       "Scan QR Code",
     ),
     "main_page_searchUsers": MessageLookupByLibrary.simpleMessage(
-      "Search users",
+      "Search persons",
     ),
     "main_page_statistic": MessageLookupByLibrary.simpleMessage("Statistics"),
+    "main_page_theme": m3,
     "no": MessageLookupByLibrary.simpleMessage("No"),
     "print": MessageLookupByLibrary.simpleMessage("Print"),
     "qr_code_print": MessageLookupByLibrary.simpleMessage("Print QR Code"),
@@ -135,10 +140,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Number of visits",
     ),
-    "statistic_page_show_top_countries": m3,
-    "statistic_page_switchYearDisplay": m4,
-    "statistic_page_visits": m5,
-    "statistic_page_xAxis": m6,
+    "statistic_page_show_top_countries": m4,
+    "statistic_page_switchYearDisplay": m5,
+    "statistic_page_visits": m6,
+    "statistic_page_xAxis": m7,
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
   };
 }

@@ -20,7 +20,7 @@
   "add_user_lastName": "Nachname*",
   "add_user_birthDay": "Geburtsdatum wählen*",
   "add_user_miscellaneous" : "Sonstiges",
-  "add_user_deleteMessage": "Bist du Sicher, dass du den Benutzer unwiderruflich löschen willst?",
+  "add_user_deleteMessage": "Bist du Sicher, dass du diese Person unwiderruflich löschen willst?",
   "add_user_requiredFieldMissing": "Eines der Pflichtfelder ist leer",
 
   "barCode_scanner_error": "Scanne einen BarCode!",
@@ -33,18 +33,19 @@
   "customer_tile_lastVisit_never": "War <bold>noch nie</bold> da",
   "customer_tile_lastVisit_today": "War <bold>heute</bold> da",
   "customer_tile_lastVisit_onDate": "War zuletzt am <bold>{dateString}</bold> da",
-
   "customer_tile_deleteLastEntry": "Vermerk löschen",
   "customer_tile_addNewEntry": "{visitMoreThan14Days, select, true{Neuen Besuch vermerken} false{Trotzdem vermerken}}",
 
   "main_page_languages": "Sprachen",
-  "main_page_searchUsers": "Benutzer durchsuchen",
+  "main_page_searchUsers": "Personen durchsuchen",
   "main_page_add": "Hinzufügen",
   "main_page_isListView": "{isListView, select, true{Als Kacheln anzeigen?} false{Als Liste anzeigen?}}",
   "main_page_statistic": "Statistiken",
-  "main_page_emptyUserListText": "Suche nach einem Namen oder Scanne einen Code um Benutzer anzuzeigen",
-  "main_page_noUserWithUUID": "Es konnte kein passender Benutzer gefunden werden!",
+  "main_page_emptyUserListText": "Suche nach einem Namen oder Scanne einen Code um Besucher anzuzeigen",
+  "main_page_noUserWithUUID": "Es konnte keine passende Person gefunden werden!",
   "main_page_scanQrCode": "QR-Code scannen",
+  "main_page_theme": "{isDarkMode, select, true{Helle Ansicht} false{Dunkle Ansicht}}",
+  "main_page_fullScreen": "Vollbild",
 
   "stat_page_country": "Herkunftsland:",
   "stat_page_children": "Hat Kinder:",

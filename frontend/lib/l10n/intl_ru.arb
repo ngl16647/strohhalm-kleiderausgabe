@@ -44,6 +44,8 @@
   "main_page_emptyUserListText": "Поиск по имени или сканирование кода для отображения пользователей",
   "main_page_noUserWithUUID": "Соответствующий пользователь не найден!",
   "main_page_scanQrCode": "Сканировать QR-код",
+  "main_page_theme": "{isDarkMode, select, true{Светлая тема} false{Тёмная тема}}",
+  "main_page_fullScreen": "Полноэкранный режим",
 
   "stat_page_country": "Страна происхождения:",
   "stat_page_children": "Есть дети:",
@@ -56,8 +58,8 @@
   "stat_page_lastTimeTookClothes": "Последний раз брал одежду:",
 
   "statistic_page_xAxis": "{showYear, select, true{Месяц} false{День}}",
-  "statistic_page_numberOfVisits": "Количество визитов",
-  "statistic_page_visits": "{count, plural, one{Посещение} few{Посещения} many{Посещений} other{Посещения}}",
+  "statistic_page_numberOfVisits": "Количество посещений",
+  "statistic_page_visits": "{count, plural, one{Посещение} other{Посещения}}",
   "statistic_page_switchYearDisplay": "{showYear, select, true{к просмотру по месяцам} false{к просмотру по годам}}",
   "statistic_page_show_top_countries": "Показать топ {cutOffNumber} стран из {overAllNumberOfCountries}"
 }

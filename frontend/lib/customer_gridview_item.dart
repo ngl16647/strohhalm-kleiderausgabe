@@ -89,7 +89,7 @@ class CustomerListTileState extends State<CustomerGridviewItem>{
                         children: [
                           Text("${user.firstName} ${user.lastName}", style: TextStyle(fontWeight: FontWeight.bold)),
                           Text(DateFormat("dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(user.birthDay)), style: TextStyle(color: Colors.grey)),
-                          Text(Country.tryParse(user.birthCountry)!.name, style: TextStyle(color: Colors.grey))
+                          Text(CountryLocalizations.of(context)?.countryName(countryCode: user.birthCountry) ?? Country.tryParse(user.birthCountry)!.name, style: TextStyle(color: Colors.grey))
                         ],
                       )
 
@@ -149,8 +149,8 @@ class CustomerListTileState extends State<CustomerGridviewItem>{
                           child: Text(S.of(context).customer_tile_deleteLastEntry, textAlign: TextAlign.center,),
                         ),
                       ),
-                      if(!visitMoreThan14Days && !Utilities().isSameDay(DateTime.now(), lastVisitDateTime.add(Duration(days: -1)))) SizedBox(width: 5,),
-                      if(!Utilities().isSameDay(DateTime.now(), lastVisitDateTime.add(Duration(days: -1))))
+                      if(!visitMoreThan14Days && !Utilities().isSameDay(DateTime.now(), lastVisitDateTime)) SizedBox(width: 5,),
+                      if(!Utilities().isSameDay(DateTime.now(), lastVisitDateTime))
                         Expanded(
                             child: TextButton(
                               onPressed: () async {
