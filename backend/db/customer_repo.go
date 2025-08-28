@@ -46,25 +46,25 @@ func AddCustomer(c Customer) (int64, error) {
 	return res.LastInsertId()
 }
 
-func UpdateCustomer(c Customer, newC Customer) error {
+func UpdateCustomer(customerId int64, newC Customer) error {
 	res, err := DB.Exec(`
         UPDATE customers
         SET FirstName = ?, LastName = ?, Birthday = ?, Notes = ?
         WHERE Id = ?`,
 		newC.FirstName, newC.LastName, newC.Birthday, newC.Notes,
-		c.Id,
+		customerId,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to update customer %d: %w", c.Id, err)
+		return fmt.Errorf("failed to update customer %d: %w", customerId, err)
 	}
 
 	rows, err := res.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("failed to check update result for customer %d: %w", c.Id, err)
+		return fmt.Errorf("failed to check update result for customer %d: %w", customerId, err)
 	}
 
 	if rows == 0 {
-		return fmt.Errorf("customer %d not found", c.Id)
+		return fmt.Errorf("customer %d not found", customerId)
 	}
 
 	return nil
@@ -78,7 +78,7 @@ func AllCustomers() ([]Customer, error) {
 	return scanCustomers(rows)
 }
 
-func CustomersById(id int64) (Customer, error) {
+func CustomerById(id int64) (Customer, error) {
 	rows, err := DB.Query(`
 		SELECT Id, FirstName, LastName, Birthday, Notes
 			FROM customers 

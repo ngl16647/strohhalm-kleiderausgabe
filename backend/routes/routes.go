@@ -24,11 +24,31 @@ var Routes = []Route{
 		Doc:     "Health check",
 	},
 	{
-		Path:        "/customers",
-		Method:      POST,
-		Handler:     AddCustomerHandler,
-		Doc:         "Add new customer. Expects JSON body with firstName, lastName, birthday (optional), notes (optional). Return new customer id.",
-		QueryParams: nil,
+		Path:    "/customers",
+		Method:  POST,
+		Handler: AddCustomerHandler,
+		Doc:     "Add new customer. Expects JSON body with firstName, lastName, birthday (optional), notes (optional). Return new customer id",
+	},
+	{
+		Path:    "/customers",
+		Method:  GET,
+		Handler: SearchCustomerHandler,
+		Doc:     "Search customer names by query parameter. Get all customers when no query parameter is provided",
+		QueryParams: []QueryParam{
+			{Name: "query", Description: "Query string for searching", Required: false},
+		},
+	},
+	{
+		Path:    "/customers/{id}",
+		Method:  GET,
+		Handler: GetCustomerHandler,
+		Doc:     "Get customer by ID",
+	},
+	{
+		Path:    "/customers/{id}",
+		Method:  PUT,
+		Handler: UpdateCustomerHandler,
+		Doc:     "Update customer. Expects JSON body with firstName, lastName, birthday, notes. IMPORTANT: omitted field will be recorded as empty string",
 	},
 	{
 		Path:    "/visits",

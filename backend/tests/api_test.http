@@ -1,0 +1,33 @@
+@base_url = http://localhost:8080
+
+
+### Health check
+GET {{base_url}}/health
+
+
+### Add customer
+POST {{base_url}}/customers
+content-type: application/json
+
+{
+    "firstName": "Pop",
+    "lastName": "Bang",
+    "birthday": "2000-01-01"
+}
+
+### Update customer
+PUT {{base_url}}/customers/1
+content-type: application/json
+
+{
+    "firstName": "Poop",
+    "lastName": "Bing",
+    "birthday": "2000-01-01"
+}
+
+
+### Get customer by id
+GET {{base_url}}/customers/1
+
+### Search customer
+GET {{base_url}}/customers?query=
