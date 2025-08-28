@@ -48,7 +48,7 @@ var Routes = []Route{
 		Path:    "/customers/{id}",
 		Method:  PUT,
 		Handler: UpdateCustomerHandler,
-		Doc:     "Update customer. Expects JSON body with firstName, lastName, birthday, notes. IMPORTANT: omitted field will be recorded as empty string",
+		Doc:     "Update customer. Expects JSON body with firstName, lastName, birthday, notes. IMPORTANT: omitted fields will be recorded as empty values",
 	},
 	{
 		Path:    "/visits",

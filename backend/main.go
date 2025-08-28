@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"strohhalm-backend/db"
@@ -11,6 +12,14 @@ import (
 )
 
 func main() {
+	// print docs if --docs flag is on
+	docsFlag := flag.Bool("docs", false, "Print API documentation")
+	flag.Parse()
+	if *docsFlag {
+		printAPIDocs()
+		return
+	}
+
 	db.InitDatabase("./data.db")
 
 	r := chi.NewRouter()
