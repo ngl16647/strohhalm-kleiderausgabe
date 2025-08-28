@@ -5,6 +5,7 @@ import 'package:strohhalm_app/create_qr_code.dart';
 import 'package:strohhalm_app/database_helper.dart';
 import 'package:strohhalm_app/user.dart';
 import 'package:strohhalm_app/utilities.dart';
+import 'package:styled_text/styled_text.dart';
 
 import 'generated/l10n.dart';
 
@@ -19,7 +20,8 @@ class CustomerListviewItem extends StatefulWidget {
     super.key,
     required this.user,
     required this.click,
-    required this.delete, required this.update
+    required this.delete,
+    required this.update,
   });
 
   @override
@@ -29,15 +31,31 @@ class CustomerListviewItem extends StatefulWidget {
 class CustomerListviewItemState extends State<CustomerListviewItem>{
   late User user;
   bool mouseIsOver = false;
+  int lastVisit = -1;
 
   @override
   void initState() {
     user = widget.user;
+    if(widget.user.tookItems.isNotEmpty) lastVisit = user.tookItems.first.tookTime;
     super.initState();
   }
 
-  DateTime get lastVisit => DateTime.fromMillisecondsSinceEpoch(user.lastVisit);
-  bool get visitMoreThan14Days => DateTime.now().difference(lastVisit).inDays > 13;
+  DateTime get lastVisitDateTime => DateTime.fromMillisecondsSinceEpoch(lastVisit);
+  bool get visitMoreThan14Days => DateTime.now().difference(lastVisitDateTime).inDays > 13;
+
+  String _buildLastVisitStyledText() {
+    if (lastVisit == -1) {
+      // Noch nie da gewesen
+      return S.of(context).customer_tile_lastVisit_never;
+    } else if (Utilities().isSameDay(DateTime.now(), lastVisitDateTime)) {
+      // Heute da gewesen
+      return S.of(context).customer_tile_lastVisit_today;
+    } else {
+      // An einem anderen Tag da gewesen
+      final dateString = DateFormat("dd.MM.yyyy").format(lastVisitDateTime);
+      return S.of(context).customer_tile_lastVisit_onDate(dateString);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +63,7 @@ class CustomerListviewItemState extends State<CustomerListviewItem>{
       padding: EdgeInsets.symmetric(vertical: mouseIsOver ? 1 : 3, horizontal: 3),
       child: InkWell(
         onTap: (){
+          //openStatPage(user);
           widget.click();
         },
         onHover: (isHovering){
@@ -104,25 +123,12 @@ class CustomerListviewItemState extends State<CustomerListviewItem>{
                           Icon(visitMoreThan14Days ? Icons.check_circle : Icons.error),
                           SizedBox(width: 5),
                           Flexible(
-                            child: Text.rich(
-                              softWrap: true,
-                              TextSpan(
-                                children: [
-                                  TextSpan(text: S.of(context).customer_tile_lastVisit_1),
-                                  if (user.lastVisit != -1)
-                                    Utilities().isSameDay(DateTime.now(), lastVisit)
-                                        ? TextSpan(text:  S.of(context).customer_tile_lastVisit_2, style: TextStyle(fontWeight: FontWeight.bold))
-                                        : TextSpan(text:  S.of(context).customer_tile_lastVisit_3),
-                                  if (user.lastVisit != -1 && !Utilities().isSameDay(DateTime.now(), lastVisit))
-                                    TextSpan(
-                                      text: DateFormat("dd.MM.yyyy").format(lastVisit),
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  if (user.lastVisit == -1) TextSpan(text: S.of(context).customer_tile_lastVisit_4, style: TextStyle(fontWeight: FontWeight.bold)),
-                                  TextSpan(text: S.of(context).customer_tile_lastVisit_5),
-                                ],
-                              ),
-                              overflow: TextOverflow.fade,
+                            child: StyledText(
+                              text: _buildLastVisitStyledText(),
+                              tags: {
+                                "bold": StyledTextTag(style: TextStyle(fontWeight: FontWeight.bold)),
+                              },
+                              textAlign: TextAlign.start,
                             ),
                           ),
                         ],
@@ -130,47 +136,56 @@ class CustomerListviewItemState extends State<CustomerListviewItem>{
                     )
                 ),
                 Expanded(
-                  flex: 2 ,
+                  flex: 3 ,
                   child: Container(
                     padding: EdgeInsets.all(2),
                     child: Row(
+
                       mainAxisAlignment: MainAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         SizedBox(width: 10),
-                        Expanded(
-                          child: Utilities().isSameDay(DateTime.now(), lastVisit)
-                            ? TextButton(
-                                onPressed: () async {
-                                  int? newLastTime = await DatabaseHelper().updateUserLastVisited(user); //Löscht den eintrag aus "TookItems" und update den User in "users"
-                                  if(newLastTime == null) return;
-                                  setState(() {
-                                    user.updateLastVisit(newLastTime);
-                                  });
-                                },
-                                style: TextButton.styleFrom(
-                                    backgroundColor: Color.fromRGBO(169, 171, 25, 0.4),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8)
-                                    )
-                                ),
-                                child: Text(S.of(context).customer_tile_deleteLastEntry, textAlign: TextAlign.center,),
-                              )
-                            : TextButton(
-                                onPressed: () async {
-                                  setState(() {
-                                    user.updateLastVisit(DateTime.now().millisecondsSinceEpoch);
-                                  });
-                                  await DatabaseHelper().addVisit(user.id, false);
-                                },
-                                style: TextButton.styleFrom(
-                                    backgroundColor: Color.fromRGBO(169, 171, 25, 0.4),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8)
-                                    )
-                                ),
-                                child: Text(S.of(context).customer_tile_addNewEntry(visitMoreThan14Days), textAlign: TextAlign.center,),
-                              ),
+                        if(!visitMoreThan14Days) Expanded( //TODO: adapt logic of buttons -> if lessThan14Days, last Entry should be deletable AND should be able to override, else dont show
+                          child:  TextButton(
+                            onPressed: () async {
+                              int? newLastTime = await DatabaseHelper().deleteLatestAndReturnPrevious(user); //Deletes last entry and returns new last as millisecondsSinceEpoch
+                              if(newLastTime == null) return;
+                              setState(() {
+                                lastVisit = newLastTime;
+                                widget.user.tookItems.removeAt(0);
+                                //lastVisit = widget.user.tookItems.isNotEmpty ? widget.user.tookItems.first.tookTime : -1; //TODO: Better? then deleteLatestAndReturnPrevious could be simpler
+                              });
+                            },
+                            style: TextButton.styleFrom(
+                                minimumSize: Size(double.infinity, 45),
+                                backgroundColor: Color.fromRGBO(169, 171, 25, 0.4),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8)
+                                )
+                            ),
+                            child: Text(S.of(context).customer_tile_deleteLastEntry, textAlign: TextAlign.center,),
+                          ),
+                        ),
+                        if(!visitMoreThan14Days && !Utilities().isSameDay(DateTime.now(), lastVisitDateTime.add(Duration(days: -1)))) SizedBox(width: 5,),
+                        if(!Utilities().isSameDay(DateTime.now(), lastVisitDateTime.add(Duration(days: -1))))
+                          Expanded(
+                          child: TextButton(
+                            onPressed: () async {
+                              setState(() {
+                                lastVisit = DateTime.now().millisecondsSinceEpoch;
+                              });
+                              TookItem item = await DatabaseHelper().addVisit(user.id, false);
+                              widget.user.tookItems.insert(0, item);
+                            },
+                            style: TextButton.styleFrom(
+                                minimumSize: Size(double.infinity, 45),
+                                backgroundColor: Color.fromRGBO(169, 171, 25, 0.4),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8)
+                                )
+                            ),
+                            child: Text(S.of(context).customer_tile_addNewEntry(visitMoreThan14Days), textAlign: TextAlign.center,),
+                          ),
                         ),
                         SizedBox(width: 10,),
                         IconButton(

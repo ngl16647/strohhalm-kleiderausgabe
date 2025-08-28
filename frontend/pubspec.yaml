@@ -53,6 +53,7 @@ dependencies:
   material_symbols_icons: ^4.2867.0
   fl_chart: ^1.0.0
   country_flags: ^3.3.0
+  styled_text: ^8.1.0
 
 dev_dependencies:
   flutter_test:

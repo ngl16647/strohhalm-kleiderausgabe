@@ -23,8 +23,22 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m0(visitMoreThan14Days) =>
       "${Intl.select(visitMoreThan14Days, {'true': 'Add new visit', 'false': 'Add Visit anyway'})}";
 
-  static String m1(isListView) =>
+  static String m1(dateString) => "Last visited on <bold>${dateString}</bold>";
+
+  static String m2(isListView) =>
       "${Intl.select(isListView, {'true': 'Show as tiles?', 'false': 'Show as list?'})}";
+
+  static String m3(cutOffNumber, overAllNumberOfCountries) =>
+      "Show top ${cutOffNumber} countries of ${overAllNumberOfCountries}";
+
+  static String m4(showYear) =>
+      "${Intl.select(showYear, {'true': 'zur Monatsansicht', 'false': 'zur Jahresansicht'})}";
+
+  static String m5(count) =>
+      "${Intl.plural(count, one: 'Besuch', other: 'Besuche')}";
+
+  static String m6(showYear) =>
+      "${Intl.select(showYear, {'true': 'Monat', 'false': 'Tag'})}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -63,17 +77,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "customer_tile_deleteLastEntry": MessageLookupByLibrary.simpleMessage(
       "Delete entry",
     ),
-    "customer_tile_lastVisit_1": MessageLookupByLibrary.simpleMessage("Was "),
-    "customer_tile_lastVisit_2": MessageLookupByLibrary.simpleMessage(
-      "here today",
+    "customer_tile_lastVisit_never": MessageLookupByLibrary.simpleMessage(
+      "Never <bold>visited</bold>",
     ),
-    "customer_tile_lastVisit_3": MessageLookupByLibrary.simpleMessage(
-      "here on the",
+    "customer_tile_lastVisit_onDate": m1,
+    "customer_tile_lastVisit_today": MessageLookupByLibrary.simpleMessage(
+      "Visited <bold>today</bold>",
     ),
-    "customer_tile_lastVisit_4": MessageLookupByLibrary.simpleMessage(
-      "never here",
-    ),
-    "customer_tile_lastVisit_5": MessageLookupByLibrary.simpleMessage(""),
     "delete": MessageLookupByLibrary.simpleMessage("Delete"),
     "language_de": MessageLookupByLibrary.simpleMessage("German"),
     "language_en": MessageLookupByLibrary.simpleMessage("English"),
@@ -82,7 +92,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_emptyUserListText": MessageLookupByLibrary.simpleMessage(
       "Search by name or scan a code to display users",
     ),
-    "main_page_isListView": m1,
+    "main_page_isListView": m2,
     "main_page_languages": MessageLookupByLibrary.simpleMessage("Languages"),
     "main_page_noUserWithUUID": MessageLookupByLibrary.simpleMessage(
       "No matching user found!",
@@ -122,12 +132,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Visit recorded!",
     ),
     "stat_page_visits": MessageLookupByLibrary.simpleMessage("Total visits:"),
-    "statistic_page_dayOfMonth": MessageLookupByLibrary.simpleMessage(
-      "Day of the month",
-    ),
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Number of visits",
     ),
+    "statistic_page_show_top_countries": m3,
+    "statistic_page_switchYearDisplay": m4,
+    "statistic_page_visits": m5,
+    "statistic_page_xAxis": m6,
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
   };
 }

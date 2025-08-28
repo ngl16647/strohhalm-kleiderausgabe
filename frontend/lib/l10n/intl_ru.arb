@@ -30,11 +30,9 @@
   "qr_code_share": "Поделиться QR-кодом",
   "print": "Печать",
 
-  "customer_tile_lastVisit_1": "Был ",
-  "customer_tile_lastVisit_2": "сегодня",
-  "customer_tile_lastVisit_3": "в последний раз",
-  "customer_tile_lastVisit_4": "никогда",
-  "customer_tile_lastVisit_5": " там",
+  "customer_tile_lastVisit_never": "Еще <bold>не был</bold>",
+  "customer_tile_lastVisit_today": "Был <bold>сегодня</bold>",
+  "customer_tile_lastVisit_onDate": "Был <bold>{dateString}</bold> в последний раз",
   "customer_tile_deleteLastEntry": "Удалить запись",
   "customer_tile_addNewEntry": "{visitMoreThan14Days, select, true{Запланировать новый визит} false{Все равно отметить}}",
 
@@ -57,6 +55,9 @@
   "stat_page_removeLastVisitConfirmation": "Вы уверены, что хотите удалить последний визит?",
   "stat_page_lastTimeTookClothes": "Последний раз брал одежду:",
 
-  "statistic_page_dayOfMonth": "День месяца",
-  "statistic_page_numberOfVisits": "Количество визитов"
+  "statistic_page_xAxis": "{showYear, select, true{Месяц} false{День}}",
+  "statistic_page_numberOfVisits": "Количество визитов",
+  "statistic_page_visits": "{count, plural, one{Посещение} few{Посещения} many{Посещений} other{Посещения}}",
+  "statistic_page_switchYearDisplay": "{showYear, select, true{к просмотру по месяцам} false{к просмотру по годам}}",
+  "statistic_page_show_top_countries": "Показать топ {cutOffNumber} стран из {overAllNumberOfCountries}"
 }

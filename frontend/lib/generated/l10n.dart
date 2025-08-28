@@ -235,53 +235,33 @@ class S {
     return Intl.message('Print', name: 'print', desc: '', args: []);
   }
 
-  /// `Was `
-  String get customer_tile_lastVisit_1 {
+  /// `Never <bold>visited</bold>`
+  String get customer_tile_lastVisit_never {
     return Intl.message(
-      'Was ',
-      name: 'customer_tile_lastVisit_1',
+      'Never <bold>visited</bold>',
+      name: 'customer_tile_lastVisit_never',
       desc: '',
       args: [],
     );
   }
 
-  /// `here today`
-  String get customer_tile_lastVisit_2 {
+  /// `Visited <bold>today</bold>`
+  String get customer_tile_lastVisit_today {
     return Intl.message(
-      'here today',
-      name: 'customer_tile_lastVisit_2',
+      'Visited <bold>today</bold>',
+      name: 'customer_tile_lastVisit_today',
       desc: '',
       args: [],
     );
   }
 
-  /// `here on the`
-  String get customer_tile_lastVisit_3 {
+  /// `Last visited on <bold>{dateString}</bold>`
+  String customer_tile_lastVisit_onDate(Object dateString) {
     return Intl.message(
-      'here on the',
-      name: 'customer_tile_lastVisit_3',
+      'Last visited on <bold>$dateString</bold>',
+      name: 'customer_tile_lastVisit_onDate',
       desc: '',
-      args: [],
-    );
-  }
-
-  /// `never here`
-  String get customer_tile_lastVisit_4 {
-    return Intl.message(
-      'never here',
-      name: 'customer_tile_lastVisit_4',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// ``
-  String get customer_tile_lastVisit_5 {
-    return Intl.message(
-      '',
-      name: 'customer_tile_lastVisit_5',
-      desc: '',
-      args: [],
+      args: [dateString],
     );
   }
 
@@ -472,13 +452,14 @@ class S {
     );
   }
 
-  /// `Day of the month`
-  String get statistic_page_dayOfMonth {
-    return Intl.message(
-      'Day of the month',
-      name: 'statistic_page_dayOfMonth',
+  /// `{showYear, select, true{Monat} false{Tag}}`
+  String statistic_page_xAxis(Object showYear) {
+    return Intl.select(
+      showYear,
+      {'true': 'Monat', 'false': 'Tag'},
+      name: 'statistic_page_xAxis',
       desc: '',
-      args: [],
+      args: [showYear],
     );
   }
 
@@ -489,6 +470,42 @@ class S {
       name: 'statistic_page_numberOfVisits',
       desc: '',
       args: [],
+    );
+  }
+
+  /// `{count, plural, one{Besuch} other{Besuche}}`
+  String statistic_page_visits(num count) {
+    return Intl.plural(
+      count,
+      one: 'Besuch',
+      other: 'Besuche',
+      name: 'statistic_page_visits',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{showYear, select, true{zur Monatsansicht} false{zur Jahresansicht}}`
+  String statistic_page_switchYearDisplay(Object showYear) {
+    return Intl.select(
+      showYear,
+      {'true': 'zur Monatsansicht', 'false': 'zur Jahresansicht'},
+      name: 'statistic_page_switchYearDisplay',
+      desc: '',
+      args: [showYear],
+    );
+  }
+
+  /// `Show top {cutOffNumber} countries of {overAllNumberOfCountries}`
+  String statistic_page_show_top_countries(
+    Object cutOffNumber,
+    Object overAllNumberOfCountries,
+  ) {
+    return Intl.message(
+      'Show top $cutOffNumber countries of $overAllNumberOfCountries',
+      name: 'statistic_page_show_top_countries',
+      desc: '',
+      args: [cutOffNumber, overAllNumberOfCountries],
     );
   }
 }

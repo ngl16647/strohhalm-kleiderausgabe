@@ -23,8 +23,23 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m0(visitMoreThan14Days) =>
       "${Intl.select(visitMoreThan14Days, {'true': 'Neuen Besuch vermerken', 'false': 'Trotzdem vermerken'})}";
 
-  static String m1(isListView) =>
+  static String m1(dateString) =>
+      "War zuletzt am <bold>${dateString}</bold> da";
+
+  static String m2(isListView) =>
       "${Intl.select(isListView, {'true': 'Als Kacheln anzeigen?', 'false': 'Als Liste anzeigen?'})}";
+
+  static String m3(cutOffNumber, overAllNumberOfCountries) =>
+      "Zeige die Top ${cutOffNumber} Länder von ${overAllNumberOfCountries}";
+
+  static String m4(showYear) =>
+      "${Intl.select(showYear, {'true': 'zur Monatsansicht', 'false': 'zur Jahresansicht'})}";
+
+  static String m5(count) =>
+      "${Intl.plural(count, one: 'Besuch', other: 'Besuche')}";
+
+  static String m6(showYear) =>
+      "${Intl.select(showYear, {'true': 'Monat', 'false': 'Tag'})}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -61,15 +76,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "customer_tile_deleteLastEntry": MessageLookupByLibrary.simpleMessage(
       "Vermerk löschen",
     ),
-    "customer_tile_lastVisit_1": MessageLookupByLibrary.simpleMessage("War "),
-    "customer_tile_lastVisit_2": MessageLookupByLibrary.simpleMessage("heute"),
-    "customer_tile_lastVisit_3": MessageLookupByLibrary.simpleMessage(
-      "zuletzt am",
+    "customer_tile_lastVisit_never": MessageLookupByLibrary.simpleMessage(
+      "War <bold>noch nie</bold> da",
     ),
-    "customer_tile_lastVisit_4": MessageLookupByLibrary.simpleMessage(
-      "noch nie",
+    "customer_tile_lastVisit_onDate": m1,
+    "customer_tile_lastVisit_today": MessageLookupByLibrary.simpleMessage(
+      "War <bold>heute</bold> da",
     ),
-    "customer_tile_lastVisit_5": MessageLookupByLibrary.simpleMessage(" da"),
     "delete": MessageLookupByLibrary.simpleMessage("Löschen"),
     "language_de": MessageLookupByLibrary.simpleMessage("Deutsch"),
     "language_en": MessageLookupByLibrary.simpleMessage("Englisch"),
@@ -78,7 +91,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_emptyUserListText": MessageLookupByLibrary.simpleMessage(
       "Suche nach einem Namen oder Scanne einen Code um Benutzer anzuzeigen",
     ),
-    "main_page_isListView": m1,
+    "main_page_isListView": m2,
     "main_page_languages": MessageLookupByLibrary.simpleMessage("Sprachen"),
     "main_page_noUserWithUUID": MessageLookupByLibrary.simpleMessage(
       "Es konnte kein passender Benutzer gefunden werden!",
@@ -118,12 +131,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "stat_page_visits": MessageLookupByLibrary.simpleMessage(
       "Besuche insgesamt:",
     ),
-    "statistic_page_dayOfMonth": MessageLookupByLibrary.simpleMessage(
-      "Tag des Monats",
-    ),
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Anzahl an Besuchen",
     ),
+    "statistic_page_show_top_countries": m3,
+    "statistic_page_switchYearDisplay": m4,
+    "statistic_page_visits": m5,
+    "statistic_page_xAxis": m6,
     "yes": MessageLookupByLibrary.simpleMessage("Ja"),
   };
 }

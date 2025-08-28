@@ -15,16 +15,16 @@ class StatisticPage extends StatefulWidget {
 }
 
 class StatisticPageState extends State<StatisticPage> {
-  bool isMobile = false;
-  bool chartLoaded = false;
-  int touchedIndex = -1;
-  int cutOffNumber = 5;
-  int monthBackNumber = 0;
-  int overAllThisMonth = 0;
-  int overAllVisits = 0;
+  int _touchedIndex = -1;
+  int _cutOffNumber = 8;
+  int _monthBackNumber = 0;
+  int _overAllNumberOfCountries = 0;
+  bool _showYear = false;
+
   Map<String, double> _countryData = {};
-  Map<String, int> visitsLastMonth = {};
-  final List<Color> presetColors = [
+  Map<String, int> _visitsInPeriod = {};
+
+  final List<Color> presetColors = [ //TODO: Change to different approach
     Colors.blue,
     Colors.red,
     Colors.green,
@@ -39,37 +39,32 @@ class StatisticPageState extends State<StatisticPage> {
 
   @override
   void initState() {
-    isMobile = MyApp().getDeviceType() == DeviceType.mobile;
-    getCountryData();
+    getData();
     super.initState();
   }
 
-  Future<void> getCountryData() async {
+  Future<void> getData() async {
       limitCountryNumber();
-      visitsLastMonth = await DatabaseHelper().getAllVisitsInLastMonths(monthBackNumber);
-      overAllThisMonth = visitsLastMonth.entries.toList().fold(0, (sum, element) => sum + element.value);
-      overAllVisits = await DatabaseHelper().countAllVisits(); //TODO: Decide where to put information
-      setState(() {
-        chartLoaded = true;
-      });
+      _visitsInPeriod = await DatabaseHelper().getAllVisitsInPeriod(_monthBackNumber,_showYear);
+      _cutOffNumber = _overAllNumberOfCountries > 8 ? 8 : _overAllNumberOfCountries;
+      setState(() {});
   }
 
   Future<void> limitCountryNumber() async {
     var countryDataLong = await DatabaseHelper().getBirthCountries();
+    _overAllNumberOfCountries = countryDataLong.length;
     final sortedEntries = countryDataLong.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
-    if (sortedEntries.length-1 > cutOffNumber) {
-      final top10 = sortedEntries.take(cutOffNumber).toList();
+    if (sortedEntries.length > _cutOffNumber) { //sortedEntries.length-1 so if "Sonstiges" would be comprised of only one country, the actual name would show
+      final topList = sortedEntries.take(_cutOffNumber).toList();
 
-      //double restSum = 0;
-      //for(int i = 10; i < sortedEntries.length; i++){
-      //  restSum += sortedEntries[i].value;
-      //}
-      final rest = sortedEntries.skip(cutOffNumber);
+      final rest = sortedEntries.skip(_cutOffNumber);
       final restSum = rest.fold<double>(0, (sum, entry) => sum + entry.value);
 
       final Map<String, double> limited = {
-        for (var entry in top10) Country.tryParse(entry.key)!.name : entry.value,
-        "Sonstiges": restSum,
+        for (var entry in topList) Country.tryParse(entry.key)!.name : entry.value,
+        mounted
+            ? S.of(context).add_user_miscellaneous
+            : S.current.add_user_miscellaneous: restSum,
       };
 
       var sortedLimitedList = limited.entries.toList()
@@ -86,10 +81,11 @@ class StatisticPageState extends State<StatisticPage> {
     }
   }
 
-  PieChartSectionData chartData(double value, String title, int index){
-    final isTouched = index == touchedIndex;
+  PieChartSectionData chartData(double value, String title, int index, BoxConstraints constrains){
+    double normalRadius = constrains.maxWidth*0.09;
+    final isTouched = index == _touchedIndex;
     final fontSize = isTouched ? 25.0 : 16.0;
-    final radius = isTouched ? 120.0 : 110.0;
+    final radius = isTouched ? (normalRadius+10) : normalRadius;
     const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
 
     return PieChartSectionData(
@@ -108,151 +104,184 @@ class StatisticPageState extends State<StatisticPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-            children: [
-              SizedBox(height: 20,),
-              Text(S.of(context).main_page_statistic),
-              Expanded(
-                child: !chartLoaded ? Center(
-                  child: SizedBox(
-                    width: 64,
-                    height: 64,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ) : Row(
-                  spacing: 50,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AspectRatio(
-                      aspectRatio: 1,
-                      child: PieChart(
-                        PieChartData(
-                          pieTouchData: PieTouchData(
-                            touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                              setState(() {
-                                if (!event.isInterestedForInteractions ||
-                                    pieTouchResponse == null ||
-                                    pieTouchResponse.touchedSection == null) {
-                                  touchedIndex = -1;
-                                  return;
-                                }
-                                touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                              });
-                            },
+    return Dialog(
+        shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+    ),
+      child: LayoutBuilder(
+          builder: (context, constrains){
+            return Column(
+              children: [
+                SizedBox(height: 20,),
+                Text(S.of(context).main_page_statistic),
+                Expanded(
+                  child: _countryData.isEmpty ? Center(
+                    child: SizedBox(
+                      width: 64,
+                      height: 64,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ) : Row(
+                    spacing: 10,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width:  constrains.maxWidth*0.4,
+                        height: constrains.maxWidth*0.4,
+                        child: PieChart(
+                          PieChartData(
+                            pieTouchData: PieTouchData(
+                              touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                                setState(() {
+                                  if (!event.isInterestedForInteractions ||
+                                      pieTouchResponse == null ||
+                                      pieTouchResponse.touchedSection == null) {
+                                    _touchedIndex = -1;
+                                    return;
+                                  }
+                                  _touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                                });
+                              },
+                            ),
+                            borderData: FlBorderData(
+                              show: true,
+                            ),
+                            centerSpaceRadius: constrains.maxWidth*0.04,
+                            sections: List.generate(_countryData.length, (i) {
+                              String countryName = _countryData.keys.elementAt(i);
+                              double value = _countryData[countryName] ?? 0;
+                              return chartData(value, countryName, i, constrains);
+                            }),
                           ),
-                          borderData: FlBorderData(
-                            show: true,
-                          ),
-                          centerSpaceRadius: 60,
-
-                          sections: List.generate(_countryData.length, (i) {
-                            String countryName = _countryData.keys.elementAt(i);
-                            double value = _countryData[countryName] ?? 0;
-                            return chartData(value, countryName, i);
-                          }),
                         ),
                       ),
-
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      spacing: 10,
-                      children: [
-                        Slider(
-                            min: 1,
-                            max: 12,
-                            value: cutOffNumber.toDouble(),
-                            onChanged: (ev){
-                              setState(() {
-                                cutOffNumber = ev.toInt();
-                                limitCountryNumber();
-                              });
-                            }),
-                        for(int i = 0; i < _countryData.length; i++)...{
-                          MouseRegion(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.fromBorderSide(BorderSide(width: 1)),
-                                  color: Theme.of(context).listTileTheme.tileColor!.withAlpha(touchedIndex == i ? 255 : 190)
-                              ),
-                              constraints: BoxConstraints(
-                                minWidth: 300
-                              ),
-                              padding: EdgeInsets.symmetric(vertical: touchedIndex == i ? 10 : 5, horizontal: 5),
-                              child: Row(
-                                spacing: 10,
+                       SizedBox(
+                          width: constrains.maxWidth*0.4,
+                          height: constrains.maxHeight*0.5,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            spacing: 10,
+                            children: [
+                              _overAllNumberOfCountries > 8 ? Column( //TODO: change completely
                                 children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                        color: presetColors[i % _countryData.length],
-                                        borderRadius:  BorderRadius.circular(10)
-                                    ),
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                  Text("${_countryData.entries.elementAt(i).value.toStringAsFixed(2)}% ${_countryData.entries.elementAt(i).key}")
+                                  Text(S.of(context).statistic_page_show_top_countries(_cutOffNumber, _overAllNumberOfCountries)),
+                                  Slider(
+                                      min: 1,
+                                      max: _overAllNumberOfCountries.toDouble(),
+                                      value: _cutOffNumber.toDouble(),
+                                      onChanged: (ev){
+                                        setState(() {
+                                          _cutOffNumber = ev.toInt();
+                                          limitCountryNumber();
+                                        });
+                                      }),
                                 ],
-                              ),
-                            ),
-                            onHover: (ev){
-                              setState(() {
-                                touchedIndex = i;
-                              });
-                            },
-                            onExit: (ev){
-                              setState(() {
-                                touchedIndex = -1;
-                              });
-                            },
-                          )
-                        },
-                        Spacer()
-                      ],
-                    )
-                  ],
+                              ) : SizedBox(height: 20,),
+                              for(int i = 0; i < _countryData.length; i++)...{
+                                MouseRegion(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.fromBorderSide(BorderSide(width: 1)),
+                                        color: Theme.of(context).listTileTheme.tileColor!.withAlpha(_touchedIndex == i ? 255 : 190)
+                                    ),
+                                    padding: EdgeInsets.symmetric(vertical: _touchedIndex == i ? 10 : 5, horizontal: 5),
+                                    child: Row(
+                                      spacing: 10,
+                                      children: [
+                                        Container(
+                                          decoration: BoxDecoration(
+                                              color: presetColors[i % _countryData.length],
+                                              borderRadius:  BorderRadius.circular(10)
+                                          ),
+                                          height: 20,
+                                          width: 20,
+                                        ),
+                                        Text("${_countryData.entries.elementAt(i).value.toStringAsFixed(2)}% ${_countryData.entries.elementAt(i).key}")
+                                      ],
+                                    ),
+                                  ),
+                                  onHover: (ev){
+                                    setState(() {
+                                      _touchedIndex = i;
+                                    });
+                                  },
+                                  onExit: (ev){
+                                    setState(() {
+                                      _touchedIndex = -1;
+                                    });
+                                  },
+                                )
+                              },
+                              Spacer()
+                            ],
+                          ),
+                        ),
+                      SizedBox(width: 10,)
+                    ],
+                  ),
                 ),
-              ),
-               Expanded(
+                Expanded(
                   child: Padding(
                     padding: EdgeInsets.all(15),
-                      child: !chartLoaded ? Center(
-                        child: SizedBox(
-                          width: 64,
-                          height: 64,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ) : Column(
+                    child: _visitsInPeriod.isEmpty ? Center(
+                      child: SizedBox(
+                        width: 64,
+                        height: 64,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ) : Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         SizedBox(
                           child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            IconButton(
-                                onPressed: () async {
-                                  monthBackNumber++;
-                                  var l = await DatabaseHelper().getAllVisitsInLastMonths(monthBackNumber);
-                                  setState(() {
-                                    visitsLastMonth = l;
-                                  });
-                                },
-                                icon: Icon(Icons.arrow_left)
-                            ),
-                            Text("${DateFormat.MMMM(MyApp.of(context).getLocale()!.countryCode).format(DateTime.now().subtract(Duration(days: 31 * monthBackNumber)))}: $overAllThisMonth Besuche",),
-                            IconButton(
-                                onPressed: () async {
-                                  monthBackNumber--;
-                                  var l = await DatabaseHelper().getAllVisitsInLastMonths(monthBackNumber);
-                                  setState(() {
-                                    visitsLastMonth = l;
-                                  });
-                                },
-                                icon: Icon(Icons.arrow_right)
-                            )
-                          ],
-                        ),),
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                  onPressed: () async {
+                                    _monthBackNumber++;
+                                    var l = await DatabaseHelper().getAllVisitsInPeriod(_monthBackNumber, _showYear);
+                                    setState(() {
+                                      _visitsInPeriod = l;
+                                    });
+                                  },
+                                  icon: Icon(Icons.arrow_left)
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                spacing: 10,
+                                children: [
+                                  ActionChip(
+                                    label: Text(S.of(context).statistic_page_switchYearDisplay(_showYear)),
+                                    avatar: Icon(_showYear ? Icons.calendar_view_month : Icons.calendar_view_month),
+                                    onPressed: () async {
+                                      setState(() {
+                                        _showYear = !_showYear;
+                                        _monthBackNumber = 0;
+                                      });
+
+                                      final visits = await DatabaseHelper().getAllVisitsInPeriod(_monthBackNumber, _showYear);
+                                      setState(() {
+                                        _visitsInPeriod = visits;
+                                      });
+                                    },
+                                  ),
+                                  Text(_buildPeriodLabel(context)),
+                                ],
+                              ),
+                              IconButton(
+                                  onPressed: () async {
+                                    _monthBackNumber--;
+                                    var l = await DatabaseHelper().getAllVisitsInPeriod(_monthBackNumber, _showYear);
+                                    setState(() {
+                                      _visitsInPeriod = l;
+                                    });
+                                  },
+                                  icon: Icon(Icons.arrow_right)
+                              )
+                            ],
+                          ),),
                         Expanded(child: Padding(
                           padding: const EdgeInsets.only(
                             right: 18,
@@ -261,19 +290,38 @@ class StatisticPageState extends State<StatisticPage> {
                             bottom: 12,
                           ),
                           child: LineChart(
-                              lineData()
+                              lineData(constrains)
                           ),
                         ))
                       ],
                     ),
                   ),
-               ),
-            ],
+                ),
+
+              ],
+            );
+          }
+      )
     );
   }
 
-  LineChartData lineData() {
-    var visitList = visitsLastMonth.entries.toList();
+  String _buildPeriodLabel(BuildContext context) {
+    int overAllInPeriod = _visitsInPeriod.entries.toList().fold(0, (sum, element) => sum + element.value);
+    String visits =  S.of(context).statistic_page_visits(overAllInPeriod);
+    if (_showYear) {
+      return "${DateTime.now().year-_monthBackNumber}: $overAllInPeriod  $visits";
+    }
+
+    final locale = MyApp.of(context).getLocale()?.countryCode;
+    final now = DateTime.now();
+    final targetDate = DateTime(now.year, now.month - _monthBackNumber);
+
+    final monthName = DateFormat.MMMM(locale).format(targetDate);
+    return "$monthName ${targetDate.year}: $overAllInPeriod $visits";
+  }
+
+  LineChartData lineData(BoxConstraints constraints) {
+    var visitList = _visitsInPeriod.entries.toList();
     return LineChartData(
       gridData: FlGridData(
         show: true,
@@ -302,11 +350,11 @@ class StatisticPageState extends State<StatisticPage> {
           sideTitles: SideTitles(showTitles: false),
         ),
         bottomTitles: AxisTitles(
-          axisNameWidget: Text(S.of(context).statistic_page_dayOfMonth),
+          axisNameWidget: Text(S.of(context).statistic_page_xAxis(_showYear)),
           sideTitles: SideTitles(
             showTitles: true,
             reservedSize: 30,
-            interval: 1,
+            interval: constraints.maxWidth > 800 ? 1 : 2,
             getTitlesWidget: (index, tileMeta){
               return SideTitleWidget(
                 meta: tileMeta,

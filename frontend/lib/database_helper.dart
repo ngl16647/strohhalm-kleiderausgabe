@@ -17,10 +17,9 @@ class DatabaseHelper {
   Future<Database> initDatabase() async {
     String path = await getDatabasesPath();
     return openDatabase(
-      join(path, "storhhalm_db_v3.db"),
+      join(path, "storhhalm_db_version1.db"),
       onCreate: (db, version) async {
 
-        //TODO: lastVisit entfernen und durch tookItem abfrage ersetzen
         await db.execute('''
           CREATE TABLE users(
             id INTEGER PRIMARY KEY,
@@ -29,7 +28,6 @@ class DatabaseHelper {
             lastName TEXT,
             birthDay INTEGER,
             birthCountry TEXT,
-            lastVisit INTEGER,
             hasChild INTEGER,
             miscellaneous TEXT,  
             createdOn INTEGER
@@ -50,7 +48,7 @@ class DatabaseHelper {
       version: 1,
     );
   }
-  
+
   Future<int> countAllVisits() async{
     final db = await database;
     int result = Sqflite.firstIntValue(await db.rawQuery("SELECT COUNT(*) as count FROM tookItems")) ?? 0;
@@ -79,16 +77,33 @@ class DatabaseHelper {
     List<Map<String, dynamic>> maps = await db.query(
         "tookItems",
         where: "userId = ?",
-        whereArgs: [userId]
+        whereArgs: [userId],
+        orderBy: "tookDate DESC",
     );
     return maps.map((mapRow) => TookItem.fromMap(mapRow)).toList();
   }
+  int getDaysInMonth(int year, int month) {
+    if (month == DateTime.february) {
+      final bool isLeapYear = (year % 4 == 0) && (year % 100 != 0) || (year % 400 == 0);
+      return isLeapYear ? 29 : 28;
+    }
+    const List<int> daysInMonth = <int>[31, -1, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    return daysInMonth[month - 1];
+  }
 
-  Future<Map<String, int>> getAllVisitsInLastMonths(int monthsBack) async {
+
+  Future<Map<String, int>> getAllVisitsInPeriod(int monthsBack, bool year) async {
     final db = await database;
     final now = DateTime.now();
-    final start = DateTime(now.year, now.month - monthsBack, 1).millisecondsSinceEpoch;
-    final end = DateTime(now.year, now.month - monthsBack, 31).millisecondsSinceEpoch;
+    final startDate = year
+        ? DateTime(now.year - monthsBack, 1, 1)
+        : DateTime.utc(now.year, now.month - monthsBack, 1);
+    final endDate= year
+        ? DateTime(now.year - monthsBack, 13, 1)
+        : DateTime.utc(now.year, now.month - monthsBack+1, 1);
+
+    final start = startDate.millisecondsSinceEpoch;
+    final end = endDate.millisecondsSinceEpoch;
 
     final maps = await db.query(
       "tookItems",
@@ -97,19 +112,26 @@ class DatabaseHelper {
     );
 
     Map<String, int> dateMap = {};
-    DateTime countTime = DateTime.fromMillisecondsSinceEpoch(start);
-    for(int i = 0; i < DateTime.fromMillisecondsSinceEpoch(end).difference(DateTime.fromMillisecondsSinceEpoch(start)).inDays; i++){
-      String key = DateFormat("dd.MM.yyyy").format(countTime);
-      dateMap.putIfAbsent(key, () => 0);
-      countTime = countTime.add(Duration(days: 1));
+    DateTime current = startDate;
+
+    if (!year) {
+      while (current.isBefore(endDate)) {
+        dateMap[DateFormat("dd.MM.yyyy").format(current)] = 0;
+        current = current.add(const Duration(days: 1));
+      }
+    } else {
+      while (current.isBefore(endDate)) {
+        dateMap[DateFormat("MM.yyyy").format(current)] = 0;
+        current = DateTime(current.year, current.month + 1, 1);
+      }
     }
 
     List<TookItem> list = maps.map((mapRow) => TookItem.fromMap(mapRow)).toList();
 
     for (var item in list) {
-      String dateKey = DateFormat("dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(item.tookTime));
+      String dateKey = DateFormat(year ? "MM.yyyy" : "dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(item.tookTime));
       dateMap.putIfAbsent(dateKey, () => 0);
-      dateMap[dateKey] = dateMap[dateKey]! + 1;
+      dateMap[dateKey] = (dateMap[dateKey] ?? 0) + 1;
     }
     //dateMap.forEach((entryString, entryInt) => print("$entryString | $entryInt"));
     return dateMap;
@@ -132,20 +154,11 @@ class DatabaseHelper {
 
 
 
-  Future<void> addVisit(int userId, bool wasBedSheet) async {
+  Future<TookItem> addVisit(int userId, bool wasBedSheet) async {
     final db = await database;
 
     int createdOn = DateTime.now().millisecondsSinceEpoch;
-
-    await db.update(
-        "users",
-        {
-          "lastVisit": createdOn
-        },
-        where: "id = ?",
-        whereArgs: [userId]);
-
-    await db.insert(
+    int itemId = await db.insert(
       "tookItems",
       {
         "userId" : userId,
@@ -154,6 +167,8 @@ class DatabaseHelper {
       },
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );
+
+    return TookItem(itemId, userId, createdOn, wasBedSheet);
   }
 
   Future<User> addUser(String firstName, String lastName, int birthDay, String birthCountry, bool hasChild, String miscellaneous) async {
@@ -169,7 +184,6 @@ class DatabaseHelper {
             "uuId": uuId,
             "firstName": firstName,
             "lastName": lastName,
-            "lastVisit": -1,
             "createdOn": createdOn,
             "hasChild": hasChild ? 1 : 0,
             "birthDay": birthDay,
@@ -185,11 +199,11 @@ class DatabaseHelper {
           firstName: firstName,
           lastName: lastName,
           createdOn: createdOn,
-          lastVisit: -1,
           birthDay: birthDay,
           birthCountry: birthCountry,
           hasChild: hasChild,
           miscellaneous: miscellaneous,
+          tookItems: []
         );
       } catch (e) {
         if (e is DatabaseException && e.isUniqueConstraintError()) {
@@ -212,24 +226,25 @@ class DatabaseHelper {
     );
     List<User> users = [];
     for(Map map in maps){
-      User user = mapToUser(map);
+      List<TookItem> list = await getVisits(map["id"] as int);
+      User user = mapToUser(map, list);
       users.add(user);
     }
     return users;
   }
 
-  User mapToUser(Map map){
+  User mapToUser(Map map, List<TookItem> list){
     return User(
         id: map["id"],
         uuId: map["uuId"],
         firstName: map["firstName"],
         lastName: map["lastName"],
         createdOn: map["createdOn"],
-        lastVisit: map["lastVisit"],
         birthDay: map["birthDay"],
         birthCountry: map["birthCountry"] ?? "",
         hasChild: map["hasChild"] == 1 ? true : false,
-        miscellaneous: map["miscellaneous"]
+        miscellaneous: map["miscellaneous"],
+        tookItems: list
     );
   }
 
@@ -241,7 +256,7 @@ class DatabaseHelper {
       whereArgs: [uuId],
       limit: 1
     );
-    return maps.isNotEmpty ? mapToUser(maps.first) : null;
+    return maps.isNotEmpty ? mapToUser(maps.first, await getVisits(maps.first["id"] as int)) : null;
   }
 
   Future<void> updateUser(User user) async {
@@ -261,17 +276,27 @@ class DatabaseHelper {
           whereArgs: [user.id]);
   }
 
-  //TODO: lastVisit entfernen
-  Future<int?> updateUserLastVisited(User user) async {
+  Future<int> getLastVisit(int userId) async { //Obsolet
+    final db = await database;
+
+    final result = await db.query(
+      "tookItems",
+      columns: ["tookDate"],
+      where: "userId = ?",
+      whereArgs: [userId],
+      orderBy: "tookDate DESC",
+      limit: 1,
+    );
+
+    int lastVisit = -1;
+    if(result.isNotEmpty) lastVisit = result.first["tookDate"] as int;
+
+    return lastVisit;
+  }
+
+  Future<int?> deleteLatestAndReturnPrevious(User user) async { //TODO: maybe return tookItem
     final db = await database;
     int id = user.id;
-    int lastVisit = user.lastVisit;
-
-    await db.delete(
-      "tookItems",
-      where: "userId = ? AND tookDate = ?",
-      whereArgs: [id, lastVisit]
-    );
 
     final result = await db.query(
       "tookItems",
@@ -279,23 +304,25 @@ class DatabaseHelper {
       where: "userId = ?",
       whereArgs: [id],
       orderBy: "tookDate DESC",
-      limit: 1,
+      limit: 2,
     );
 
-    int? lastTookDate = -1;
-    if (result.isNotEmpty) {
-      lastTookDate = result.first["tookDate"] as int?;
+    //result[0] is newest, is deleted, result[1] is the one before gets returned as new latest
+    if (result.isEmpty) { //should never be the case since if empty there is no possibility to delete
+      return -1;
     }
 
-    await db.update(
-        "users",
-        {
-          "lastVisit": lastTookDate
-        },
-        where: "id = ?",
-        whereArgs: [id]);
+    await db.delete(
+      "tookItems",
+      where: "userId = ? AND tookDate = ?",
+      whereArgs: [id, result.first["tookDate"] as int],
+    );
 
-    return lastTookDate;
+    if (result.length > 1) {
+      return result.last["tookDate"] as int;
+    } else {
+      return -1; //if there is no second entry visits for user is empty
+    }
   }
 
   Future<void> deleteUser(int id) async {

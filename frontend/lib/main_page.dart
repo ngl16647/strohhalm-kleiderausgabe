@@ -34,7 +34,6 @@ class MainPageState extends State<MainPage> {
   @override
   void initState() {
     isMobile = MyApp().getDeviceType() == DeviceType.mobile;
-    searchUsers("");
     super.initState();
   }
 
@@ -47,24 +46,10 @@ class MainPageState extends State<MainPage> {
       } else if(searchTerm.trim().isNotEmpty) { //WhiteSpaces get removed so a SPACE doesn't just retrieve All
         _userList = await DatabaseHelper().getUsers(searchTerm);
       }
+      //_userList.forEach((item) => print(item.tookItems.isNotEmpty ? item.tookItems.first.tookTime : "EMpty"));
     setState(() {
       _userList;
     });
-  }
-
-  ///Opens the detailed View of a User
-  Future<void> openStatPage(User user) async {
-    bool? updated = await showDialog<bool>(
-        context: context,
-        builder: (context){
-          return Dialog(
-            child: StatPage(user: user),
-          );
-        });
-
-    if(updated != null){
-      searchUsers(_searchController.text);
-    }
   }
 
   ///Adds or edits a User (if you want to edit, you have to give it a existing User)
@@ -100,12 +85,25 @@ class MainPageState extends State<MainPage> {
     }
   }
 
+  Future<void> openStatPage(User user) async {
+    List<TookItem>? updated = await showDialog<List<TookItem>>(
+        context: context,
+        builder: (context){
+          return StatPage(user: user);
+        });
+    if(updated != null){
+      int i = _userList.indexOf(user);
+      _userList[i] = user.copyWith(tookItems: updated); //new Objekt so the ListView can update throug Objectkey(user)
+    }
+  }
+
   void openUser(User user){
+    //TODO: Ask how it would be best to update?
     _userList.clear();
-    openStatPage(user);
     setState(() {
       _userList.add(user);
     });
+    openStatPage(user);
     _searchController.text = "${user.firstName} ${user.lastName}";
   }
 
@@ -153,6 +151,7 @@ class MainPageState extends State<MainPage> {
                     spacing: 10,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      //TODO: Maybe over the SearchBar? I don't like the Positioning of the Fullscreen, darkmode, languages...
                       if(!isMobile) Expanded(
                           flex: 0,
                           child:  IconButton(
@@ -310,17 +309,7 @@ class MainPageState extends State<MainPage> {
                           builder: (context) {
                             return StatefulBuilder(
                               builder: (context, state) {
-                                final size = MediaQuery.of(context).size;
-                                return Dialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                  child: SizedBox(
-                                    width: size.width * 0.9,
-                                    height: size.height * 0.9,
-                                    child: StatisticPage(),
-                                  ),
-                                );
+                                return  StatisticPage();
                               },
                             );
                           },
@@ -336,7 +325,7 @@ class MainPageState extends State<MainPage> {
                       ? Center(child: Text(S.of(context).main_page_emptyUserListText),)
                       : LayoutBuilder(
                     builder: (context, constraints) {
-                      if (constraints.maxWidth > 682 && isListView) {
+                      if (constraints.maxWidth > 782 && isListView) {
                         return ListView.builder(
                             itemCount: _userList.length,
                             itemBuilder: (context, index){
@@ -450,71 +439,3 @@ class LanguageOption {
   LanguageOption({required this.code, required this.label, required this.onPressed});
 }
 
-//TODO: Maybe over the SearchBar? I don't like the Positioning of the Fullscreen, darkmode, languages...
-/*
-Row(
-                children: [
-                  if(!isMobile) Expanded(
-                      flex: 0,
-                      child:  IconButton(
-                          onPressed: () async {
-                            bool isFullScreen = await windowManager.isFullScreen();
-                            windowManager.setFullScreen(!isFullScreen);
-                            setState(() {
-                              fullScreenIcon = !isFullScreen ? Icon(Icons.close_fullscreen) : Icon(Icons.aspect_ratio);
-                            });
-                          },
-                          icon: fullScreenIcon
-                      )
-                  ),
-                  Expanded(
-                      flex: 0,
-                      child:  IconButton(
-                          onPressed: () async {
-                            MyApp.of(context).changeTheme();
-                          },
-                          icon: Icon(Icons.dark_mode)
-                      )
-                  ),
-                  Expanded(
-                      flex: 0,
-                      child: MenuAnchor(
-                          style: MenuStyle(
-                            padding: WidgetStateProperty.all(
-                              EdgeInsets.all(5),
-                            ),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          menuChildren: languages.map((lang) {
-                            return MenuItemButton(
-                              onPressed: lang.onPressed,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  CountryFlag.fromLanguageCode(lang.code, height: 15, width: 25),
-                                  const SizedBox(width: 5),
-                                  Text(lang.label),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                          builder: (BuildContext context, MenuController controller, Widget? child) {
-                            return TextButton.icon(
-                              focusNode: FocusNode(),
-                              onPressed: () {
-                                if (controller.isOpen) {
-                                  controller.close();
-                                } else {
-                                  controller.open();
-                                }
-                              },
-                              label: Text("Sprachen"),
-                              icon: Icon(Icons.language, size: 30),
-                            );
-                          },
-                          child: Icon(Icons.language)
-                      )
-                  ),
-                ],
-              )
- */

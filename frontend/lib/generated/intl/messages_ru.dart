@@ -23,8 +23,23 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m0(visitMoreThan14Days) =>
       "${Intl.select(visitMoreThan14Days, {'true': 'Запланировать новый визит', 'false': 'Все равно отметить'})}";
 
-  static String m1(isListView) =>
+  static String m1(dateString) =>
+      "Был <bold>${dateString}</bold> в последний раз";
+
+  static String m2(isListView) =>
       "${Intl.select(isListView, {'true': 'Показывать как плитки?', 'false': 'Показывать как список?'})}";
+
+  static String m3(cutOffNumber, overAllNumberOfCountries) =>
+      "Показать топ ${cutOffNumber} стран из ${overAllNumberOfCountries}";
+
+  static String m4(showYear) =>
+      "${Intl.select(showYear, {'true': 'к просмотру по месяцам', 'false': 'к просмотру по годам'})}";
+
+  static String m5(count) =>
+      "${Intl.plural(count, one: 'Посещение', few: 'Посещения', many: 'Посещений', other: 'Посещения')}";
+
+  static String m6(showYear) =>
+      "${Intl.select(showYear, {'true': 'Месяц', 'false': 'День'})}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -61,17 +76,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "customer_tile_deleteLastEntry": MessageLookupByLibrary.simpleMessage(
       "Удалить запись",
     ),
-    "customer_tile_lastVisit_1": MessageLookupByLibrary.simpleMessage("Был "),
-    "customer_tile_lastVisit_2": MessageLookupByLibrary.simpleMessage(
-      "сегодня",
+    "customer_tile_lastVisit_never": MessageLookupByLibrary.simpleMessage(
+      "Еще <bold>не был</bold>",
     ),
-    "customer_tile_lastVisit_3": MessageLookupByLibrary.simpleMessage(
-      "в последний раз",
+    "customer_tile_lastVisit_onDate": m1,
+    "customer_tile_lastVisit_today": MessageLookupByLibrary.simpleMessage(
+      "Был <bold>сегодня</bold>",
     ),
-    "customer_tile_lastVisit_4": MessageLookupByLibrary.simpleMessage(
-      "никогда",
-    ),
-    "customer_tile_lastVisit_5": MessageLookupByLibrary.simpleMessage(" там"),
     "delete": MessageLookupByLibrary.simpleMessage("Удалить"),
     "language_de": MessageLookupByLibrary.simpleMessage("Немецкий"),
     "language_en": MessageLookupByLibrary.simpleMessage("Английский"),
@@ -80,7 +91,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_emptyUserListText": MessageLookupByLibrary.simpleMessage(
       "Поиск по имени или сканирование кода для отображения пользователей",
     ),
-    "main_page_isListView": m1,
+    "main_page_isListView": m2,
     "main_page_languages": MessageLookupByLibrary.simpleMessage("Языки"),
     "main_page_noUserWithUUID": MessageLookupByLibrary.simpleMessage(
       "Соответствующий пользователь не найден!",
@@ -120,12 +131,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Визит зафиксирован!",
     ),
     "stat_page_visits": MessageLookupByLibrary.simpleMessage("Всего визитов:"),
-    "statistic_page_dayOfMonth": MessageLookupByLibrary.simpleMessage(
-      "День месяца",
-    ),
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Количество визитов",
     ),
+    "statistic_page_show_top_countries": m3,
+    "statistic_page_switchYearDisplay": m4,
+    "statistic_page_visits": m5,
+    "statistic_page_xAxis": m6,
     "yes": MessageLookupByLibrary.simpleMessage("Да"),
   };
 }

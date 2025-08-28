@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'generated/l10n.dart';
+
 class Utilities{
 
   bool isSameDay(DateTime dateTimeOne, DateTime dateTimeTwo){
@@ -20,12 +22,12 @@ class Utilities{
                   onPressed: (){
                     Navigator.of(context).pop();
                   },
-                  child: Text("Cancel")),
+                  child: Text(S.of(context).cancel)),
               TextButton(
                   onPressed: (){
                     Navigator.of(context).pop(true);
                   },
-                  child: Text("Confirm"))
+                  child: Text(S.of(context).confirm))
             ],
           );
         });

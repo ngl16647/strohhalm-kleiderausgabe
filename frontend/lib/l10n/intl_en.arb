@@ -30,11 +30,9 @@
   "qr_code_share": "Share QR Code",
   "print": "Print",
 
-  "customer_tile_lastVisit_1": "Was ",
-  "customer_tile_lastVisit_2": "here today",
-  "customer_tile_lastVisit_3": "here on the",
-  "customer_tile_lastVisit_4": "never here",
-  "customer_tile_lastVisit_5": "",
+  "customer_tile_lastVisit_never": "Never <bold>visited</bold>",
+  "customer_tile_lastVisit_today": "Visited <bold>today</bold>",
+  "customer_tile_lastVisit_onDate": "Last visited on <bold>{dateString}</bold>",
   "customer_tile_deleteLastEntry": "Delete entry",
   "customer_tile_addNewEntry": "{visitMoreThan14Days, select, true{Add new visit} false{Add Visit anyway}}",
 
@@ -57,6 +55,9 @@
   "stat_page_removeLastVisitConfirmation": "Are you sure you want to delete the last visit?",
   "stat_page_lastTimeTookClothes": "Last time clothes borrowed:",
 
-  "statistic_page_dayOfMonth": "Day of the month",
-  "statistic_page_numberOfVisits": "Number of visits"
+  "statistic_page_xAxis": "{showYear, select, true{Monat} false{Tag}}",
+  "statistic_page_numberOfVisits": "Number of visits",
+  "statistic_page_visits": "{count, plural, one{Besuch} other{Besuche}}",
+  "statistic_page_switchYearDisplay": "{showYear, select, true{zur Monatsansicht} false{zur Jahresansicht}}",
+  "statistic_page_show_top_countries": "Show top {cutOffNumber} countries of {overAllNumberOfCountries}"
 }
