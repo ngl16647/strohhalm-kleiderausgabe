@@ -20,6 +20,7 @@ func scanCustomers(rows *sql.Rows) ([]Customer, error) {
 			&c.FirstName,
 			&c.LastName,
 			&c.Birthday,
+			&c.Notes,
 		); err != nil {
 			return nil, err
 		}
@@ -36,8 +37,8 @@ func scanCustomers(rows *sql.Rows) ([]Customer, error) {
 
 func AddCustomer(c Customer) (int64, error) {
 	res, err := DB.Exec(
-		"INSERT INTO customers (FirstName, LastName, Birthday) VALUES (?, ?, ?)",
-		c.FirstName, c.LastName, c.Birthday,
+		"INSERT INTO customers (FirstName, LastName, Birthday, Notes) VALUES (?, ?, ?, ?)",
+		c.FirstName, c.LastName, c.Birthday, c.Notes,
 	)
 	if err != nil {
 		return 0, fmt.Errorf("failed to add customer %s %s: %w", c.FirstName, c.LastName, err)
@@ -48,9 +49,9 @@ func AddCustomer(c Customer) (int64, error) {
 func UpdateCustomer(c Customer, newC Customer) error {
 	res, err := DB.Exec(`
         UPDATE customers
-        SET FirstName = ?, LastName = ?, Birthday = ?
+        SET FirstName = ?, LastName = ?, Birthday = ?, Notes = ?
         WHERE Id = ?`,
-		newC.FirstName, newC.LastName, newC.Birthday,
+		newC.FirstName, newC.LastName, newC.Birthday, newC.Notes,
 		c.Id,
 	)
 	if err != nil {
@@ -70,7 +71,7 @@ func UpdateCustomer(c Customer, newC Customer) error {
 }
 
 func AllCustomers() ([]Customer, error) {
-	rows, err := DB.Query("SELECT Id, FirstName, LastName, Birthday FROM customers")
+	rows, err := DB.Query("SELECT Id, FirstName, LastName, Birthday, Notes FROM customers")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get all customers: %w", err)
 	}
@@ -79,7 +80,7 @@ func AllCustomers() ([]Customer, error) {
 
 func CustomersById(id int64) (Customer, error) {
 	rows, err := DB.Query(`
-		SELECT Id, FirstName, LastName, Birthday 
+		SELECT Id, FirstName, LastName, Birthday, Notes
 			FROM customers 
 			WHERE Id = ?
 		`, id,
@@ -109,7 +110,7 @@ func SearchCustomer(query string) ([]Customer, error) {
 	}
 
 	rows, err := DB.Query(`
-		SELECT Id, FirstName, LastName, Birthday
+		SELECT Id, FirstName, LastName, Birthday, Notes
 			FROM customers
 			WHERE LOWER(FirstName || ' ' || LastName) LIKE ?
 		`, "%"+strings.ToLower(query)+"%",

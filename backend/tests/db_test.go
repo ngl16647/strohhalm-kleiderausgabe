@@ -11,9 +11,14 @@ import (
 func TestAddAndSearchCustomer(t *testing.T) {
 	db.InitDatabase(":memory:")
 
-	c1 := db.Customer{Id: 1, FirstName: "A", LastName: "Customer", Birthday: TestDate}
+	c1 := db.Customer{Id: 1, FirstName: "A", LastName: "Customer", Birthday: TestDate, Notes: "very fat"}
 
-	id, err := db.AddCustomer(db.Customer{FirstName: "A", LastName: "Customer", Birthday: TestDate})
+	id, err := db.AddCustomer(db.Customer{
+		FirstName: c1.FirstName,
+		LastName:  c1.LastName,
+		Birthday:  TestDate,
+		Notes:     c1.Notes,
+	})
 	FatalErr(t, err, "failed to add user")
 
 	if id != 1 {

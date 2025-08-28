@@ -5,6 +5,7 @@ type Customer struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Birthday  string `json:"birthday"`
+	Notes     string `json:"notes"`
 }
 
 type CustomerVisit struct {
@@ -23,7 +24,8 @@ const (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
             FirstName TEXT NOT NULL,
             LastName TEXT NOT NULL,
-			Birthday TEXT
+			Birthday TEXT,
+			Notes TEXT
         )
 	`
 	VisitsInitStr = `
