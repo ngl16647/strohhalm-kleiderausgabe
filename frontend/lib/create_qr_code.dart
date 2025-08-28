@@ -23,7 +23,7 @@ class CreateQRCode{
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width*0.7),
+          // constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width*0.7),
           insetPadding: EdgeInsets.all(16),
           child: LayoutBuilder(
             builder: (context, constraints) {

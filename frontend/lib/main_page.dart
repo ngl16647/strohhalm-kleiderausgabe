@@ -41,12 +41,13 @@ class MainPageState extends State<MainPage> {
   ///Gets Users with the firstName/Lastname LIKE the searchTerm. "*" gets all
   Future<void> searchUsers(String searchTerm) async {
     //TODO: Probably include a Search-Button, so there are less unnecessary server-requests
-      _userList.clear();
-      if(searchTerm == "*"){
-        _userList = await DatabaseHelper().getUsers("");
-      } else if(searchTerm.trim().isNotEmpty) { //WhiteSpaces get removed so a SPACE doesn't just retrieve All
-        _userList = await DatabaseHelper().getUsers(searchTerm);
-      }
+    _userList.clear();
+    if (searchTerm == "*") {
+      _userList = await DatabaseHelper().getUsers("");
+    } else if (searchTerm.trim().isNotEmpty) {
+      //WhiteSpaces get removed so a SPACE doesn't just retrieve All
+      _userList = await DatabaseHelper().getUsers(searchTerm);
+    }
     setState(() {
       _userList;
     });
@@ -56,13 +57,13 @@ class MainPageState extends State<MainPage> {
   Future<void> openStatPage(User user) async {
     bool? updated = await showDialog<bool>(
         context: context,
-        builder: (context){
+        builder: (context) {
           return Dialog(
             child: StatPage(user: user),
           );
         });
 
-    if(updated != null){
+    if (updated != null) {
       searchUsers(_searchController.text);
     }
   }
@@ -73,22 +74,21 @@ class MainPageState extends State<MainPage> {
         context: context,
         builder: (BuildContext context) {
           return AddUserDialog(user: user);
-        }
-    );
-    if(result != null){
+        });
+    if (result != null) {
       User? newUser = result[0];
       bool delete = result[1];
 
-      if(delete) {
+      if (delete) {
         await DatabaseHelper().deleteUser(newUser!.id);
         setState(() {
-          _userList.removeWhere((listUser) => listUser.id == user?.id );
+          _userList.removeWhere((listUser) => listUser.id == user?.id);
         });
       } else {
         //Here so there doesn't have to be a extra Call to the Database
-        if(newUser != null) {
+        if (newUser != null) {
           int index = _userList.indexWhere((item) => item.id == newUser.id);
-          if(index != -1){
+          if (index != -1) {
             setState(() {
               _userList[index] = newUser;
             });
@@ -100,7 +100,7 @@ class MainPageState extends State<MainPage> {
     }
   }
 
-  void openUser(User user){
+  void openUser(User user) {
     _userList.clear();
     openStatPage(user);
     setState(() {
@@ -112,318 +112,333 @@ class MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     var languages = [
-      LanguageOption(code: "de", label: S.of(context).language_de, onPressed: () {
-        widget.onLocaleChange(Locale("de"));
-      }),
-      LanguageOption(code: "en", label: S.of(context).language_en, onPressed: () {
-        widget.onLocaleChange(Locale("en"));
-      }),
-      LanguageOption(code: "ru", label: "Russisch", onPressed: () {}),
-      LanguageOption(code: "ro", label: "Rumänien", onPressed: () {}),
-      //Here one can add new Languages if necessary (code = Country-Code from http://www.lingoes.net/en/translator/langcode.htm)
+      LanguageOption(
+          code: "de",
+          label: S.of(context).language_de,
+          onPressed: () {
+            widget.onLocaleChange(Locale("de"));
+          }),
+      LanguageOption(
+          code: "gb",
+          label: S.of(context).language_en,
+          onPressed: () {
+            widget.onLocaleChange(Locale("en"));
+          }),
+      // LanguageOption(code: "ru", label: "Russisch", onPressed: () {}),
+      // LanguageOption(code: "ro", label: "Rumänien", onPressed: () {}),
+      // Here one can add new Languages if necessary (code = Country-Code from http://www.lingoes.net/en/translator/langcode.htm)
     ];
 
     return Scaffold(
-      body: SafeArea(child: Padding(
+      appBar: AppBar(
+        actions: [
+          Image.asset(
+            isMobile
+                ? "assets/images/strohalm_header_image_mobile.png"
+                : "assets/images/strohalm_header_image.png",
+          ),
+        ],
+      ),
+      body: SafeArea(
+          child: Padding(
         padding: EdgeInsets.all(10),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            spacing: 10,
-            children: [
-              Image.asset(
-                isMobile
-                    ? "assets/images/strohalm_header_image_mobile.png"
-                    : "assets/images/strohalm_header_image.png",
-                width: double.infinity,
-              ),
-              Container(
-                constraints: BoxConstraints(
-                  minHeight: 32,
-                ),
-                height: MediaQuery.of(context).size.height*0.1,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
-                  child: Row(
-                    spacing: 10,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      if(!isMobile) Expanded(
-                          flex: 0,
-                          child:  IconButton(
-                              onPressed: () async {
-                                bool isFullScreen = await windowManager.isFullScreen();
-                                windowManager.setFullScreen(!isFullScreen);
-                                setState(() {
-                                  fullScreenIcon = !isFullScreen ? Icon(Icons.close_fullscreen) : Icon(Icons.aspect_ratio);
-                                });
-                              },
-                              icon: fullScreenIcon
-                          )
-                      ),
-                      Expanded(
-                          flex: 0,
-                          child:  IconButton(
-                              onPressed: () async {
-                                MyApp.of(context).changeTheme();
-                              },
-                              icon: Icon(Icons.dark_mode)
-                          )
-                      ),
-                      Expanded(
-                          flex: 0,
-                          child: MenuAnchor(
-                            style: MenuStyle(
-                              padding: WidgetStateProperty.all(
-                                EdgeInsets.all(5),
-                              ),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                            menuChildren: languages.map((lang) {
-                              return MenuItemButton(
-                                onPressed: lang.onPressed,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    CountryFlag.fromLanguageCode(lang.code, height: 15, width: 25),
-                                    const SizedBox(width: 5),
-                                    Text(lang.label),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                              builder: (BuildContext context, MenuController controller, Widget? child) {
-                                return TextButton.icon(
-                                  focusNode: FocusNode(),
-                                  onPressed: () {
-                                    if (controller.isOpen) {
-                                      controller.close();
-                                    } else {
-                                      controller.open();
-                                    }
-                                  },
-                                  label: Row(
-                                    children: [
-                                   // Icon(Icons.language),  //TODO: Icon or no Icon?
-                                    Text("Sprachen")],),
-                                  icon: Icon(controller.isOpen ? Icons.expand_less : Icons.expand_more),
-                                );
-                              },
-                            child: Icon(Icons.language)
-                          )
-                      ),
-                      Expanded(
-                        flex: 10,
-                        child: Stack(
-                          children: [
-                            Align(
-                              alignment: AlignmentGeometry.center,
-                              child: TextField(
-                                controller: _searchController,
-                                decoration: InputDecoration(
-                                  hintText: "Search Users",
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12)
-                                  ),
-                                ),
-                                onChanged: (ev){
-                                  searchUsers(ev);
-                                },
-                                onTapOutside: (ev){
-                                  FocusScope.of(context).unfocus();
-                                },
-                              ),
-                            ),
-                            Align(
-                              alignment: AlignmentDirectional.centerEnd,
-                              child: IconButton(
-                                onPressed: (){
-                                  setState(() {
-                                    _searchController.text = "";
-                                    _userList.clear();
-                                  });
-                                },
-                                icon: Icon(Icons.close),
-                                style: IconButton.styleFrom(
-                                    backgroundColor: Colors.transparent
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                          flex: 2,
-                          child: !isMobile ? TextButton.icon(
-                            onPressed: (){
-                              addOrEditUser();
-                            },
-                            style: TextButton.styleFrom(
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                backgroundColor: Color.fromRGBO(169, 171, 25, 1.0),
-                                foregroundColor: Colors.black87,
-                                minimumSize: Size(double.infinity, 64)
-                            ),
-                            label: Text("Hinzufügen"),
-                            icon: Icon(Icons.person_add_alt_1, color: Colors.black87),
-                          ) : IconButton(
-                            onPressed: (){
-                              addOrEditUser();
-                            },
-                            style: TextButton.styleFrom(
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                backgroundColor: Color.fromRGBO(169, 171, 25, 1.0),
-                                foregroundColor: Colors.black87,
-                                minimumSize: Size(double.infinity, 64)
-                            ),
-                            icon: Icon(Icons.person_add_alt_1, color: Colors.black87),
-                          )
-                      )
-                    ],
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          spacing: 10,
+          children: [
+            Container(
+              width: double.infinity, // Ensure finite width
+              child: Wrap(
+                direction: Axis.horizontal,
+                spacing: 8,
+                runSpacing: 4,
+                alignment: WrapAlignment.start,
                 children: [
-                  if(!isMobile)Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                        onPressed: (){
-                          setState(() {
-                            isListView = !isListView;
-                          });
+                  if (!isMobile)
+                    ActionChip(
+                      avatar: FutureBuilder<bool>(
+                        future: windowManager.isFullScreen(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                                  ConnectionState.done &&
+                              snapshot.hasData) {
+                            return snapshot.data!
+                                ? Icon(Icons.close_fullscreen)
+                                : Icon(Icons.fullscreen);
+                          }
+                          return Icon(
+                              Icons.fullscreen); // Default icon while loading
                         },
-                        icon: Icon(isListView ? Icons.grid_on : Icons.list),
-                      label: Text(isListView ? "Als Kacheln anzeigen?" : "Als Liste anzeigen?"),
+                      ),
+                      label: Text("Fullscreen"),
+                      onPressed: () async {
+                        bool isFullScreen = await windowManager.isFullScreen();
+                        windowManager.setFullScreen(!isFullScreen);
+                        setState(() {
+                          fullScreenIcon = !isFullScreen
+                              ? Icon(Icons.close_fullscreen)
+                              : Icon(Icons.aspect_ratio);
+                        });
+                      },
+                    ),
+                  ActionChip(
+                    avatar: (Theme.of(context).brightness == Brightness.dark)
+                        ? Icon(Icons.dark_mode)
+                        : Icon(Icons.light_mode),
+                    label: Text("Theme"),
+                    onPressed: () async {
+                      MyApp.of(context).changeTheme();
+                      setState(() {});
+                    },
+                  ),
+                  ...languages.map((lang) => ActionChip(
+                        avatar: CountryFlag.fromCountryCode(
+                          lang.code,
+                          height: 12,
+                          width: 16,
+                        ),
+                        label: Text(lang.label),
+                        onPressed: lang.onPressed,
+                      ))
+                ],
+              ),
+            ),
+            Container(
+              constraints: BoxConstraints(
+                minHeight: 32,
+              ),
+              height: MediaQuery.of(context).size.height * 0.1,
+              child: Row(
+                spacing: 10,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    flex: 10,
+                    child: Stack(
+                      children: [
+                        Align(
+                          // alignment: AlignmentGeometry.center,
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: "Search Users",
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            onChanged: (ev) {
+                              searchUsers(ev);
+                            },
+                            onTapOutside: (ev) {
+                              FocusScope.of(context).unfocus();
+                            },
+                          ),
+                        ),
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _searchController.text = "";
+                                _userList.clear();
+                              });
+                            },
+                            icon: Icon(Icons.close),
+                            style: IconButton.styleFrom(
+                                backgroundColor: Colors.transparent),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  TextButton.icon(
-                      onPressed: (){
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return StatefulBuilder(
-                              builder: (context, state) {
-                                final size = MediaQuery.of(context).size;
-                                return Dialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                  child: SizedBox(
-                                    width: size.width * 0.9,
-                                    height: size.height * 0.9,
-                                    child: StatisticPage(),
-                                  ),
-                                );
+                  Expanded(
+                      flex: 2,
+                      child: !isMobile
+                          ? TextButton.icon(
+                              onPressed: () {
+                                addOrEditUser();
                               },
+                              style: TextButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12)),
+                                  backgroundColor:
+                                      Color.fromRGBO(169, 171, 25, 1.0),
+                                  foregroundColor: Colors.black87,
+                                  minimumSize: Size(double.infinity, 64)),
+                              label: Text("Hinzufügen"),
+                              icon: Icon(Icons.person_add_alt_1,
+                                  color: Colors.black87),
+                            )
+                          : IconButton(
+                              onPressed: () {
+                                addOrEditUser();
+                              },
+                              style: TextButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12)),
+                                  backgroundColor:
+                                      Color.fromRGBO(169, 171, 25, 1.0),
+                                  foregroundColor: Colors.black87,
+                                  minimumSize: Size(double.infinity, 64)),
+                              icon: Icon(Icons.person_add_alt_1,
+                                  color: Colors.black87),
+                            ))
+                ],
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (!isMobile)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          isListView = !isListView;
+                        });
+                      },
+                      icon: Icon(isListView ? Icons.grid_on : Icons.list),
+                      label: Text(isListView
+                          ? "Als Kacheln anzeigen?"
+                          : "Als Liste anzeigen?"),
+                    ),
+                  ),
+                TextButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return StatefulBuilder(
+                          builder: (context, state) {
+                            final size = MediaQuery.of(context).size;
+                            return Dialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: SizedBox(
+                                width: size.width * 0.9,
+                                height: size.height * 0.9,
+                                child: StatisticPage(),
+                              ),
                             );
                           },
                         );
                       },
-                      label: Text("Statistics"),
-                      icon: Icon(Icons.bar_chart),
-                  )
-                ],
-              ),
-              Expanded(
-                  child: _userList.isEmpty
-                      ? Center(child: Text("Enter a Name or Scan a BarCode to view Users"),)
-                      : LayoutBuilder(
-                    builder: (context, constraints) {
-                      if (constraints.maxWidth > 682 && isListView) {
-                        return ListView.builder(
-                            itemCount: _userList.length,
-                            itemBuilder: (context, index){
-                              User user = _userList[index];
-                              return CustomerListviewItem(
-                                key: ObjectKey(user),
-                                user: user,
-                                click: (){
-                                  openStatPage(user);
-                                },
-                                delete: ()async{
-                                  await DatabaseHelper().deleteUser(user.id);
-                                  setState(() {
-                                    _userList.removeAt(index);
-                                  });
-                                },
-                                update: () {
-                                  addOrEditUser(user);
-                                },
-                              ) .animate(delay: (index * 50).ms)
-                                  .fadeIn(duration: 500.ms)
-                                  .slideX(begin: -0.2, end: 0);
-                            }
-                        );
-                      } else {
-                        return GridView.builder(
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: (MediaQuery.of(context).size.width / 220).toInt(),
-                                mainAxisSpacing: 10,
-                                crossAxisSpacing: 10,
-                                mainAxisExtent: 250
-                            ),
-                            itemCount: _userList.length,
-                            itemBuilder: (context, index){
-                              User user = _userList[index];
-                              return CustomerTile(
-                                key: ObjectKey(user),
-                                user: user,
-                                click: (){
-                                  openStatPage(user);
-                                },
-                                delete: ()async{
-                                  await DatabaseHelper().deleteUser(user.id);
-                                  setState(() {
-                                    _userList.removeAt(index);
-                                  });
-                                },
-                                update: () {
-                                  addOrEditUser(user);
-                                },
-                              ) .animate(delay: (index * 50).ms)
-                                  .fadeIn(duration: 500.ms)
-                                  .slideX(begin: -0.2, end: 0);
-                            });
-                      }
-                    },
-                  )
-              )
-            ],
-          ),
-        )
-      ),
+                    );
+                  },
+                  label: Text("Statistics"),
+                  icon: Icon(Icons.bar_chart),
+                )
+              ],
+            ),
+            Expanded(
+                child: _userList.isEmpty
+                    ? Center(
+                        child: Text(
+                            "Enter a Name or Scan a BarCode to view Users"),
+                      )
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          if (constraints.maxWidth > 682 && isListView) {
+                            return ListView.builder(
+                                itemCount: _userList.length,
+                                itemBuilder: (context, index) {
+                                  User user = _userList[index];
+                                  return CustomerListviewItem(
+                                    key: ObjectKey(user),
+                                    user: user,
+                                    click: () {
+                                      openStatPage(user);
+                                    },
+                                    delete: () async {
+                                      await DatabaseHelper()
+                                          .deleteUser(user.id);
+                                      setState(() {
+                                        _userList.removeAt(index);
+                                      });
+                                    },
+                                    update: () {
+                                      addOrEditUser(user);
+                                    },
+                                  )
+                                      .animate(delay: (index * 50).ms)
+                                      .fadeIn(duration: 500.ms)
+                                      .slideX(begin: -0.2, end: 0);
+                                });
+                          } else {
+                            return GridView.builder(
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount:
+                                            (MediaQuery.of(context).size.width /
+                                                    220)
+                                                .toInt(),
+                                        mainAxisSpacing: 10,
+                                        crossAxisSpacing: 10,
+                                        mainAxisExtent: 250),
+                                itemCount: _userList.length,
+                                itemBuilder: (context, index) {
+                                  User user = _userList[index];
+                                  return CustomerTile(
+                                    key: ObjectKey(user),
+                                    user: user,
+                                    click: () {
+                                      openStatPage(user);
+                                    },
+                                    delete: () async {
+                                      await DatabaseHelper()
+                                          .deleteUser(user.id);
+                                      setState(() {
+                                        _userList.removeAt(index);
+                                      });
+                                    },
+                                    update: () {
+                                      addOrEditUser(user);
+                                    },
+                                  )
+                                      .animate(delay: (index * 50).ms)
+                                      .fadeIn(duration: 500.ms)
+                                      .slideX(begin: -0.2, end: 0);
+                                });
+                          }
+                        },
+                      ))
+          ],
+        ),
+      )),
       floatingActionButton: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            minimumSize: Size(64, 64)
-          ),
-          onPressed: ()async{
+          style: ElevatedButton.styleFrom(minimumSize: Size(64, 64)),
+          onPressed: () async {
             String? result = await showDialog(
                 context: context,
-                builder: (context){
-                  return isMobile ? BarcodeScannerSimple() : Dialog(child: SizedBox.expand(),); //TODO: Barcode-Scanner for Windows(or allow scanning at any time?)
+                builder: (context) {
+                  return isMobile
+                      ? BarcodeScannerSimple()
+                      : Dialog(
+                          child: SizedBox.expand(),
+                        ); //TODO: Barcode-Scanner for Windows(or allow scanning at any time?)
                 });
-            if(result != null){
-              if(Uuid.isValidUUID(fromString: result)){
+            if (result != null) {
+              if (Uuid.isValidUUID(fromString: result)) {
                 var user = await DatabaseHelper().getUserByUuid(result);
-                if(user != null){
+                if (user != null) {
                   openUser(user);
                 } else {
-                  if(context.mounted) {
+                  if (context.mounted) {
                     showDialog(
-                      context: context,
-                      builder: (context){
-                        return AlertDialog(
-                          content: Text("Es konnte kein passender Benutzer gefunden werden!"),
-                          actions: [
-                            TextButton(
-                                onPressed: (){
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text("Close"))
-                          ],
-                        );
-                      });
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            content: Text(
+                                "Es konnte kein passender Benutzer gefunden werden!"),
+                            actions: [
+                              TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: Text("Close"))
+                            ],
+                          );
+                        });
                   }
                 }
               }
@@ -440,74 +455,9 @@ class LanguageOption {
   final String label;
   final VoidCallback onPressed;
 
-  LanguageOption({required this.code, required this.label, required this.onPressed});
+  LanguageOption(
+      {required this.code, required this.label, required this.onPressed});
 }
 
 //Maybe over the SearchBar? I dont like the Positioning of the Fullscreen, darkmode, languages...
-/*
-Row(
-                children: [
-                  if(!isMobile) Expanded(
-                      flex: 0,
-                      child:  IconButton(
-                          onPressed: () async {
-                            bool isFullScreen = await windowManager.isFullScreen();
-                            windowManager.setFullScreen(!isFullScreen);
-                            setState(() {
-                              fullScreenIcon = !isFullScreen ? Icon(Icons.close_fullscreen) : Icon(Icons.aspect_ratio);
-                            });
-                          },
-                          icon: fullScreenIcon
-                      )
-                  ),
-                  Expanded(
-                      flex: 0,
-                      child:  IconButton(
-                          onPressed: () async {
-                            MyApp.of(context).changeTheme();
-                          },
-                          icon: Icon(Icons.dark_mode)
-                      )
-                  ),
-                  Expanded(
-                      flex: 0,
-                      child: MenuAnchor(
-                          style: MenuStyle(
-                            padding: WidgetStateProperty.all(
-                              EdgeInsets.all(5),
-                            ),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          menuChildren: languages.map((lang) {
-                            return MenuItemButton(
-                              onPressed: lang.onPressed,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  CountryFlag.fromLanguageCode(lang.code, height: 15, width: 25),
-                                  const SizedBox(width: 5),
-                                  Text(lang.label),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                          builder: (BuildContext context, MenuController controller, Widget? child) {
-                            return TextButton.icon(
-                              focusNode: FocusNode(),
-                              onPressed: () {
-                                if (controller.isOpen) {
-                                  controller.close();
-                                } else {
-                                  controller.open();
-                                }
-                              },
-                              label: Text("Sprachen"),
-                              icon: Icon(Icons.language, size: 30),
-                            );
-                          },
-                          child: Icon(Icons.language)
-                      )
-                  ),
-                ],
-              )
- */
+// TM: Find ich gut

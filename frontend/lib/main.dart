@@ -10,14 +10,16 @@ import 'package:window_manager/window_manager.dart';
 import 'generated/l10n.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 enum DeviceType { mobile, desktop, web }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.windows ||
-      defaultTargetPlatform == TargetPlatform.linux ||
-      defaultTargetPlatform == TargetPlatform.macOS)) {
+  if (!kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.linux ||
+          defaultTargetPlatform == TargetPlatform.macOS)) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
     await windowManager.ensureInitialized();
@@ -80,43 +82,43 @@ class MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Strohhalm Kleiderausgabe",
-      navigatorKey: navigatorKey,
-      locale: _locale,
-      localizationsDelegates: [
-        S.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: [
-        Locale("en", ""),
-        Locale("de", ""),
-      ],
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.limeAccent,
-          brightness: Brightness.light,
+        title: "Strohhalm Kleiderausgabe",
+        navigatorKey: navigatorKey,
+        locale: _locale,
+        localizationsDelegates: [
+          S.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: [
+          Locale("en", ""),
+          Locale("de", ""),
+        ],
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.limeAccent,
+            brightness: Brightness.light,
+          ),
+          scaffoldBackgroundColor: CupertinoColors.lightBackgroundGray,
+          appBarTheme: AppBarTheme(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black87,
+            elevation: 0,
+          ),
+          cardTheme: CardThemeData(
+            color: Colors.white,
+            margin: EdgeInsets.all(8),
+            elevation: 1,
+          ),
+          listTileTheme: ListTileThemeData(
+            tileColor: Colors.white,
+            textColor: Colors.black87,
+            iconColor: Colors.black54,
+          ),
+          useMaterial3: true,
         ),
-        scaffoldBackgroundColor: CupertinoColors.lightBackgroundGray,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black87,
-          elevation: 0,
-        ),
-        cardTheme: CardThemeData(
-          color: Colors.white,
-          margin: EdgeInsets.all(8),
-          elevation: 1,
-        ),
-        listTileTheme: ListTileThemeData(
-          tileColor: Colors.white,
-          textColor: Colors.black87,
-          iconColor: Colors.black54,
-        ),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
+        darkTheme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
             seedColor: Colors.limeAccent,
             brightness: Brightness.dark,
@@ -137,21 +139,17 @@ class MyAppState extends State<MyApp> {
             textColor: Colors.white70,
             iconColor: Colors.white70,
           ),
-      ),
-      themeMode: themeMode,
-      home: MainPage(
-        onLocaleChange: setLocale,
-      )
-    );
+        ),
+        themeMode: themeMode,
+        home: MainPage(
+          onLocaleChange: setLocale,
+        ));
   }
 
   void changeTheme() {
     setState(() {
-      themeMode = themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      themeMode =
+          themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     });
   }
-
-
 }
-
-
