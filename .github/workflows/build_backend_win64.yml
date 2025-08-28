@@ -9,7 +9,6 @@ on:
 env:
   WORK_DIR: backend
   ARTIFACT_NAME: backend-winx64-${{ github.ref_name }}
-  VERSION: ${{ github.ref_name }}
 
 jobs:
   build:
@@ -24,7 +23,7 @@ jobs:
 
     - name: Build
       working-directory: ${{ env.WORK_DIR }}
-      run: go build -v -ldflags="-s -w -X main.Version=${{ env.VERSION }}" -trimpath -o ${{ env.ARTIFACT_NAME }}.exe .
+      run: go build -v -ldflags="-s -w" -trimpath -o ${{ env.ARTIFACT_NAME }}.exe .
 
     - name: Upload # This happens only when manually requested
       if: github.ref_type != 'tag'
