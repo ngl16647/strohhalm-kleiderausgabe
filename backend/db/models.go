@@ -14,6 +14,7 @@ type CustomerVisit struct {
 	CustomerFirstName string `json:"customerFirstName"`
 	CustomerLastName  string `json:"customerLastName"`
 	VisitDate         string `json:"visitDate"`
+	Notes             string `json:"notes"`
 }
 
 const DateFormat = "2006-01-02"
@@ -33,6 +34,7 @@ const (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
 			CustomerId INTEGER,
 			VisitDate TEXT NOT NULL,
+			Notes TEXT,
 			FOREIGN KEY (CustomerId) REFERENCES customers(Id)
         )
 	`
