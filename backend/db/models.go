@@ -1,19 +1,18 @@
 package db
 
-import "time"
-
 type Customer struct {
 	Id        int64  `json:"id"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
+	Birthday  string `json:"birthday"`
 }
 
 type CustomerVisit struct {
-	Id                int64     `json:"id"`
-	CustomerId        int64     `json:"customerId"`
-	CustomerFirstName string    `json:"customerFirstName"`
-	CustomerLastName  string    `json:"customerLastName"`
-	VisitDate         time.Time `json:"visitDate"`
+	Id                int64  `json:"id"`
+	CustomerId        int64  `json:"customerId"`
+	CustomerFirstName string `json:"customerFirstName"`
+	CustomerLastName  string `json:"customerLastName"`
+	VisitDate         string `json:"visitDate"`
 }
 
 const DateFormat = "2006-01-02"
@@ -23,7 +22,8 @@ const (
 		CREATE TABLE IF NOT EXISTS customers (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
             FirstName TEXT NOT NULL,
-            LastName TEXT NOT NULL
+            LastName TEXT NOT NULL,
+			Birthday TEXT
         )
 	`
 	VisitsInitStr = `

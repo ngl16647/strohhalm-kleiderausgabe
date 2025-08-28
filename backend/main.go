@@ -18,6 +18,6 @@ func main() {
 
 	routes.InitRoutes(r)
 
-	log.Println("Server started")
+	log.Println("Server started on port 8080")
 	http.ListenAndServe(":8080", r)
 }
