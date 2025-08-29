@@ -11,7 +11,7 @@ import (
 
 func AddCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	var c db.Customer
-	if err := DecodeBody(r, &c); err != nil {
+	if err := DecodeRequestBody(r, &c); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -76,7 +76,7 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var c db.Customer
-	if err := DecodeBody(r, &c); err != nil {
+	if err := DecodeRequestBody(r, &c); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

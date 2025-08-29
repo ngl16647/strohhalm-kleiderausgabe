@@ -36,15 +36,20 @@ func scanCustomerVisits(rows *sql.Rows) ([]CustomerVisit, error) {
 	return cvs, nil
 }
 
-func AddVisitNow(customerId int64, notes string) (int64, error) {
+func AddVisitNow(customerId int64, notes string) (Visit, error) {
+	today := time.Now().Format(DateFormat)
 	res, err := DB.Exec(
 		"INSERT INTO visits (customer_id, visit_date, notes) VALUES (?, ?, ?)",
-		customerId, time.Now().Format(DateFormat), notes,
+		customerId, today, notes,
 	)
 	if err != nil {
-		return 0, fmt.Errorf("insert visit for customer %d: %w", customerId, err)
+		return Visit{}, fmt.Errorf("insert visit for customer %d: %w", customerId, err)
 	}
-	return res.LastInsertId()
+	visitId, err := res.LastInsertId()
+	if err != nil {
+		return Visit{}, err
+	}
+	return Visit{Id: visitId, CustomerId: customerId, VisitDate: today, Notes: notes}, nil
 }
 
 func AllCustomerVisits() ([]CustomerVisit, error) {

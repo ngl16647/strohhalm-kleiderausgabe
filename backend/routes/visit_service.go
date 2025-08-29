@@ -1,10 +1,36 @@
 package routes
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
+	"strconv"
 	"strohhalm-backend/db"
 	"time"
+
+	"github.com/go-chi/chi/v5"
 )
+
+func RecordCustomerVisitHandler(w http.ResponseWriter, r *http.Request) {
+	customerId, err := strconv.ParseInt(chi.URLParam(r, "customer_id"), 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid customer ID", http.StatusBadRequest)
+		return
+	}
+	var req map[string]string
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil && err != io.EOF {
+		http.Error(w, "Invalid note", http.StatusBadRequest)
+		return
+	}
+	note := req["notes"]
+
+	visit, err := db.AddVisitNow(customerId, note)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	WriteJson(w, visit, http.StatusOK)
+}
 
 func CustomerVisitsHandler(w http.ResponseWriter, r *http.Request) {
 	beginStr := GetParam(r, "begin")

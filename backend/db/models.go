@@ -11,10 +11,10 @@ type Customer struct {
 }
 
 type Visit struct {
-	Id         int64  `db:"id"`
-	CustomerId int64  `db:"customer_id"`
-	VisitDate  string `db:"visit_date"`
-	Notes      string `db:"notes"`
+	Id         int64  `json:"id"`
+	CustomerId int64  `db:"customer_id" json:"customer_id"`
+	VisitDate  string `db:"visit_date" json:"visit_date"`
+	Notes      string `json:"notes,omitempty"`
 }
 
 type CustomerVisit struct {

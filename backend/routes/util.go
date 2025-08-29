@@ -27,7 +27,7 @@ func GetParam(r *http.Request, param string) string {
 	return r.URL.Query().Get(param)
 }
 
-func DecodeBody(r *http.Request, data any) error {
+func DecodeRequestBody(r *http.Request, data any) error {
 	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
 		return fmt.Errorf("invalid JSON: %w", err)
 	}

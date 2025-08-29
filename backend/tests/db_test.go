@@ -47,9 +47,9 @@ func TestAddVisit(t *testing.T) {
 	c, err := db.AddCustomer(cInput)
 	FatalErr(t, err)
 
-	vid, err := db.AddVisitNow(c.Id, "we got robbed")
+	v, err := db.AddVisitNow(c.Id, "we got robbed")
 	FatalErr(t, err)
-	if vid != 1 {
+	if v.Id != 1 {
 		t.Fatal("New Visit ID is not 1")
 	}
 
