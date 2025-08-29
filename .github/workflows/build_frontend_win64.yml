@@ -1,0 +1,54 @@
+name: Build Frontend Win64
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  WORK_DIR: frontend
+  BUILD_DIR: frontend/build/windows/x64/runner
+  ARTIFACT_NAME: frontend-winx64-${{ github.ref_name }}
+  VERSION: ${{ github.ref_name }}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: stable
+        # Uncomment this if you want to use specific flutter version specified in pubspec.yaml
+        # flutter-version-file: ${{ env.WORK_DIR }}/pubspec.yaml
+    - run: flutter --version
+
+    - name: Install dependencies
+      working-directory: ${{ env.WORK_DIR }}
+      run: flutter pub get
+
+    - name: Build for Windows
+      working-directory: ${{ env.WORK_DIR }}
+      run: flutter build windows --release
+
+    - name: Upload # This happens only when manually requested
+      if: github.ref_type != 'tag'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.ARTIFACT_NAME }}
+        path: ${{ env.BUILD_DIR }}/Release/
+
+    # The following happens only when tags are pushed
+
+    - name: Zip release files
+      if: github.ref_type == 'tag'
+      run: powershell Compress-Archive -Path ${{ env.BUILD_DIR }}/Release -DestinationPath ${{ env.ARTIFACT_NAME }}.zip
+
+    - name: Release
+      if: github.ref_type == 'tag'
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ${{ env.ARTIFACT_NAME }}.zip

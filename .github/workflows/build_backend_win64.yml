@@ -1,0 +1,40 @@
+name: Build Backend Win64
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+env:
+  WORK_DIR: backend
+  ARTIFACT_NAME: backend-winx64-${{ github.ref_name }}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24'
+
+    - name: Build
+      working-directory: ${{ env.WORK_DIR }}
+      run: go build -v -ldflags="-s -w" -trimpath -o ${{ env.ARTIFACT_NAME }}.exe .
+
+    - name: Upload # This happens only when manually requested
+      if: github.ref_type != 'tag'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.ARTIFACT_NAME }}
+        path: ${{ env.WORK_DIR }}/${{ env.ARTIFACT_NAME }}.exe
+
+    - name: Release # This happens only when tags are pushed
+      uses: softprops/action-gh-release@v2
+      if: github.ref_type == 'tag'
+      with:
+        name: ${{ env.ARTIFACT_NAME }}
+        files: ${{ env.WORK_DIR }}/${{ env.ARTIFACT_NAME }}.exe
