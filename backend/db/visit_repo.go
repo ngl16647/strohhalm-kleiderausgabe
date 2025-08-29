@@ -38,7 +38,7 @@ func scanCustomerVisits(rows *sql.Rows) ([]CustomerVisit, error) {
 
 func AddVisitNow(customerId int64, notes string) (int64, error) {
 	res, err := DB.Exec(
-		"INSERT INTO visits (CustomerId, VisitDate, Notes) VALUES (?, ?, ?)",
+		"INSERT INTO visits (customer_id, visit_date, notes) VALUES (?, ?, ?)",
 		customerId, time.Now().Format(DateFormat), notes,
 	)
 	if err != nil {
@@ -48,32 +48,46 @@ func AddVisitNow(customerId int64, notes string) (int64, error) {
 }
 
 func AllCustomerVisits() ([]CustomerVisit, error) {
-	rows, err := DB.Query(`
-        SELECT v.Id, c.Id, c.FirstName, c.LastName, v.VisitDate, v.Notes
-        FROM customers c
-        JOIN visits v ON c.Id = v.CustomerId
-        ORDER BY v.VisitDate DESC
-    `)
+	cvs := []CustomerVisit{}
+	err := DB.Select(&cvs, `
+		SELECT 
+			v.id AS id,
+			c.id AS customer_id,
+			c.first_name AS first_name,
+			c.last_name AS last_name,
+			v.visit_date AS visit_date,
+			v.notes AS notes
+      	FROM customers c
+        JOIN visits v ON c.id = v.customer_id
+        ORDER BY v.visit_date DESC`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get customer visits: %w", err)
 	}
-	return scanCustomerVisits(rows)
+	return cvs, nil
 }
 
 func CustomerVisitsBetween(begin time.Time, end time.Time) ([]CustomerVisit, error) {
 	beginStr := begin.Format(DateFormat)
 	endStr := end.Format(DateFormat)
 
-	rows, err := DB.Query(`
-        SELECT v.Id, c.Id, c.FirstName, c.LastName, v.VisitDate, v.Notes
-        FROM customers c
-        JOIN visits v ON c.Id = v.CustomerId
-        WHERE v.VisitDate BETWEEN ? AND ?
-        ORDER BY v.VisitDate DESC
-    `, beginStr, endStr)
+	cvs := []CustomerVisit{}
+	err := DB.Select(&cvs, `
+		SELECT 
+			v.id AS id,
+			c.id AS customer_id,
+			c.first_name AS first_name,
+			c.last_name AS last_name,
+			v.visit_date AS visit_date,
+			v.notes AS notes
+      	FROM customers c
+        JOIN visits v ON c.id = v.customer_id
+		WHERE v.visit_date BETWEEN $1 AND $2
+        ORDER BY v.visit_date DESC`,
+		beginStr, endStr,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get customer visits between %s and %s: %w", beginStr, endStr, err)
 	}
 
-	return scanCustomerVisits(rows)
+	return cvs, nil
 }

@@ -1,13 +1,13 @@
 package db
 
 import (
-	"database/sql"
 	"errors"
 
+	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var DB *sql.DB
+var DB *sqlx.DB
 
 var (
 	ErrNotFound = errors.New("not found")
@@ -22,11 +22,8 @@ func initPanic(err error, message string) {
 func InitDatabase(path string) {
 	var err error
 
-	DB, err = sql.Open("sqlite3", path)
+	DB, err = sqlx.Open("sqlite3", path)
 	initPanic(err, "Failed to open database")
-
-	err = DB.Ping()
-	initPanic(err, "Failed to ping database")
 
 	_, err = DB.Exec(CustomerInitStr)
 	initPanic(err, "Failed to create table `customers`")

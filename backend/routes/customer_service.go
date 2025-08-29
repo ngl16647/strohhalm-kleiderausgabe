@@ -24,13 +24,13 @@ func AddCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := db.AddCustomer(c)
+	c, err := db.AddCustomer(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	WriteJson(w, map[string]int64{"id": id}, http.StatusCreated)
+	WriteJson(w, c, http.StatusCreated)
 }
 
 func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {

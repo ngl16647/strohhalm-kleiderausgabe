@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 // helper
@@ -35,23 +37,32 @@ func scanCustomers(rows *sql.Rows) ([]Customer, error) {
 	return customers, nil
 }
 
-func AddCustomer(c Customer) (int64, error) {
-	res, err := DB.Exec(
-		"INSERT INTO customers (FirstName, LastName, Birthday, Notes) VALUES (?, ?, ?, ?)",
-		c.FirstName, c.LastName, c.Birthday, c.Notes,
+func AddCustomer(c Customer) (Customer, error) {
+	if c.Uuid == "" {
+		c.Uuid = uuid.NewString()
+	}
+	res, err := DB.NamedExec(
+		`INSERT INTO customers (uuid, first_name, last_name, birthday, country, notes) 
+			VALUES (:uuid, :first_name, :last_name, :birthday, :country, :notes)`,
+		&c,
 	)
 	if err != nil {
-		return 0, fmt.Errorf("failed to add customer %s %s: %w", c.FirstName, c.LastName, err)
+		return Customer{}, fmt.Errorf("failed to add customer %s %s: %w", c.FirstName, c.LastName, err)
 	}
-	return res.LastInsertId()
+	id, err := res.LastInsertId()
+	if err != nil {
+		return Customer{}, fmt.Errorf("unable to get user id")
+	}
+	c.Id = id
+	return c, nil
 }
 
 func UpdateCustomer(customerId int64, newC Customer) error {
 	res, err := DB.Exec(`
         UPDATE customers
-        SET FirstName = ?, LastName = ?, Birthday = ?, Notes = ?
+        SET uuid = ?, first_name = ?, last_name = ?, birthday = ?, country = ?, notes = ?
         WHERE Id = ?`,
-		newC.FirstName, newC.LastName, newC.Birthday, newC.Notes,
+		newC.Uuid, newC.FirstName, newC.LastName, newC.Birthday, newC.Country, newC.Notes,
 		customerId,
 	)
 	if err != nil {
@@ -71,37 +82,23 @@ func UpdateCustomer(customerId int64, newC Customer) error {
 }
 
 func AllCustomers() ([]Customer, error) {
-	rows, err := DB.Query("SELECT Id, FirstName, LastName, Birthday, Notes FROM customers")
+	cs := []Customer{}
+	err := DB.Select(&cs, "SELECT * FROM customers")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get all customers: %w", err)
 	}
-	return scanCustomers(rows)
+	return cs, nil
 }
 
 func CustomerById(id int64) (Customer, error) {
-	rows, err := DB.Query(`
-		SELECT Id, FirstName, LastName, Birthday, Notes
-			FROM customers 
-			WHERE Id = ?
-		`, id,
-	)
+	c := Customer{}
+	err := DB.Get(&c, "SELECT * FROM customers WHERE Id = $1", id)
 	if err != nil {
 		var empty Customer
 		return empty, fmt.Errorf("failed to get customer by id %d: %w", id, err)
 	}
 
-	cs, err := scanCustomers(rows)
-	if err != nil {
-		var empty Customer
-		return empty, fmt.Errorf("failed to get customer by id %d: %w", id, err)
-	}
-
-	if len(cs) == 0 {
-		var empty Customer
-		return empty, ErrNotFound
-	}
-
-	return cs[0], nil
+	return c, nil
 }
 
 func SearchCustomer(query string) ([]Customer, error) {
@@ -109,14 +106,14 @@ func SearchCustomer(query string) ([]Customer, error) {
 		return AllCustomers()
 	}
 
-	rows, err := DB.Query(`
-		SELECT Id, FirstName, LastName, Birthday, Notes
-			FROM customers
-			WHERE LOWER(FirstName || ' ' || LastName) LIKE ?
-		`, "%"+strings.ToLower(query)+"%",
+	cs := []Customer{}
+	err := DB.Select(&cs,
+		`SELECT * FROM customers
+			WHERE LOWER(first_name || ' ' || last_name) LIKE $1`,
+		"%"+strings.ToLower(query)+"%",
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query customer: %w", err)
 	}
-	return scanCustomers(rows)
+	return cs, nil
 }
