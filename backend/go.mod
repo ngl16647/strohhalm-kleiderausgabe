@@ -1,4 +1,4 @@
-module strohalm-backend
+module strohhalm-backend
 
 go 1.24.4
 
