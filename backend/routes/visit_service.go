@@ -39,36 +39,41 @@ func CustomerVisitsHandler(w http.ResponseWriter, r *http.Request) {
 	var cvs []db.CustomerVisit
 	var err error
 
-	switch {
-	case beginStr == "" && endStr == "":
+	// Return all visits when no time param is provided
+	if beginStr == "" && endStr == "" {
 		cvs, err = db.AllCustomerVisits()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		WriteJson(w, cvs, http.StatusOK)
+	}
 
-	case beginStr == "" || endStr == "":
-		http.Error(w, "both begin and end must be provided", http.StatusBadRequest)
+	// When at least one of time param is provided
+	if beginStr == "" {
+		beginStr = "0000-01-01"
+	}
+
+	if endStr == "" {
+		endStr = "9000-01-01"
+	}
+
+	begin, err := time.Parse(db.DateFormat, beginStr)
+	if err != nil {
+		http.Error(w, "invalid begin date", http.StatusBadRequest)
 		return
+	}
 
-	default:
-		begin, err := time.Parse(db.DateFormat, beginStr)
-		if err != nil {
-			http.Error(w, "invalid begin date", http.StatusBadRequest)
-			return
-		}
+	end, err := time.Parse(db.DateFormat, endStr)
+	if err != nil {
+		http.Error(w, "invalid end date", http.StatusBadRequest)
+		return
+	}
 
-		end, err := time.Parse(db.DateFormat, endStr)
-		if err != nil {
-			http.Error(w, "invalid end date", http.StatusBadRequest)
-			return
-		}
-
-		cvs, err = db.CustomerVisitsBetween(begin, end)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	cvs, err = db.CustomerVisitsBetween(begin, end)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	WriteJson(w, cvs, http.StatusOK)

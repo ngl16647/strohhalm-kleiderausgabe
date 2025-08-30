@@ -46,7 +46,7 @@ const (
 			customer_id INTEGER,
 			visit_date TEXT NOT NULL,
 			notes TEXT,
-			FOREIGN KEY (customer_id) REFERENCES customers(id)
+			FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
         )
-	`
+	` // Use "ON DELETE SET NULL" to allow visit record to exist with deleted customer
 )
