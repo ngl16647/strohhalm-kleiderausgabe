@@ -42,8 +42,8 @@ func AddCustomer(c Customer) (Customer, error) {
 		c.Uuid = uuid.NewString()
 	}
 	res, err := DB.NamedExec(
-		`INSERT INTO customers (uuid, first_name, last_name, birthday, country, notes) 
-			VALUES (:uuid, :first_name, :last_name, :birthday, :country, :notes)`,
+		`INSERT INTO customers (uuid, first_name, last_name, birthday, country, last_visit, notes) 
+			VALUES (:uuid, :first_name, :last_name, :birthday, :country, :last_visit, :notes)`,
 		&c,
 	)
 	if err != nil {
@@ -58,12 +58,18 @@ func AddCustomer(c Customer) (Customer, error) {
 }
 
 func UpdateCustomer(customerId int64, newC Customer) error {
-	res, err := DB.Exec(`
+	newC.Id = customerId
+	res, err := DB.NamedExec(`
         UPDATE customers
-        SET uuid = ?, first_name = ?, last_name = ?, birthday = ?, country = ?, notes = ?
-        WHERE Id = ?`,
-		newC.Uuid, newC.FirstName, newC.LastName, newC.Birthday, newC.Country, newC.Notes,
-		customerId,
+        SET uuid = :uuid, 
+			first_name = :first_name,
+			last_name = :last_name,
+			birthday = :birthday,
+			country = :country,
+			last_visit = :last_visit,
+			notes = :notes
+        WHERE Id = :id`,
+		&newC,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to update customer %d: %w", customerId, err)

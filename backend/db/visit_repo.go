@@ -14,10 +14,19 @@ func AddVisitNow(customerId int64, notes string) (Visit, error) {
 	if err != nil {
 		return Visit{}, fmt.Errorf("insert visit for customer %d: %w", customerId, err)
 	}
+
+	if _, err := DB.Exec(
+		"UPDATE customers SET last_visit = ? WHERE id = ?",
+		today, customerId,
+	); err != nil {
+		return Visit{}, fmt.Errorf("insert visit for customer %d: %w", customerId, err)
+	}
+
 	visitId, err := res.LastInsertId()
 	if err != nil {
 		return Visit{}, err
 	}
+
 	return Visit{Id: visitId, CustomerId: customerId, VisitDate: today, Notes: notes}, nil
 }
 

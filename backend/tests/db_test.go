@@ -63,4 +63,7 @@ func TestAddVisit(t *testing.T) {
 	cvs, err = db.CustomerVisitsBetween(t1, t2)
 	FatalErr(t, err)
 	log.Println(cvs)
+
+	c, _ = db.CustomerById(1)
+	t.Log(c)
 }

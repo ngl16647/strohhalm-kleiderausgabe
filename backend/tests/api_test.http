@@ -44,4 +44,4 @@ POST {{base_url}}/visits/1
 ### Get visit
 GET {{base_url}}/visits
     ?begin=2025-07-20
-    &end=3000-10-10
+    &end=

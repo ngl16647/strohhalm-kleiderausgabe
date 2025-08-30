@@ -5,9 +5,10 @@ type Customer struct {
 	Uuid      string `json:"uuid"`
 	FirstName string `db:"first_name" json:"firstName"`
 	LastName  string `db:"last_name" json:"lastName"`
-	Birthday  string `json:"birthday,omitempty"`
-	Country   string `json:"country,omitempty"`
-	Notes     string `json:"notes,omitempty"`
+	Birthday  string `json:"birthday"`
+	Country   string `json:"country"`
+	LastVisit string `db:"last_visit" json:"lastVisit"`
+	Notes     string `json:"notes"`
 }
 
 type Visit struct {
@@ -23,7 +24,7 @@ type CustomerVisit struct {
 	CustomerFirstName string `db:"first_name" json:"customerFirstName"`
 	CustomerLastName  string `db:"last_name" json:"customerLastName"`
 	VisitDate         string `db:"visit_date" json:"visitDate"`
-	Notes             string `db:"notes" json:"notes,omitempty"`
+	Notes             string `db:"notes" json:"notes"`
 }
 
 const DateFormat = "2006-01-02"
@@ -37,8 +38,9 @@ const (
             last_name TEXT NOT NULL,
 			birthday TEXT,
 			country TEXT,
+			last_visit TEXT,
 			notes TEXT
-        )
+        );
 	`
 	VisitsInitStr = `
 		CREATE TABLE IF NOT EXISTS visits (
@@ -47,10 +49,11 @@ const (
 			visit_date TEXT NOT NULL,
 			notes TEXT,
 			FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
-        )
+        );
 	` // Use "ON DELETE SET NULL" to allow visit record to exist with deleted customer
 )
 
 var Indices = []string{
 	`CREATE INDEX IF NOT EXISTS idx_visits_visit_date ON visits(visit_date);`,
+	`CREATE INDEX IF NOT EXISTS idx_visits_customer_id ON visits(customer_id);`,
 }

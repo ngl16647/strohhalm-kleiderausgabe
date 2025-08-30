@@ -84,6 +84,7 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	// validating customer data
 	c.FirstName = strings.TrimSpace(c.FirstName)
 	c.LastName = strings.TrimSpace(c.LastName)
+	c.Notes = strings.TrimSpace(c.Notes)
 	if c.FirstName == "" || c.LastName == "" {
 		http.Error(w, "first and last name are required", http.StatusBadRequest)
 		return
