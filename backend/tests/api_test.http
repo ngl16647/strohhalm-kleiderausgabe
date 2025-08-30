@@ -38,10 +38,11 @@ GET {{base_url}}/customers?query=
 POST {{base_url}}/visits/1
 
 {
+    "visitDate": "2000-10-10",
     "notes": "He farted"
 }
 
 ### Get visit
 GET {{base_url}}/visits
-    ?begin=2025-07-20
+    ?begin=2000-07-20
     &end=

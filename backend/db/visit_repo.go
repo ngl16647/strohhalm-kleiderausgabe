@@ -6,20 +6,19 @@ import (
 )
 
 func AddVisitNow(customerId int64, notes string) (Visit, error) {
-	today := time.Now().Format(DateFormat)
+	today := time.Now()
+	todayStr := today.Format(DateFormat)
+
 	res, err := DB.Exec(
 		"INSERT INTO visits (customer_id, visit_date, notes) VALUES (?, ?, ?)",
-		customerId, today, notes,
+		customerId, todayStr, notes,
 	)
 	if err != nil {
 		return Visit{}, fmt.Errorf("insert visit for customer %d: %w", customerId, err)
 	}
 
-	if _, err := DB.Exec(
-		"UPDATE customers SET last_visit = ? WHERE id = ?",
-		today, customerId,
-	); err != nil {
-		return Visit{}, fmt.Errorf("insert visit for customer %d: %w", customerId, err)
+	if err := SetCustomerLastVisit(customerId, today); err != nil {
+		return Visit{}, fmt.Errorf("update last visit for customer %d: %w", customerId, err)
 	}
 
 	visitId, err := res.LastInsertId()
@@ -27,7 +26,30 @@ func AddVisitNow(customerId int64, notes string) (Visit, error) {
 		return Visit{}, err
 	}
 
-	return Visit{Id: visitId, CustomerId: customerId, VisitDate: today, Notes: notes}, nil
+	return Visit{Id: visitId, CustomerId: customerId, VisitDate: todayStr, Notes: notes}, nil
+}
+
+func AddVisitAt(customerId int64, visitDate time.Time, notes string) (Visit, error) {
+	visitDateStr := visitDate.Format(DateFormat)
+
+	res, err := DB.Exec(
+		"INSERT INTO visits (customer_id, visit_date, notes) VALUES (?, ?, ?)",
+		customerId, visitDateStr, notes,
+	)
+	if err != nil {
+		return Visit{}, fmt.Errorf("insert visit for customer %d: %w", customerId, err)
+	}
+
+	if err := SetCustomerLastVisit(customerId, visitDate); err != nil {
+		return Visit{}, fmt.Errorf("update last visit for customer %d: %w", customerId, err)
+	}
+
+	visitId, err := res.LastInsertId()
+	if err != nil {
+		return Visit{}, err
+	}
+
+	return Visit{Id: visitId, CustomerId: customerId, VisitDate: visitDateStr, Notes: notes}, nil
 }
 
 func AllCustomerVisits() ([]CustomerVisit, error) {

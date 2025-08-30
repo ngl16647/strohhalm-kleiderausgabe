@@ -42,15 +42,18 @@ const (
 			notes TEXT
         );
 	`
+	// Use "ON DELETE SET NULL" to allow visit record to exist with deleted customer
+	// Use UNIQUE(costumer_id, visit_date) to endure a customer cannot visit twice a day
 	VisitsInitStr = `
 		CREATE TABLE IF NOT EXISTS visits (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
 			customer_id INTEGER,
 			visit_date TEXT NOT NULL,
 			notes TEXT,
-			FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
+			FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
+			UNIQUE(customer_id, visit_date)
         );
-	` // Use "ON DELETE SET NULL" to allow visit record to exist with deleted customer
+	`
 )
 
 var Indices = []string{

@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"strohhalm-backend/db"
 	"time"
 
@@ -22,11 +23,28 @@ func RecordCustomerVisitHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid note", http.StatusBadRequest)
 		return
 	}
-	note := req["notes"]
+	visitDateStr := req["visitDate"]
+	notes := req["notes"]
 
-	visit, err := db.AddVisitNow(customerId, note)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	var visit db.Visit
+	var addVisitErr error
+	if visitDateStr == "" {
+		visit, addVisitErr = db.AddVisitNow(customerId, notes)
+	} else {
+		visitDate, err := time.Parse(db.DateFormat, visitDateStr)
+		if err != nil {
+			http.Error(w, "Invalid date format", http.StatusBadRequest)
+			return
+		}
+		visit, addVisitErr = db.AddVisitAt(customerId, visitDate, notes)
+	}
+	if addVisitErr != nil {
+		// A customer cannot visit twice within a day
+		if strings.Contains(addVisitErr.Error(), "UNIQUE constraint failed") {
+			http.Error(w, "Customer already has a visit on this date", http.StatusConflict)
+			return
+		}
+		http.Error(w, addVisitErr.Error(), http.StatusInternalServerError)
 		return
 	}
 	WriteJson(w, visit, http.StatusOK)
