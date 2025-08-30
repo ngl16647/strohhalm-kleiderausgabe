@@ -30,4 +30,8 @@ func InitDatabase(path string) {
 
 	_, err = DB.Exec(VisitsInitStr)
 	initPanic(err, "Failed to create table `visits`")
+
+	for _, index := range Indices {
+		sqlx.MustExec(DB, index)
+	}
 }

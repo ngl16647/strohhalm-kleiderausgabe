@@ -50,3 +50,7 @@ const (
         )
 	` // Use "ON DELETE SET NULL" to allow visit record to exist with deleted customer
 )
+
+var Indices = []string{
+	`CREATE INDEX IF NOT EXISTS idx_visits_visit_date ON visits(visit_date);`,
+}
