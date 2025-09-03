@@ -1,42 +1,12 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
-
-// helper
-func scanCustomers(rows *sql.Rows) ([]Customer, error) {
-	defer rows.Close()
-
-	var customers []Customer
-	for rows.Next() {
-		var c Customer
-
-		// Scanning rows
-		if err := rows.Scan(
-			&c.Id,
-			&c.FirstName,
-			&c.LastName,
-			&c.Birthday,
-			&c.Notes,
-		); err != nil {
-			return nil, err
-		}
-
-		customers = append(customers, c)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return customers, nil
-}
 
 func AddCustomer(c Customer) (Customer, error) {
 	if c.Uuid == "" {
@@ -60,14 +30,13 @@ func AddCustomer(c Customer) (Customer, error) {
 
 func UpdateCustomer(customerId int64, newC Customer) error {
 	newC.Id = customerId
+	// uuid cannot be updated
 	res, err := DB.NamedExec(`
         UPDATE customers
-        SET uuid = :uuid, 
-			first_name = :first_name,
+        SET first_name = :first_name,
 			last_name = :last_name,
 			birthday = :birthday,
 			country = :country,
-			last_visit = :last_visit,
 			notes = :notes
         WHERE Id = :id`,
 		&newC,

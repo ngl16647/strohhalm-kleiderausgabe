@@ -13,7 +13,7 @@ import (
 )
 
 func RecordCustomerVisitHandler(w http.ResponseWriter, r *http.Request) {
-	customerId, err := strconv.ParseInt(chi.URLParam(r, "customer_id"), 10, 64)
+	customerId, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid customer ID", http.StatusBadRequest)
 		return

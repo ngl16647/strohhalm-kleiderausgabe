@@ -21,6 +21,7 @@ type Visit struct {
 type CustomerVisit struct {
 	Id                int64  `db:"id" json:"id"`
 	CustomerId        int64  `db:"customer_id" json:"customerId"`
+	CustomerUuid      string `db:"customer_uuid" json:"customerUuid"`
 	CustomerFirstName string `db:"first_name" json:"customerFirstName"`
 	CustomerLastName  string `db:"last_name" json:"customerLastName"`
 	VisitDate         string `db:"visit_date" json:"visitDate"`

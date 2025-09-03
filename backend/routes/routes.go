@@ -45,21 +45,30 @@ var Routes = []Route{
 		Path:    "/customers/{id}",
 		Method:  GET,
 		Handler: GetCustomerHandler,
-		Doc:     "Get customer by ID",
+		Doc: `Get customer by ID. Response includes "id", "uuid", "firstName", "lastName", "birthday" 
+		 "country", "lastVisit" and "notes".`,
 	},
 	{
 		Path:    "/customers/{id}",
 		Method:  PUT,
 		Handler: UpdateCustomerHandler,
-		Doc: `Update customer. Expects JSON body with "firstName", "lastName", "birthday", "notes". 
-		 IMPORTANT: omitted fields will be recorded as empty values.`,
+		Doc: `Update customer. Expects JSON body with "firstName", "lastName", "birthday", "country"
+		 and "notes". 
+		 IMPORTANT: omitted fields will be recorded as empty values. "uuid" cannot be changed.`,
 	},
 	{
-		Path:    "/visits/{customer_id}",
+		Path:    "/customers/{id}/visits",
 		Method:  POST,
 		Handler: RecordCustomerVisitHandler,
 		Doc: `Record a visit. Optionally accepts JSON body with "visitDate" (format: YYYY-MM-DD) and
 		 "notes". Record the visit with today's date if visitDate is not provided. Returns visit id.`,
+	},
+	{
+		Path:    "/customers/{id}/visits",
+		Method:  GET,
+		Handler: nil,
+		Doc: `Get all visits of a customer. Returns a list consists of data: "id", "customerId", 
+		 "customerUuid", "customerFirstName", "customerLastName", "visitDate" and "notes".`,
 	},
 	{
 		Path:    "/visits",

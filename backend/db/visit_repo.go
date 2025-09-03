@@ -60,6 +60,7 @@ func AllCustomerVisits() ([]CustomerVisit, error) {
 		SELECT 
 			v.id AS id,
 			c.id AS customer_id,
+			c.uuid AS customer_uuid,
 			c.first_name AS first_name,
 			c.last_name AS last_name,
 			v.visit_date AS visit_date,
@@ -82,6 +83,7 @@ func CustomerVisitsBetween(begin time.Time, end time.Time) ([]CustomerVisit, err
 		SELECT 
 			v.id AS id,
 			c.id AS customer_id,
+			c.uuid AS customer_uuid,
 			c.first_name AS first_name,
 			c.last_name AS last_name,
 			v.visit_date AS visit_date,
