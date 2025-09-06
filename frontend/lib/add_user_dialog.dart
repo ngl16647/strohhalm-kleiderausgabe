@@ -1,9 +1,11 @@
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:strohhalm_app/http_helper.dart';
 import 'package:strohhalm_app/main.dart';
 import 'package:strohhalm_app/user.dart';
 import 'package:strohhalm_app/utilities.dart';
+import 'package:uuid/uuid.dart';
 import 'database_helper.dart';
 import 'generated/l10n.dart';
 
@@ -23,9 +25,9 @@ class AddUserDialogState extends State<AddUserDialog> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _miscellaneousController = TextEditingController();
-  bool _hasChild = false;
   DateTime? _selectedDate;
   Country _selectedCountry = Country.worldWide;
+  bool uploading = false;
 
   @override
   void initState() {
@@ -34,8 +36,7 @@ class AddUserDialogState extends State<AddUserDialog> {
       _lastNameController.text = widget.user!.lastName;
       _miscellaneousController.text = widget.user!.miscellaneous ?? "";
 
-      _selectedDate = DateTime.fromMillisecondsSinceEpoch(widget.user!.birthDay);
-      _hasChild = widget.user!.hasChild;
+      _selectedDate = widget.user!.birthDay;
       _selectedCountry = Country.tryParse(widget.user!.birthCountry) ?? Country.worldWide;
     }
     super.initState();
@@ -151,19 +152,6 @@ class AddUserDialogState extends State<AddUserDialog> {
                     ),
                   ),
                 ),
-                //Row(
-                //  children: [
-                //    Checkbox(
-                //      value: hasChild,
-                //      onChanged: (ev) {
-                //        setState(() {
-                //          hasChild = ev!;
-                //        });
-                //      },
-                //    ),
-                //    const Text("Has children"),
-                //  ],
-                //),
                 TextField(
                   decoration: InputDecoration(
                     hintText: S.of(context).add_user_miscellaneous,
@@ -208,30 +196,62 @@ class AddUserDialogState extends State<AddUserDialog> {
                         );
                         return;
                       }
+                      setState(() {
+                        uploading = true;
+                      });
                       if(widget.user != null){
                         User user = widget.user!.copyWith(
                             firstName: _firstNameController.text,
                             lastName: _lastNameController.text,
-                            birthDay: _selectedDate!.millisecondsSinceEpoch,
+                            birthDay: _selectedDate!,
                             birthCountry: _selectedCountry.countryCode,
-                            hasChild: _hasChild,
                             miscellaneous: _miscellaneousController.text
                         );
-                        await DatabaseHelper().updateUser(user);
+                        var result = await HttpHelper().updateCustomer(
+                            id: user.id,
+                            uuid: user.uuId,
+                            firstName: user.firstName,
+                            lastName: user.lastName,
+                            birthday: user.birthDay,
+                            countryCode: user.birthCountry,
+                            notes: user.miscellaneous
+                        );
+                        if(result == null) {
+                          print("Online update failed $result" );
+                        }
+                        await DatabaseHelper().updateUser(user, result != null);
                         if(context.mounted) navigatorKey.currentState?.pop([user, false]);
                       } else {
-                        User? user = await DatabaseHelper().addUser(
-                            _firstNameController.text,
-                            _lastNameController.text,
-                            _selectedDate!.millisecondsSinceEpoch,
-                            _selectedCountry.countryCode,
-                            _hasChild,
-                            _miscellaneousController.text
+                        final uuId = const Uuid().v4(); //v3 would allow hashing of name, birthday => Autodetect collisions, v4 is most used and random
+                        int? id = await HttpHelper().addCustomer(
+                            uuId: uuId,
+                            firstName: _firstNameController.text,
+                            lastName: _lastNameController.text,
+                            birthday: _selectedDate!,
+                            countryCode:  _selectedCountry.countryCode,
+                            notes: _miscellaneousController.text
                         );
+                        print(id);
+                        User? user = await DatabaseHelper().addUser(
+                            id: id, //If null a negative Id is created in addUser
+                            uuId: uuId,
+                            firstName: _firstNameController.text,
+                            lastName: _lastNameController.text,
+                            birthDay: _selectedDate!,
+                            birthCountry: _selectedCountry.countryCode,
+                            notes: _miscellaneousController.text
+                        );
+                        setState(() {
+                          uploading = false;
+                        });
                         if(context.mounted) navigatorKey.currentState?.pop([user, false]);
                         }
                       },
-                    child: Text(S.of(context).confirm),
+                    child: uploading ? SizedBox(
+                      height: 24, // kleiner als 40
+                      width: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ) :Text(widget.user != null ? S.of(context).update : S.of(context).confirm),
                   ),
                 ),
               ],

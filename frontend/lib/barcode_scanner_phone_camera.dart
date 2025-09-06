@@ -6,17 +6,17 @@ import 'package:strohhalm_app/main.dart';
 import 'generated/l10n.dart';
 
 ///QR-Code Scanner Seite
-class BarcodeScannerSimple extends StatefulWidget {
+class BarcodeScannerSmartPhoneCamera extends StatefulWidget {
 
-  const BarcodeScannerSimple({
+  const BarcodeScannerSmartPhoneCamera({
     super.key,
   });
 
   @override
-  State<BarcodeScannerSimple> createState() => _BarcodeScannerSimpleState();
+  State<BarcodeScannerSmartPhoneCamera> createState() => _BarcodeScannerSmartPhoneCameraState();
 }
 
-class _BarcodeScannerSimpleState extends State<BarcodeScannerSimple> {
+class _BarcodeScannerSmartPhoneCameraState extends State<BarcodeScannerSmartPhoneCamera> {
   Barcode? _barcode;
   bool codeFound = false;
 

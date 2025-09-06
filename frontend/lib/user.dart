@@ -3,30 +3,30 @@ class User{
   final String uuId;
   final String firstName;
   final String lastName;
-  final int createdOn;
-  final int birthDay;
+  //final DateTime createdOn;
+  final DateTime birthDay;
   final String birthCountry;
   final bool hasChild;
   final String? miscellaneous;
-  List<TookItem> tookItems;
+  List<TookItem> visits;
 
   User({
     required this.id,
     required this.uuId,
     required this.firstName,
     required this.lastName,
-    required this.createdOn,
+    //required this.createdOn,
     required this.birthDay,
     required this.birthCountry,
     required this.hasChild,
     this.miscellaneous,
-    required this.tookItems
+    required this.visits
   });
 
   User copyWith({
     String? firstName,
     String? lastName,
-    int? birthDay,
+    DateTime? birthDay,
     String? birthCountry,
     bool? hasChild,
     String? miscellaneous,
@@ -37,40 +37,53 @@ class User{
       uuId: uuId,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
-      createdOn: createdOn,
+      //createdOn: createdOn,
       birthDay: birthDay ?? this.birthDay,
       birthCountry: birthCountry ?? this.birthCountry,
       hasChild: hasChild ?? this.hasChild,
       miscellaneous: miscellaneous ?? this.miscellaneous,
-      tookItems: tookItems ?? this.tookItems,
+      visits: tookItems ?? visits,
+    );
+  }
+
+  factory User.fromMap(Map<String, dynamic> map, List<TookItem>? list){
+    return User(
+      id: map["id"],
+      uuId: map["uuid"],
+      firstName: map["firstName"],
+      lastName: map["lastName"],
+      birthDay: DateTime.parse(map["birthday"]),
+      birthCountry: map["country"] ?? "DE",
+      miscellaneous: map["notes"] ?? "",
+      visits: list ?? [],
+      //createdOn: map["createdOn"],
+      hasChild: false
     );
   }
 
   @override
   String toString() {
-    return "$firstName $lastName $birthCountry $uuId";
+    return "$id $firstName $lastName $birthCountry $uuId";
   }
 }
 
 class TookItem{
   final int id;
   final int userId;
-  final int tookTime;
-  final bool wasBedSheet;
+  final DateTime tookTime;
+  final bool? wasBedSheet;
 
-  const TookItem(
-      this.id,
-      this.userId,
-      this.tookTime,
-      this.wasBedSheet
-  );
+  const TookItem({
+    required this.id,
+    required this.userId,
+    required this.tookTime,
+    this.wasBedSheet});
 
   static TookItem fromMap(Map map){
     return TookItem(
-        map["id"],
-        map["userId"],
-        map["tookDate"],
-        map["wasBedSheet"] == 1 ? true : false
+        id: map["visitId"] ?? map["id"], //A litte hacky
+        userId: map["userId"],
+        tookTime: DateTime.parse(map["visitedOn"])
     );
   }
 }

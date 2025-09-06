@@ -95,6 +95,16 @@ class S {
     return Intl.message('Close', name: 'close', desc: '', args: []);
   }
 
+  /// `Today`
+  String get today {
+    return Intl.message('Today', name: 'today', desc: '', args: []);
+  }
+
+  /// `Update`
+  String get update {
+    return Intl.message('Update', name: 'update', desc: '', args: []);
+  }
+
   /// `Strohhalm Clothing Distribution`
   String get application_name {
     return Intl.message(

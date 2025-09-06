@@ -7,7 +7,7 @@ import 'package:strohhalm_app/database_helper.dart';
 import 'package:strohhalm_app/main.dart';
 import 'package:strohhalm_app/user.dart';
 import 'package:strohhalm_app/utilities.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:styled_text/styled_text.dart';
 import 'create_qr_code.dart';
 import 'generated/l10n.dart';
 
@@ -22,14 +22,11 @@ class StatPage extends StatefulWidget {
 
 class StatPageState extends State<StatPage>{
   List<TookItem> _tookItems = [];
-  TookItem? lastBedSheetItem;
-  CalendarFormat format = CalendarFormat.month;
-  bool takesBedsheet = false;
-  int numberOfVisits = 0;
-  int lastVisit = -1;
+  DateTime? _lastVisit;
+  bool _changed = false;
+  bool uploading = false;
 
-  DateTime get lastVisitDateTime => DateTime.fromMillisecondsSinceEpoch(lastVisit);
-  bool get isMoreThan14Days => DateTime.now().difference(lastVisitDateTime) > Duration(days: 13);
+  bool get isMoreThan14Days => _lastVisit != null ?  DateTime.now().difference(_lastVisit!) > Duration(days: 13) : true;
 
   @override
   void initState() {
@@ -38,18 +35,16 @@ class StatPageState extends State<StatPage>{
   }
 
   Future<void> getVisits() async {
-    _tookItems = widget.user.tookItems;
-    if (_tookItems.any((item) => item.wasBedSheet)) {
-      lastBedSheetItem = _tookItems
-          .where((item) => item.wasBedSheet)
-          .reduce((a, b) => a.tookTime > b.tookTime ? a : b);
-    }
+    _tookItems = widget.user.visits;
     setState(() {
-      lastBedSheetItem;
-      _tookItems;
-      if(_tookItems.isNotEmpty) lastVisit = _tookItems.first.tookTime;
-      numberOfVisits = _tookItems.length;
+      if(_tookItems.isNotEmpty) _lastVisit = _tookItems.first.tookTime;
     });
+
+    //if (_tookItems.any((item) => item.wasBedSheet)) {
+    //  lastBedSheetItem = _tookItems
+    //      .where((item) => item.wasBedSheet)
+    //      .reduce((a, b) => a.tookTime.isAfter(b.tookTime) ? a : b);
+    //}
   }
 
   List<Widget> getVisitTiles(){
@@ -57,7 +52,7 @@ class StatPageState extends State<StatPage>{
       Expanded(
         child: Container(
           decoration: BoxDecoration(
-            color: lastVisit == -1
+            color: _lastVisit == null //TODO: Gray or green?
                 ? Colors.grey
                 : (isMoreThan14Days)
                 ? Colors.lightGreen
@@ -75,11 +70,12 @@ class StatPageState extends State<StatPage>{
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(S.of(context).stat_page_lastTimeTookClothes),
-                    Text(
-                      lastVisit == -1
-                          ? "Never"
-                          : "${DateFormat("dd.MM.yyyy HH:mm").format(lastVisitDateTime)} ${Utilities().isSameDay(DateTime.now(), lastVisitDateTime) ? " (Heute)" : ""}",
+                    StyledText(
+                      text: _lastVisit == null
+                          ? S.of(context).customer_tile_lastVisit_never
+                          : "${DateFormat("dd.MM.yyyy HH:mm").format(_lastVisit!)} ${Utilities().isSameDay(DateTime.now(), _lastVisit!) ? " (${S.of(context).today})" : ""}",
                       style: TextStyle(fontSize: 18),
+
                     ),
                   ],
                 ),
@@ -89,14 +85,14 @@ class StatPageState extends State<StatPage>{
                 onPressed: () async {
                   bool? result = await Utilities().dialogConfirmation(context, S.of(context).stat_page_removeLastVisitConfirmation);
                   if (result != null) {
-                    int? newVisit = await DatabaseHelper().deleteLatestAndReturnPrevious(widget.user);
-                    if (newVisit != null) {
+                    DateTime? newVisit = await DatabaseHelper().deleteLatestAndReturnPrevious(widget.user);
                       setState(() {
-                        _tookItems.removeAt(0);
-                        widget.user.tookItems = _tookItems;
-                        lastVisit = newVisit;
+                        //_tookItems.removeAt(0);
+                        if(_tookItems.isNotEmpty) _tookItems.removeAt(0);
+                        _lastVisit = newVisit;
                       });
-                    }
+
+                    _changed = true;
                   }
                 },
                 label: Text(S.of(context).stat_page_removeLastVisit),
@@ -157,8 +153,8 @@ class StatPageState extends State<StatPage>{
             canPop: false,
             onPopInvokedWithResult: (popped, ev){
               if(!popped){
-                //To update List when barrierdismissing Dialog
-                Navigator.of(context).pop(_tookItems);
+                //To update List when barrier-dismissing Dialog
+                Navigator.of(context).pop(_changed ? _tookItems : null);
               }
             },
             child: Padding(
@@ -209,12 +205,11 @@ class StatPageState extends State<StatPage>{
                                   SizedBox(height: 10,),
                                   Text("${widget.user.firstName} ${widget.user.lastName}"),
                                   Text(
-                                    DateFormat("dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(widget.user.birthDay)),
+                                    DateFormat("dd.MM.yyyy").format(widget.user.birthDay),
                                     style: TextStyle(color: Colors.grey),
                                   ),
                                 ],
                               ),
-
                               // Birth Country
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,13 +230,14 @@ class StatPageState extends State<StatPage>{
                               //    Text(widget.user.hasChild ? "Ja" : "Nein", style: TextStyle(color: Colors.grey)),
                               //  ],
                               //),
+                              //overallVisits
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   SizedBox(height: 10,),
                                   Text(S.of(context).stat_page_visits),
-                                  Text(numberOfVisits.toString(), style: TextStyle(color: Colors.grey)),
+                                  Text(_tookItems.length.toString(), style: TextStyle(color: Colors.grey)),
                                 ],
                               ),
                             ],
@@ -303,33 +299,30 @@ class StatPageState extends State<StatPage>{
                         flex: 2,
                         child: TextButton(
                             onPressed: ()async{
-                              if(_tookItems.any((item) => isSameDay(DateTime.fromMillisecondsSinceEpoch(item.tookTime), DateTime.now()))) {
-                                if(context.mounted){
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(S.of(context).stat_page_alreadyGotToday))
-                                  );
-                                }
+                              if(_tookItems.any((item) => Utilities().isSameDay(item.tookTime, DateTime.now()))) {
+                                if(!context.mounted) return;
+                                Utilities().showToast(context: context, title: "Already Visited Today", description: S.of(context).stat_page_alreadyGotToday, isError: true);
                                 return;
                               }
-                              TookItem newestVisit = await DatabaseHelper().addVisit(widget.user.id, takesBedsheet);
-                              _tookItems.add(newestVisit);
-                              widget.user.tookItems = _tookItems;
                               setState(() {
-                                lastVisit = newestVisit.tookTime;
+                                uploading = true;
                               });
-                              if(context.mounted){
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(S.of(context).stat_page_savedVisit))
-                                );
-                                //navigatorKey.currentState?.pop(newestVisit);
-                              }
+                              TookItem newestVisit = await DatabaseHelper().addVisit(widget.user.id);
+                              _tookItems.insert(0,newestVisit);
+                              setState(() {
+                                _lastVisit = newestVisit.tookTime;
+                                uploading = false;
+                              });
+                              _changed = true;
+                              if(!context.mounted) return;
+                              Utilities().showToast(context: context, title: "Success", description: S.of(context).stat_page_savedVisit);
                             },
                             style: TextButton.styleFrom(
                                 backgroundColor: Colors.lime.withAlpha(70),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 minimumSize: Size(double.infinity, 75)
                             ),
-                            child: Text(S.of(context).customer_tile_addNewEntry(isMoreThan14Days))))
+                            child: uploading ? Center(child: CircularProgressIndicator()) : Text( S.of(context).customer_tile_addNewEntry(isMoreThan14Days))))
                   ],
                 )
               ],
@@ -340,7 +333,7 @@ class StatPageState extends State<StatPage>{
   }
 }
 
-/* Theoretisch alle Visits anzeigen
+/* Dialog for showAllVisits
 TextButton(
               style: TextButton.styleFrom(
                 minimumSize: Size(double.infinity, 42),

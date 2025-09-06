@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+import 'package:toastification/toastification.dart';
 import 'generated/l10n.dart';
 
 class Utilities{
@@ -33,4 +33,23 @@ class Utilities{
         });
   }
 
+  void showToast({
+     required BuildContext context,
+     required String title,
+     required String description,
+     bool? isError,
+    }){
+    if(context.mounted){
+      Toastification().show(
+        padding: EdgeInsets.all(24),
+        context: context,
+        type: isError != null ? ToastificationType.error : ToastificationType.success,
+        style: ToastificationStyle.flat,
+        autoCloseDuration: const Duration(seconds: 4),
+        title: Text(title, style: Theme.of(context).textTheme.titleMedium,),
+        description: Text(description, style: Theme.of(context).textTheme.bodyMedium,),
+        alignment: Alignment.topCenter,
+      );
+    }
+  }
 }

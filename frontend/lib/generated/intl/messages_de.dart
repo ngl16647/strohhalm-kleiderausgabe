@@ -143,6 +143,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "statistic_page_switchYearDisplay": m5,
     "statistic_page_visits": m6,
     "statistic_page_xAxis": m7,
+    "today": MessageLookupByLibrary.simpleMessage("Heute"),
+    "update": MessageLookupByLibrary.simpleMessage("Updaten"),
     "yes": MessageLookupByLibrary.simpleMessage("Ja"),
   };
 }

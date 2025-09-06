@@ -1,19 +1,24 @@
+import 'dart:io';
 import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:strohhalm_app/add_user_dialog.dart';
-import 'package:strohhalm_app/customer_listview_item.dart';
-import 'package:strohhalm_app/customer_gridview_item.dart';
+import 'package:strohhalm_app/barcode_scanner_hardware_listener.dart';
+import 'package:strohhalm_app/customer_tile.dart';
 import 'package:strohhalm_app/database_helper.dart';
+import 'package:strohhalm_app/settings.dart';
 import 'package:strohhalm_app/stat_page.dart';
 import 'package:strohhalm_app/statistic_page.dart';
 import 'package:strohhalm_app/user.dart';
-import 'package:uuid/uuid.dart';
 import 'package:window_manager/window_manager.dart';
-
-import 'barcode_scanner_simple.dart';
+import 'barcode_scanner_phone_camera.dart';
 import 'generated/l10n.dart';
 import 'main.dart';
+
+/* Overall TODO:
+  - check everything in mobile and decide what to keep
+
+ */
 
 class MainPage extends StatefulWidget {
   final void Function(Locale) onLocaleChange;
@@ -26,27 +31,112 @@ class MainPage extends StatefulWidget {
 
 class MainPageState extends State<MainPage> {
   final TextEditingController _searchController = TextEditingController();
+  late BarcodeScannerListener socketListener;
   List<User> _userList = [];
-  Icon fullScreenIcon = Icon(Icons.fullscreen);
-  bool isListView = true;
-  bool isMobile = false;
+  Icon _fullScreenIcon = Icon(Icons.fullscreen);
+  bool _isListView = true;
+  bool _isMobile = false;
+  bool _useServer = false;
+  bool _blockScan = false;
+  Color _selectedColor = Color.fromRGBO(169, 171, 25, 1.0);
+  File? _bannerImage;
 
   @override
-  void initState() {
-    isMobile = MyApp().getDeviceType() == DeviceType.mobile;
+  void initState(){
+    loadPage();
+    _isMobile = MyApp().getDeviceType() == DeviceType.mobile;
+    listenForScanner();
+
     super.initState();
   }
+
+  void loadPage()async{
+    loadSettings();
+    if(_useServer){
+      syncWithServer();
+    }
+  }
+
+  Future<void> syncWithServer()async{
+    await DatabaseHelper().uploadPendingUsers();
+    await DatabaseHelper().updatePendingUsers();
+    await DatabaseHelper().uploadPendingVisits();
+  }
+
+  Future<void> loadSettings() async {
+    await AppSettingsManager.instance.load();
+    var settings = AppSettingsManager.instance.settings;
+
+    _useServer = settings.useServer ?? false;
+    _selectedColor = settings.selectedColor ?? Color.fromRGBO(169, 171, 25, 1.0);
+    _bannerImage = settings.bannerImage;
+    String languageCode = settings.languageCode ?? "de";
+
+    changeLanguage(languageCode);
+    if(mounted){
+      MyApp.of(context).changeSeedColor(_selectedColor);
+      MyApp.of(context).changeTheme(settings.darkMode! ? ThemeMode.dark : ThemeMode.light);
+    }
+    setState(() {});
+  }
+
+  void listenForScanner(){
+    //TODO: HID or COM-Serial
+    // Pro HID:
+    //   - simple, universal, works with the cheapest scanners
+    //   - no drivers needed, plug-and-play
+    //   - works consistently across OSes
+    //   - Can be dis/reconnected and still works without additional logic
+    // Con HID:
+    //   - scanner "types" text into the currently active window → focus issues
+    //   - keyboard layout must match between scanner and system
+    // Pro COM(Serial):
+    //   - precise control over incoming data (rawData), no layout issues, more control over results
+    //   - can configure scanner via software (LED, beep, scan modes)
+    // Con COM (Serial):
+    //   - not all scanners support Serial/COM mode
+    //   - more complex setup (drivers, baud rate, parity, platform-specific plugins)
+    //   - need logic to recognise and act when devices lost/new connected
+    void scanSuccess(scannedValue) async {
+      openUserFromUuId(scannedValue);
+    }
+
+    void uuIdFail(){
+      showDialog(context: context, builder: (context){
+        return AlertDialog(
+            content: Text("Failed UuId Check!\nMake sure your Keyboard-Language (Left-Alt + Left-Shift) is the same as the Barcode-Scanner!"),
+            actions: [
+              TextButton(
+                  onPressed: Navigator.of(context).pop,
+                  child: Text(S.of(context).accept))
+            ]
+        );
+      });
+    }
+
+    socketListener = BarcodeScannerListener(
+        context: context,
+        onSuccessScan: scanSuccess,
+        onFailedUuIdCheck: uuIdFail
+    );
+    if(!_isMobile) socketListener.listenForScan();
+  }
+
+
 
   ///Gets Users with the firstName/Lastname LIKE the searchTerm. "*" gets all
   Future<void> searchUsers(String searchTerm) async {
     //TODO: Probably include a Search-Button, so there are less unnecessary server-requests
       _userList.clear();
-      if(searchTerm == "*"){
-        _userList = await DatabaseHelper().getUsers("");
-      } else if(searchTerm.trim().isNotEmpty) { //WhiteSpaces get removed so a SPACE doesn't just retrieve All
-        _userList = await DatabaseHelper().getUsers(searchTerm);
+      if(searchTerm.trim().isNotEmpty) { //WhiteSpaces get removed so a SPACE doesn't just retrieve All
+        _userList = await DatabaseHelper().getUsers(search: searchTerm == "*" ? "" : searchTerm);
+        //var result = await HttpHelper().searchCustomers(searchTerm == "*" ? "" : searchTerm);
+        //if(result is List<User>){
+        //  for(User u in _userList){
+        //    print(u.toString());
+        //  }
+        //}
       }
-      //_userList.forEach((item) => print(item.tookItems.isNotEmpty ? item.tookItems.first.tookTime : "EMpty"));
     setState(() {
       _userList;
     });
@@ -54,6 +144,7 @@ class MainPageState extends State<MainPage> {
 
   ///Adds or edits a User (if you want to edit, you have to give it a existing User)
   Future<void> addOrEditUser([User? user]) async {
+    _blockScan = true;
     final result = await showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -83,9 +174,11 @@ class MainPageState extends State<MainPage> {
         }
       }
     }
+    _blockScan = false;
   }
 
   Future<void> openStatPage(User user) async {
+    _blockScan = true;
     List<TookItem>? updated = await showDialog<List<TookItem>>(
         context: context,
         builder: (context){
@@ -93,12 +186,38 @@ class MainPageState extends State<MainPage> {
         });
     if(updated != null){
       int i = _userList.indexOf(user);
-      _userList[i] = user.copyWith(tookItems: updated); //new Objekt so the ListView can update throug Objectkey(user)
+      setState(() {
+        _userList[i] = user.copyWith(tookItems: updated); //new Objekt so the ListView can update through ObjectKey(user)
+      });
+    }
+    _blockScan = false;
+  }
+
+  Future<void> openUserFromUuId(String uuIdString) async {
+    if(_blockScan) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erfolgreich gescannt : $uuIdString")));
+    User? user = await DatabaseHelper().getUsers(uuid: uuIdString).then((item) => item.first);
+    if(user != null){
+      openUser(user);
+    } else {
+      if(mounted) {
+        showDialog(
+            context: context,
+            builder: (context){
+              return AlertDialog(
+                content: Text("${S.of(context).main_page_noUserWithUUID}:\n$uuIdString"),
+                actions: [
+                  TextButton(
+                      onPressed: Navigator.of(context).pop,
+                      child: Text(S.of(context).close))
+                ],
+              );
+            });
+      }
     }
   }
 
   void openUser(User user){
-    //TODO: Ask how it would be best to update?
     _userList.clear();
     setState(() {
       _userList.add(user);
@@ -109,13 +228,37 @@ class MainPageState extends State<MainPage> {
 
   Future<void> changeLanguage(String localeId) async {
     widget.onLocaleChange(Locale(localeId));
-
+    AppSettingsManager.instance.setLanguage(localeId);
     // Warte auf rebuild
     WidgetsBinding.instance.addPostFrameCallback((duration) async {
       if (!mounted) return;
       await windowManager.setTitle(S.of(context).application_name);
       setState(() {});
     });
+  }
+
+  @override
+  void dispose() {
+    socketListener.dispose();
+    super.dispose();
+  }
+
+  Widget _buildUserTile(User user, int index,bool isList) {
+    return CustomerTile(
+      isListView: isList,
+      key: ObjectKey(user),
+      user: user,
+      click: () => openStatPage(user),
+      delete: () async {
+        await DatabaseHelper().deleteUser(user.id);
+        setState(() {
+          _userList.removeAt(index);
+        });
+      },
+      update: () => addOrEditUser(user),
+    ).animate(delay: (index * 50).ms)
+        .fadeIn(duration: 300.ms)
+        .slideX(begin: -0.2, end: 0);
   }
 
   @override
@@ -127,6 +270,7 @@ class MainPageState extends State<MainPage> {
       //Here one can add new Languages if necessary (code = Country-Code from http://www.lingoes.net/en/translator/langcode.htm)
     ];
     double width = MediaQuery.of(context).size.width;
+
     return Scaffold(
       body: SafeArea(child: Padding(
         padding: EdgeInsets.all(10),
@@ -134,38 +278,22 @@ class MainPageState extends State<MainPage> {
             mainAxisAlignment: MainAxisAlignment.start,
             spacing: 10,
             children: [
-              Image.asset(
-                isMobile
-                    ? "assets/images/strohalm_header_image_mobile.png"
-                    : "assets/images/strohalm_header_image.png",
-                width: double.infinity,
-              ),
-              SizedBox(
+              if(_bannerImage != null) Image.file(_bannerImage!),
+              Container(
                 width: double.infinity, // Ensure finite width
+                padding: EdgeInsets.symmetric(horizontal: 10 ,vertical: 0),
                 child: Row(
                   spacing: 8,
                   children: [
-                    if (!isMobile)
+                    if (!_isMobile)
                       ActionChip(
-                        avatar: FutureBuilder<bool>(
-                          future: windowManager.isFullScreen(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.done &&
-                                snapshot.hasData) {
-                              return snapshot.data!
-                                  ? Icon(Icons.close_fullscreen)
-                                  : Icon(Icons.fullscreen);
-                            }
-                            return Icon(Icons.fullscreen); // Default icon while loading
-                          },
-                        ),
+                        avatar: _fullScreenIcon,
                         label: Text(S.of(context).main_page_fullScreen),
                         onPressed: () async {
                           bool isFullScreen = await windowManager.isFullScreen();
                           windowManager.setFullScreen(!isFullScreen);
                           setState(() {
-                            fullScreenIcon = !isFullScreen
+                            _fullScreenIcon = !isFullScreen
                                 ? Icon(Icons.close_fullscreen)
                                 : Icon(Icons.aspect_ratio);
                           });
@@ -178,8 +306,12 @@ class MainPageState extends State<MainPage> {
                           : Icon(Icons.light_mode),
                       label: Text(S.of(context).main_page_theme((Theme.of(context).brightness == Brightness.dark))),
                       onPressed: () async {
-                        MyApp.of(context).changeTheme();
-                        setState(() {});
+                        if(context.mounted){
+                          bool themeBool = Theme.of(context).brightness == Brightness.dark;
+                          MyApp.of(context).changeTheme(themeBool ? ThemeMode.light : ThemeMode.dark);
+                          AppSettingsManager.instance.setDarkMode(!themeBool);
+                          setState(() {});
+                        }
                       },
                     ),
                     MenuAnchor(
@@ -203,20 +335,65 @@ class MainPageState extends State<MainPage> {
                           );
                         }).toList(),
                         builder: (BuildContext context, MenuController controller, Widget? child) {
-                          return ActionChip(
-                            label: Text(S.of(context).main_page_languages),
-                            //backgroundColor: Color.fromRGBO(169, 171, 25, 0.3),
-                            avatar: Icon(controller.isOpen ? Icons.expand_less : Icons.expand_more, size: 18),
-                            onPressed: () {
-                              if (controller.isOpen) {
-                                controller.close();
-                              } else {
-                                controller.open();
-                              }
-                            },
+                          return Stack(
+                            fit: StackFit.passthrough,
+                            children: [
+                              ActionChip(
+                                label: Row(
+                                  children: [
+                                    Text(S.of(context).main_page_languages),
+                                    SizedBox(width: 10,)
+                                  ],
+                                ),
+                                //backgroundColor: Color.fromRGBO(169, 171, 25, 0.3),
+                                avatar: Icon(Icons.language),
+                                onPressed: () {
+                                  if (controller.isOpen) {
+                                    controller.close();
+                                  } else {
+                                    controller.open();
+                                  }
+                                },
+                              ),
+                              Positioned(
+                                right: 5,
+                                top: 0,
+                                bottom: 0,
+                                child: IgnorePointer( // <-- hier
+                                  child: Icon(
+                                    controller.isOpen ? Icons.expand_less : Icons.expand_more,
+                                    size: 18,
+                                  ),
+                                ),
+                              )
+                            ],
                           );
                         },
                         child: Icon(Icons.language)
+                    ),
+                    ActionChip(
+                        label: Text("Settings", ),
+                        avatar: Icon(Icons.settings),
+                        onPressed: () async {
+                          _blockScan = true;
+                          var result = await showDialog(
+                              context: context,
+                              barrierDismissible: true,
+                              builder: (context){
+                                return  SettingsPage(
+                                  changeColor: (Color color){
+                                    setState(() {
+                                      _selectedColor = color;
+                                      //MyApp.of(context).changeSeedColor(color);
+                                    });
+                                  },
+                                );
+                              });
+                           if(result != null){
+                             loadSettings();
+                           }
+                           _blockScan = false;
+                        },
                     )
                   ],
                 ),
@@ -233,54 +410,14 @@ class MainPageState extends State<MainPage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
-                        flex: 10,
-                        child: Stack(
-                          children: [
-                            Align(
-                              alignment: AlignmentGeometry.center,
-                              child: TextField(
-                                controller: _searchController,
-                                decoration: InputDecoration(
-                                  hintText:S.of(context).main_page_searchUsers,
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12)
-                                  ),
-                                ),
-                                onChanged: (ev){
-                                  searchUsers(ev);
-                                },
-                                onTapOutside: (ev){
-                                  FocusScope.of(context).unfocus();
-                                },
-                              ),
-                            ),
-                            Align(
-                              alignment: AlignmentDirectional.centerEnd,
-                              child: IconButton(
-                                onPressed: (){
-                                  setState(() {
-                                    _searchController.text = "";
-                                    _userList.clear();
-                                  });
-                                },
-                                icon: Icon(Icons.close),
-                                style: IconButton.styleFrom(
-                                    backgroundColor: Colors.transparent
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
                           flex: 2,
-                          child: !isMobile && width > 850 ? TextButton.icon(
+                          child: !_isMobile && width > 850 ? TextButton.icon(
                             onPressed: (){
                               addOrEditUser();
                             },
                             style: TextButton.styleFrom(
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                backgroundColor: Color.fromRGBO(169, 171, 25, 1.0),
+                                backgroundColor: _selectedColor, //Color.fromRGBO(169, 171, 25, 1.0),
                                 foregroundColor: Colors.black87,
                                 minimumSize: Size(double.infinity, 64)
                             ),
@@ -292,13 +429,72 @@ class MainPageState extends State<MainPage> {
                             },
                             style: TextButton.styleFrom(
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                backgroundColor: Color.fromRGBO(169, 171, 25, 1.0),
+                                backgroundColor: _selectedColor, //Color.fromRGBO(169, 171, 25, 1.0),
                                 foregroundColor: Colors.black87,
                                 minimumSize: Size(double.infinity, 64)
                             ),
                             icon: Icon(Icons.person_add_alt_1, color: Colors.black87),
                           )
-                      )
+                      ),
+                      Expanded(
+                        flex: 10,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Expanded(child: Stack(
+                              children: [
+                                Align(
+                                  alignment: AlignmentGeometry.center,
+                                  child: TextField(
+                                    controller: _searchController,
+                                    decoration: InputDecoration(
+                                      hintText:S.of(context).main_page_searchUsers,
+                                      border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12))
+                                      ),
+                                    ),
+                                    onChanged: (ev){
+                                      searchUsers(ev);
+                                    },
+                                    onTapOutside: (ev){
+                                      FocusScope.of(context).unfocus();
+                                    },
+                                  ),
+                                ),
+                                Align(
+                                  alignment: AlignmentDirectional.centerEnd,
+                                  child: IconButton(
+                                    onPressed: (){
+                                      setState(() {
+                                        _searchController.text = "";
+                                        _userList.clear();
+                                      });
+                                    },
+                                    icon: Icon(Icons.close),
+                                    style: IconButton.styleFrom(
+                                        backgroundColor: Colors.transparent
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )),
+                            IconButton(
+                                onPressed: () => searchUsers(_searchController.text),
+                                //label: Text("Suchen"),
+                                icon: Icon(Icons.search),
+                                style: TextButton.styleFrom(
+                                  backgroundColor: _selectedColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.only(topRight: Radius.circular(12), bottomRight: Radius.circular(12)),
+
+                                  ),
+                                    minimumSize: Size(30, double.infinity)
+                                ),
+                            )
+                          ],
+                        ),
+                      ),
+
                     ],
                   ),
                 ),
@@ -306,30 +502,28 @@ class MainPageState extends State<MainPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  if(!isMobile)Align(
+                  if(!_isMobile)Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
                         onPressed: (){
                           setState(() {
-                            isListView = !isListView;
+                            _isListView = !_isListView;
                           });
                         },
-                        icon: Icon(isListView ? Icons.grid_on : Icons.list),
-                      label: Text(S.of(context).main_page_isListView(isListView)),
+                        icon: Icon(_isListView ? Icons.grid_on : Icons.list),
+                      label: Text(S.of(context).main_page_isListView(_isListView)),
                     ),
                   ),
                   TextButton.icon(
-                      onPressed: (){
-                        showDialog(
+                      onPressed: ()async{
+                        _blockScan = true;
+                        await showDialog(
                           context: context,
                           builder: (context) {
-                            return StatefulBuilder(
-                              builder: (context, state) {
-                                return  StatisticPage();
-                              },
-                            );
+                                return StatisticPage();
                           },
                         );
+                        _blockScan = false;
                       },
                       label: Text(S.of(context).main_page_statistic),
                       icon: Icon(Icons.bar_chart),
@@ -337,114 +531,58 @@ class MainPageState extends State<MainPage> {
                 ],
               ),
               Expanded(
-                  child: _userList.isEmpty
-                      ? Center(child: Text(S.of(context).main_page_emptyUserListText),)
-                      : LayoutBuilder(
-                    builder: (context, constraints) {
-                      if (constraints.maxWidth > 782 && isListView) {
-                        return ListView.builder(
-                            itemCount: _userList.length,
-                            itemBuilder: (context, index){
-                              User user = _userList[index];
-                              return CustomerListviewItem(
-                                key: ObjectKey(user),
-                                user: user,
-                                click: (){
-                                  openStatPage(user);
-                                },
-                                delete: ()async{
-                                  await DatabaseHelper().deleteUser(user.id);
-                                  setState(() {
-                                    _userList.removeAt(index);
-                                  });
-                                },
-                                update: () {
-                                  addOrEditUser(user);
-                                },
-                              ) .animate(delay: (index * 50).ms)
-                                  .fadeIn(duration: 500.ms)
-                                  .slideX(begin: -0.2, end: 0);
-                            }
-                        );
-                      } else {
-                        return GridView.builder(
+                child: _userList.isEmpty
+                    ? Center(
+                  child: Text(S.of(context).main_page_emptyUserListText),
+                )
+                    : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isList = constraints.maxWidth > 782 && _isListView;
+                    return isList
+                        ? ListView.builder(
+                          itemCount: _userList.length,
+                          itemBuilder: (context, index) {
+                            return _buildUserTile(_userList[index], index, isList);
+                            },
+                          )
+                        : GridView.builder(
                             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: (MediaQuery.of(context).size.width / 220).toInt(),
-                                mainAxisSpacing: 10,
-                                crossAxisSpacing: 10,
-                                mainAxisExtent: 250
+                              crossAxisCount:
+                              (MediaQuery.of(context).size.width / 220).toInt(),
+                              mainAxisSpacing: 10,
+                              crossAxisSpacing: 10,
+                              mainAxisExtent: 250,
                             ),
                             itemCount: _userList.length,
-                            itemBuilder: (context, index){
-                              User user = _userList[index];
-                              return CustomerGridviewItem(
-                                key: ObjectKey(user),
-                                user: user,
-                                click: (){
-                                  openStatPage(user);
-                                },
-                                delete: ()async{
-                                  await DatabaseHelper().deleteUser(user.id);
-                                  setState(() {
-                                    _userList.removeAt(index);
-                                  });
-                                },
-                                update: () {
-                                  addOrEditUser(user);
-                                },
-                              ) .animate(delay: (index * 50).ms)
-                                  .fadeIn(duration: 500.ms)
-                                  .slideX(begin: -0.2, end: 0);
-                            }
-                        );
-                      }
-                    },
-                  )
+                            itemBuilder: (context, index) {
+                              return _buildUserTile(_userList[index], index, isList);
+                            },
+                    );
+                  },
+                ),
               )
             ],
           ),
         )
       ),
-      floatingActionButton: ElevatedButton.icon(
+      floatingActionButton: _isMobile ? ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
             minimumSize: Size(64, 64)
           ),
           onPressed: ()async{
+            //HttpHelper().testAddCustomer(firstName: "Test", lastName: "Tester", birthday: DateTime(1970,2,1).toIso8601String(),);
             String? result = await showDialog(
                 context: context,
                 builder: (context){
-                  return isMobile ? BarcodeScannerSimple() : Dialog(child: SizedBox.expand(),); //TODO: Barcode-Scanner for Windows(or allow scanning at any time?)
+                  return BarcodeScannerSmartPhoneCamera();
                 });
-            if(result != null){
-              if(Uuid.isValidUUID(fromString: result)){
-                var user = await DatabaseHelper().getUserByUuid(result);
-                if(user != null){
-                  openUser(user);
-                } else {
-                  if(context.mounted) {
-                    showDialog(
-                      context: context,
-                      builder: (context){
-                        return AlertDialog(
-                          content: Text(S.of(context).main_page_noUserWithUUID),
-                          actions: [
-                            TextButton(
-                                onPressed: (){
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text(S.of(context).close))
-                          ],
-                        );
-                      });
-                  }
-                }
-              }
-            }
+            if(result != null) {openUserFromUuId(result);}
           },
           label: Text(S.of(context).main_page_scanQrCode),
-          icon: Icon(Icons.qr_code_scanner)),
+          icon: Icon(Icons.qr_code_scanner)) : SizedBox.shrink(),
     );
   }
+
 }
 
 class LanguageOption {

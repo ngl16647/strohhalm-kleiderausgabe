@@ -28,30 +28,29 @@ class CustomerGridviewItem extends StatefulWidget {
 }
 
 class CustomerListTileState extends State<CustomerGridviewItem>{
-  late User user;
-  bool mouseIsOver = false;
-  int lastVisit = -1;
+  late User _user;
+  bool _mouseIsOver = false;
+  DateTime? _lastVisit;
 
   @override
   void initState() {
-    user = widget.user;
-    if(widget.user.tookItems.isNotEmpty) lastVisit = user.tookItems.first.tookTime;
+    _user = widget.user;
+    if(widget.user.visits.isNotEmpty) _lastVisit = _user.visits.first.tookTime;
     super.initState();
   }
 
-  DateTime get lastVisitDateTime => DateTime.fromMillisecondsSinceEpoch(lastVisit);
-  bool get visitMoreThan14Days => DateTime.now().difference(lastVisitDateTime).inDays > 13;
+  bool get visitMoreThan14Days => _lastVisit != null ? DateTime.now().difference(_lastVisit!).inDays > 13 : true;
 
   String _buildLastVisitStyledText() {
-    if (lastVisit == -1) {
+    if (_lastVisit == null) {
       // Noch nie da gewesen
       return S.of(context).customer_tile_lastVisit_never;
-    } else if (Utilities().isSameDay(DateTime.now(), lastVisitDateTime)) {
+    } else if (Utilities().isSameDay(DateTime.now(), _lastVisit!)) {
       // Heute da gewesen
       return S.of(context).customer_tile_lastVisit_today;
     } else {
       // An einem anderen Tag da gewesen
-      final dateString = DateFormat("dd.MM.yyyy").format(lastVisitDateTime);
+      final dateString = DateFormat("dd.MM.yyyy").format(_lastVisit!);
       return S.of(context).customer_tile_lastVisit_onDate(dateString);
     }
   }
@@ -59,20 +58,22 @@ class CustomerListTileState extends State<CustomerGridviewItem>{
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.all(mouseIsOver ? 2 : 4),
+      padding: EdgeInsets.all(_mouseIsOver ? 2 : 4),
       child: InkWell(
         onTap: (){
           widget.click();
         },
         onHover: (isHovering){
           setState(() {
-            mouseIsOver = isHovering;
+            _mouseIsOver = isHovering;
           });
         },
+        borderRadius: BorderRadius.circular(12),
+        hoverColor: Theme.of(context).listTileTheme.tileColor?.withAlpha(255),
         child: Material(
             elevation: 10,
             borderRadius: BorderRadius.circular(12),
-            color: Theme.of(context).listTileTheme.tileColor?.withAlpha(mouseIsOver ? 255 : 220),
+            color: Theme.of(context).listTileTheme.tileColor?.withAlpha(220),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -82,14 +83,14 @@ class CustomerListTileState extends State<CustomerGridviewItem>{
                     children: [
                       Align(
                         alignment: Alignment.topRight,
-                        child: Text("#${user.id}"),
+                        child: Text("#${_user.id}"),
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("${user.firstName} ${user.lastName}", style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(DateFormat("dd.MM.yyyy").format(DateTime.fromMillisecondsSinceEpoch(user.birthDay)), style: TextStyle(color: Colors.grey)),
-                          Text(CountryLocalizations.of(context)?.countryName(countryCode: user.birthCountry) ?? Country.tryParse(user.birthCountry)!.name, style: TextStyle(color: Colors.grey))
+                          Text("${_user.firstName} ${_user.lastName}", style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text(DateFormat("dd.MM.yyyy").format(_user.birthDay), style: TextStyle(color: Colors.grey)),
+                          Text(CountryLocalizations.of(context)?.countryName(countryCode: _user.birthCountry) ?? Country.tryParse(_user.birthCountry)!.name, style: TextStyle(color: Colors.grey))
                         ],
                       )
 
@@ -116,7 +117,7 @@ class CustomerListTileState extends State<CustomerGridviewItem>{
                           tags: {
                             "bold": StyledTextTag(style: TextStyle(fontWeight: FontWeight.bold)),
                           },
-                          textAlign: TextAlign.start,
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ],
@@ -131,11 +132,10 @@ class CustomerListTileState extends State<CustomerGridviewItem>{
                       if(!visitMoreThan14Days) Expanded( //TODO: adapt logic of buttons -> if lessThan14Days, last Entry should be deletable AND should be able to override, else dont show
                         child:  TextButton(
                           onPressed: () async {
-                            int? newLastTime = await DatabaseHelper().deleteLatestAndReturnPrevious(user); //Deletes last entry and returns new last as millisecondsSinceEpoch
-                            if(newLastTime == null) return;
+                            DateTime? newLastTime = await DatabaseHelper().deleteLatestAndReturnPrevious(_user); //Deletes last entry and returns new last as millisecondsSinceEpoch
                             setState(() {
-                              lastVisit = newLastTime;
-                              widget.user.tookItems.removeAt(0);
+                              _lastVisit = newLastTime;
+                              if(widget.user.visits.isNotEmpty) widget.user.visits.removeAt(0);
                               //lastVisit = widget.user.tookItems.isNotEmpty ? widget.user.tookItems.first.tookTime : -1; //TODO: Better? then deleteLatestAndReturnPrevious could be simpler
                             });
                           },
@@ -149,16 +149,16 @@ class CustomerListTileState extends State<CustomerGridviewItem>{
                           child: Text(S.of(context).customer_tile_deleteLastEntry, textAlign: TextAlign.center,),
                         ),
                       ),
-                      if(!visitMoreThan14Days && !Utilities().isSameDay(DateTime.now(), lastVisitDateTime)) SizedBox(width: 5,),
-                      if(!Utilities().isSameDay(DateTime.now(), lastVisitDateTime))
+                      if(!visitMoreThan14Days && !Utilities().isSameDay(DateTime.now(), _lastVisit!)) SizedBox(width: 5,),
+                      if(_lastVisit == null || !Utilities().isSameDay(DateTime.now(), _lastVisit!))
                         Expanded(
                             child: TextButton(
                               onPressed: () async {
+                                TookItem item = await DatabaseHelper().addVisit(_user.id);
+                                widget.user.visits.insert(0, item);
                                 setState(() {
-                                  lastVisit = DateTime.now().millisecondsSinceEpoch;
+                                  _lastVisit = item.tookTime;
                                 });
-                                TookItem item = await DatabaseHelper().addVisit(user.id, false);
-                                widget.user.tookItems.insert(0, item);
                               },
                               style: TextButton.styleFrom(
                                   minimumSize: Size(double.infinity, 45),
@@ -181,7 +181,7 @@ class CustomerListTileState extends State<CustomerGridviewItem>{
                     children: [
                       IconButton(
                         onPressed: () {
-                          CreateQRCode().printQrCode(context, user);
+                          CreateQRCode().printQrCode(context, _user);
                           //CreateQRCode().showQrCode(context, user);
                         },
                         icon: Icon(Icons.print),
