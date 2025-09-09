@@ -162,8 +162,19 @@ func UpdateVisit(visitId int64, newV Visit) error {
 }
 
 func DeleteVisit(visitId int64) error {
-	_, err := DB.Exec("DELETE FROM visits WHERE id = ?", visitId)
-	if err != nil {
+	var customerId *int64
+	if err := DB.Get(&customerId, `
+		DELETE FROM visits WHERE id = ?
+		RETURNING customer_id
+	`, visitId); err != nil {
+		return err
+	}
+
+	if customerId == nil {
+		return nil
+	}
+
+	if err := UpdateCustomerLastVisit(*customerId); err != nil {
 		return err
 	}
 

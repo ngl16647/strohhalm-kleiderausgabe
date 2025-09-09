@@ -59,6 +59,7 @@ const (
 )
 
 var Indices = []string{
+	`PRAGMA foreign_keys = ON;`,
 	`CREATE INDEX IF NOT EXISTS idx_visits_visit_date ON visits(visit_date);`,
 	`CREATE INDEX IF NOT EXISTS idx_visits_customer_id ON visits(customer_id);`,
 }

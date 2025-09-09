@@ -103,7 +103,22 @@ func SetCustomerLastVisit(customerId int64, lastVisit time.Time) error {
 		WHERE id = ? AND (last_visit IS NULL OR last_visit < ?)`,
 		newVisit, customerId, newVisit,
 	); err != nil {
-		return fmt.Errorf("update last visit for customer %d: %w", customerId, err)
+		return fmt.Errorf("failed to update last visit for customer %d: %w", customerId, err)
+	}
+	return nil
+}
+
+func UpdateCustomerLastVisit(customerId int64) error {
+	if _, err := DB.Exec(`
+		UPDATE customers
+		SET last_visit = (
+			SELECT MAX(v.visit_date)
+			FROM visits v
+			WHERE v.customer_id = ?
+		)
+		WHERE id = ?`,
+		customerId, customerId); err != nil {
+		return fmt.Errorf("failed to update last visit for customer %d: %w", customerId, err)
 	}
 	return nil
 }

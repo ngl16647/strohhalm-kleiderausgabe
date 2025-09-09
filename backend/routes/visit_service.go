@@ -38,15 +38,22 @@ func RecordCustomerVisitHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		visit, addVisitErr = db.AddVisitAt(customerId, visitDate, notes)
 	}
+
 	if addVisitErr != nil {
 		// A customer cannot visit twice within a day
 		if strings.Contains(addVisitErr.Error(), "UNIQUE constraint failed") {
 			http.Error(w, "customer already has a visit on this date", http.StatusConflict)
 			return
 		}
+		// Deleted customer cannot have new visits
+		if strings.Contains(addVisitErr.Error(), "FOREIGN KEY constraint failed") {
+			http.Error(w, "customer deleted or does not exist", http.StatusBadRequest)
+			return
+		}
 		http.Error(w, addVisitErr.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	writeJson(w, visit, http.StatusOK)
 }
 
