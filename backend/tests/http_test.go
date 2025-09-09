@@ -48,7 +48,22 @@ func addCustomers() {
 
 func addVisits() {
 	call("/customers/1/visits", "POST", map[string]string{
-		"visitDate": "2025-08-23",
+		"visitDate": "2025-09-03",
+	})
+	call("/customers/1/visits", "POST", map[string]string{
+		"visitDate": "2025-08-25",
+	})
+	call("/customers/1/visits", "POST", map[string]string{
+		"visitDate": "2025-08-12",
+	})
+	call("/customers/2/visits", "POST", map[string]string{
+		"visitDate": "2025-07-21",
+	})
+	call("/customers/3/visits", "POST", map[string]string{
+		"visitDate": "2025-08-27",
+	})
+	call("/customers/3/visits", "POST", map[string]string{
+		"visitDate": "2025-08-09",
 	})
 }
 

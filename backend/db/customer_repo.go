@@ -95,9 +95,12 @@ func SearchCustomer(query string) ([]Customer, error) {
 }
 
 func SetCustomerLastVisit(customerId int64, lastVisit time.Time) error {
-	if _, err := DB.Exec(
-		"UPDATE customers SET last_visit = ? WHERE id = ?",
-		lastVisit.Format(DateFormat), customerId,
+	newVisit := lastVisit.Format(DateFormat)
+	if _, err := DB.Exec(`
+		UPDATE customers
+		SET last_visit = ? 
+		WHERE id = ? AND (last_visit IS NULL OR last_visit < ?)`,
+		newVisit, customerId, newVisit,
 	); err != nil {
 		return fmt.Errorf("update last visit for customer %d: %w", customerId, err)
 	}
