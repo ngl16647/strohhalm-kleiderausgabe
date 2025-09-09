@@ -60,7 +60,7 @@ var Routes = []Route{
 		Path:    "/customers/{id}",
 		Method:  DELETE,
 		Handler: DeleteCustomerHandler,
-		Doc:     `Delete customer by customer id.`,
+		Doc:     `Delete a customer, set customer information in corresponding visits to null.`,
 	},
 	{
 		Path:    "/customers/{id}/visits",
@@ -97,6 +97,12 @@ var Routes = []Route{
 		Path:    "/visits/{id}",
 		Method:  DELETE,
 		Handler: DeleteVisitHandler,
-		Doc:     `Delete visit by visit id.`,
+		Doc:     `Delete a visit and update that customer's last visit.`,
+	},
+	{
+		Path:    "/stats/customers",
+		Method:  GET,
+		Handler: CustomerStatsHandler,
+		Doc:     `Statistic report for customers.`,
 	},
 }

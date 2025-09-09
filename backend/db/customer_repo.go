@@ -59,7 +59,7 @@ func UpdateCustomer(customerId int64, newC Customer) error {
 }
 
 func AllCustomers() ([]Customer, error) {
-	cs := []Customer{}
+	var cs []Customer
 	err := DB.Select(&cs, "SELECT * FROM customers")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get all customers: %w", err)
@@ -68,7 +68,7 @@ func AllCustomers() ([]Customer, error) {
 }
 
 func CustomerById(id int64) (Customer, error) {
-	c := Customer{}
+	var c Customer
 	err := DB.Get(&c, "SELECT * FROM customers WHERE Id = $1", id)
 	if err != nil {
 		var empty Customer
@@ -83,7 +83,7 @@ func SearchCustomer(query string) ([]Customer, error) {
 		return AllCustomers()
 	}
 
-	cs := []Customer{}
+	var cs []Customer
 	err := DB.Select(&cs,
 		`SELECT * FROM customers
 			WHERE LOWER(first_name || ' ' || last_name) LIKE $1`,
