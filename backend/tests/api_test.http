@@ -7,18 +7,16 @@ GET {{base_url}}/health
 
 ### Add customer
 POST {{base_url}}/customers
-content-type: application/json
 
 {
     "firstName": "Pop",
     "lastName": "Bang",
     "birthday": "2000-01-01",
-    "country": "JoJoLands"
+    "country": "Homeland"
 }
 
 ### Update customer
 PUT {{base_url}}/customers/1
-content-type: application/json
 
 {
     "firstName": "Poop",
@@ -34,11 +32,16 @@ GET {{base_url}}/customers/1
 ### Search customer
 GET {{base_url}}/customers?query=
 
+### Delete a customer
+DELETE {{base_url}}/customers/2
+
+# ---------------
+
 ### Record a visit
-POST {{base_url}}/visits/1
+POST {{base_url}}/customers/2/visits
 
 {
-    "visitDate": "2000-10-10",
+    "visitDate": "2013-02-23",
     "notes": "He farted"
 }
 
@@ -46,3 +49,9 @@ POST {{base_url}}/visits/1
 GET {{base_url}}/visits
     ?begin=2000-07-20
     &end=
+
+### Get visit of a customer
+GET {{base_url}}/customers/1/visits
+
+### Delete a visit
+DELETE {{base_url}}/visits/3

@@ -27,7 +27,12 @@ func AddVisitNow(customerId int64, notes string) (Visit, error) {
 		return Visit{}, err
 	}
 
-	return Visit{Id: visitId, CustomerId: customerId, VisitDate: todayStr, Notes: notes}, nil
+	return Visit{
+		Id:         visitId,
+		CustomerId: &customerId,
+		VisitDate:  todayStr,
+		Notes:      notes,
+	}, nil
 }
 
 func AddVisitAt(customerId int64, visitDate time.Time, notes string) (Visit, error) {
@@ -50,7 +55,12 @@ func AddVisitAt(customerId int64, visitDate time.Time, notes string) (Visit, err
 		return Visit{}, err
 	}
 
-	return Visit{Id: visitId, CustomerId: customerId, VisitDate: visitDateStr, Notes: notes}, nil
+	return Visit{
+		Id:         visitId,
+		CustomerId: &customerId,
+		VisitDate:  visitDateStr,
+		Notes:      notes,
+	}, nil
 }
 
 func AllCustomerVisits() ([]CustomerVisit, error) {

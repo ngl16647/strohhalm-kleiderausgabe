@@ -11,21 +11,22 @@ type Customer struct {
 	Notes     string `json:"notes"`
 }
 
+// Use pointer for nullable values
 type Visit struct {
 	Id         int64  `json:"id"`
-	CustomerId int64  `db:"customer_id" json:"customer_id"`
+	CustomerId *int64 `db:"customer_id" json:"customer_id"`
 	VisitDate  string `db:"visit_date" json:"visit_date"`
 	Notes      string `json:"notes,omitempty"`
 }
 
 type CustomerVisit struct {
-	Id                int64  `db:"id" json:"id"`
-	CustomerId        int64  `db:"customer_id" json:"customerId"`
-	CustomerUuid      string `db:"customer_uuid" json:"customerUuid"`
-	CustomerFirstName string `db:"first_name" json:"customerFirstName"`
-	CustomerLastName  string `db:"last_name" json:"customerLastName"`
-	VisitDate         string `db:"visit_date" json:"visitDate"`
-	Notes             string `db:"notes" json:"notes"`
+	Id                int64   `db:"id" json:"id"`
+	CustomerId        *int64  `db:"customer_id" json:"customerId,omitempty"`
+	CustomerUuid      *string `db:"customer_uuid" json:"customerUuid,omitempty"`
+	CustomerFirstName *string `db:"first_name" json:"customerFirstName,omitempty"`
+	CustomerLastName  *string `db:"last_name" json:"customerLastName,omitempty"`
+	VisitDate         string  `db:"visit_date" json:"visitDate"`
+	Notes             string  `db:"notes" json:"notes"`
 }
 
 const DateFormat = "2006-01-02"

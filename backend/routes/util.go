@@ -35,7 +35,7 @@ func getParam(r *http.Request, param string) string {
 
 func decodeBody(r *http.Request, data any) error {
 	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
-		return fmt.Errorf("invalid JSON: %w", err)
+		return fmt.Errorf("invalid JSON body: %w", err)
 	}
 	return nil
 }
