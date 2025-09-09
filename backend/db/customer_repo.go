@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -38,7 +39,7 @@ func UpdateCustomer(customerId int64, newC Customer) error {
 			birthday = :birthday,
 			country = :country,
 			notes = :notes
-        WHERE Id = :id`,
+        WHERE id = :id`,
 		&newC,
 	)
 	if err != nil {
@@ -51,7 +52,7 @@ func UpdateCustomer(customerId int64, newC Customer) error {
 	}
 
 	if rows == 0 {
-		return fmt.Errorf("customer %d not found", customerId)
+		return errors.New("custome not found")
 	}
 
 	return nil
@@ -104,5 +105,14 @@ func SetCustomerLastVisit(customerId int64, lastVisit time.Time) error {
 	); err != nil {
 		return fmt.Errorf("update last visit for customer %d: %w", customerId, err)
 	}
+	return nil
+}
+
+func DeleteCustomer(customerId int64) error {
+	_, err := DB.Exec("DELETE FROM customers WHERE id = ?", customerId)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -20,7 +20,7 @@ var Routes = []Route{
 	{
 		Path:    "/health",
 		Method:  GET,
-		Handler: func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("OK")) },
+		Handler: func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("ok")) },
 		Doc:     `Health check.`,
 	},
 	{
@@ -57,6 +57,12 @@ var Routes = []Route{
 		 IMPORTANT: omitted fields will be recorded as empty values. "uuid" cannot be changed.`,
 	},
 	{
+		Path:    "/customers/{id}",
+		Method:  DELETE,
+		Handler: DeleteCustomerHandler,
+		Doc:     `Delete customer by customer id.`,
+	},
+	{
 		Path:    "/customers/{id}/visits",
 		Method:  POST,
 		Handler: RecordCustomerVisitHandler,
@@ -66,7 +72,7 @@ var Routes = []Route{
 	{
 		Path:    "/customers/{id}/visits",
 		Method:  GET,
-		Handler: nil,
+		Handler: VisitsOfCustomerHandler,
 		Doc: `Get all visits of a customer. Returns a list consists of data: "id", "customerId", 
 		 "customerUuid", "customerFirstName", "customerLastName", "visitDate" and "notes".`,
 	},
@@ -79,5 +85,18 @@ var Routes = []Route{
 			{Name: "begin", Description: "Start date in YYYY-MM-DD format", Required: false},
 			{Name: "end", Description: "End date in YYYY-MM-DD format", Required: false},
 		},
+	},
+	{
+		Path:    "/visits/{id}",
+		Method:  PUT,
+		Handler: UpdateCustomerHandler,
+		Doc: `Update visit by visit id. Expect JSON body with "customerId", "visitDate" and "notes".
+		 IMPORTANT: omitted fields will be recorded as empty values.`,
+	},
+	{
+		Path:    "/visits/{id}",
+		Method:  DELETE,
+		Handler: DeleteVisitHandler,
+		Doc:     `Delete visit by visit id.`,
 	},
 }

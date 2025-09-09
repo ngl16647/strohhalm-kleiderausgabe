@@ -15,7 +15,7 @@ import (
 func RecordCustomerVisitHandler(w http.ResponseWriter, r *http.Request) {
 	customerId, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
-		http.Error(w, "Invalid customer ID", http.StatusBadRequest)
+		http.Error(w, "invalid customer ID", http.StatusBadRequest)
 		return
 	}
 	var req map[string]string
@@ -33,7 +33,7 @@ func RecordCustomerVisitHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		visitDate, err := time.Parse(db.DateFormat, visitDateStr)
 		if err != nil {
-			http.Error(w, "Invalid date format", http.StatusBadRequest)
+			http.Error(w, "invalid date format", http.StatusBadRequest)
 			return
 		}
 		visit, addVisitErr = db.AddVisitAt(customerId, visitDate, notes)
@@ -41,18 +41,18 @@ func RecordCustomerVisitHandler(w http.ResponseWriter, r *http.Request) {
 	if addVisitErr != nil {
 		// A customer cannot visit twice within a day
 		if strings.Contains(addVisitErr.Error(), "UNIQUE constraint failed") {
-			http.Error(w, "Customer already has a visit on this date", http.StatusConflict)
+			http.Error(w, "customer already has a visit on this date", http.StatusConflict)
 			return
 		}
 		http.Error(w, addVisitErr.Error(), http.StatusInternalServerError)
 		return
 	}
-	WriteJson(w, visit, http.StatusOK)
+	writeJson(w, visit, http.StatusOK)
 }
 
 func CustomerVisitsHandler(w http.ResponseWriter, r *http.Request) {
-	beginStr := GetParam(r, "begin")
-	endStr := GetParam(r, "end")
+	beginStr := getParam(r, "begin")
+	endStr := getParam(r, "end")
 
 	var cvs []db.CustomerVisit
 	var err error
@@ -64,7 +64,7 @@ func CustomerVisitsHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		WriteJson(w, cvs, http.StatusOK)
+		writeJson(w, cvs, http.StatusOK)
 	}
 
 	// When at least one of time param is provided
@@ -73,7 +73,7 @@ func CustomerVisitsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if endStr == "" {
-		endStr = "9000-01-01"
+		endStr = "9999-12-31"
 	}
 
 	begin, err := time.Parse(db.DateFormat, beginStr)
@@ -94,5 +94,55 @@ func CustomerVisitsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteJson(w, cvs, http.StatusOK)
+	writeJson(w, cvs, http.StatusOK)
+}
+
+func UpdateVisitHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := parseIntFromUrl(r, "id")
+	if err != nil {
+		http.Error(w, "invalid visit id", http.StatusBadRequest)
+		return
+	}
+
+	var newV db.Visit
+	if err = decodeBody(r, newV); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err = db.UpdateVisit(id, newV); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	ok(w)
+}
+
+func DeleteVisitHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := parseIntFromUrl(r, "id")
+	if err != nil {
+		http.Error(w, "invalid visit id", http.StatusBadRequest)
+	}
+
+	if err = db.DeleteVisit(id); err != nil {
+		http.Error(w, "deletion failed", http.StatusInternalServerError)
+		return
+	}
+
+	ok(w)
+}
+
+func VisitsOfCustomerHandler(w http.ResponseWriter, r *http.Request) {
+	customerId, err := parseIntFromUrl(r, "id")
+	if err != nil {
+		http.Error(w, "invalid visit id", http.StatusBadRequest)
+	}
+
+	cvs, err := db.VisitsOfCustomer(customerId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJson(w, cvs, http.StatusOK)
 }

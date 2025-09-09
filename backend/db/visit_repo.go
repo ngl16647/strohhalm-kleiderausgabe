@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"time"
 )
@@ -78,7 +79,7 @@ func CustomerVisitsBetween(begin time.Time, end time.Time) ([]CustomerVisit, err
 	beginStr := begin.Format(DateFormat)
 	endStr := end.Format(DateFormat)
 
-	cvs := []CustomerVisit{}
+	var cvs []CustomerVisit
 	err := DB.Select(&cvs, `
 		SELECT 
 			v.id AS id,
@@ -99,4 +100,62 @@ func CustomerVisitsBetween(begin time.Time, end time.Time) ([]CustomerVisit, err
 	}
 
 	return cvs, nil
+}
+
+func VisitsOfCustomer(customerId int64) ([]CustomerVisit, error) {
+	var cvs []CustomerVisit
+	err := DB.Select(&cvs, `
+		SELECT
+			v.id AS id,
+			c.id AS customer_id,
+			c.uuid AS customer_uuid,
+			c.first_name AS first_name,
+			c.last_name AS last_name,
+			v.visit_date AS visit_date,
+			v.notes AS notes
+		FROM visits v
+		LEFT JOIN customers c ON c.id = v.customer_id
+		WHERE v.customer_id = $1`,
+		customerId,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get visits: %w", err)
+	}
+
+	return cvs, nil
+}
+
+func UpdateVisit(visitId int64, newV Visit) error {
+	newV.Id = visitId
+	res, err := DB.NamedExec(`
+        UPDATE customers
+        SET customer_id = :customer_id,
+			visit_date = :visit_date,
+			notes = :notes
+        WHERE id = :id`,
+		&newV,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update visit %d: %w", visitId, err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to check update result for visit %d: %w", visitId, err)
+	}
+
+	if rows == 0 {
+		return errors.New("visit not found")
+	}
+
+	return nil
+}
+
+func DeleteVisit(visitId int64) error {
+	_, err := DB.Exec("DELETE FROM visits WHERE id = ?", visitId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

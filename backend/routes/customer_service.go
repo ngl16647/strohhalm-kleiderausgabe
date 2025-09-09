@@ -2,39 +2,35 @@ package routes
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 	"strohhalm-backend/db"
-
-	"github.com/go-chi/chi/v5"
 )
 
 func AddCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	var c db.Customer
-	if err := DecodeRequestBody(r, &c); err != nil {
+	if err := decodeBody(r, &c); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// validating customer data
-	c.FirstName = strings.TrimSpace(c.FirstName)
-	c.LastName = strings.TrimSpace(c.LastName)
-	if c.FirstName == "" || c.LastName == "" {
-		http.Error(w, "first and last name are required", http.StatusBadRequest)
+	err := prepareCustomerData(&c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	c, err := db.AddCustomer(c)
+	c, err = db.AddCustomer(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	WriteJson(w, c, http.StatusCreated)
+	writeJson(w, c, http.StatusCreated)
 }
 
 func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := parseIntFromUrl(r, "id")
 	if err != nil {
 		http.Error(w, "invalid customer ID", http.StatusBadRequest)
 		return
@@ -46,11 +42,11 @@ func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteJson(w, c, http.StatusOK)
+	writeJson(w, c, http.StatusOK)
 }
 
 func SearchCustomerHandler(w http.ResponseWriter, r *http.Request) {
-	query := strings.TrimSpace(GetParam(r, "query"))
+	query := strings.TrimSpace(getParam(r, "query"))
 
 	var cs []db.Customer
 	var err error
@@ -65,28 +61,26 @@ func SearchCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteJson(w, cs, http.StatusOK)
+	writeJson(w, cs, http.StatusOK)
 }
 
 func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	id, err := parseIntFromUrl(r, "id")
 	if err != nil {
 		http.Error(w, "invalid customer ID", http.StatusBadRequest)
 		return
 	}
 
 	var c db.Customer
-	if err := DecodeRequestBody(r, &c); err != nil {
+	if err := decodeBody(r, &c); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// validating customer data
-	c.FirstName = strings.TrimSpace(c.FirstName)
-	c.LastName = strings.TrimSpace(c.LastName)
-	c.Notes = strings.TrimSpace(c.Notes)
-	if c.FirstName == "" || c.LastName == "" {
-		http.Error(w, "first and last name are required", http.StatusBadRequest)
+	err = prepareCustomerData(&c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -96,5 +90,20 @@ func UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("OK"))
+	ok(w)
+}
+
+func DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := parseIntFromUrl(r, "id")
+	if err != nil {
+		http.Error(w, "invalid customer ID", http.StatusBadRequest)
+		return
+	}
+
+	if err = db.DeleteCustomer(id); err != nil {
+		http.Error(w, "deletion failed", http.StatusInternalServerError)
+		return
+	}
+
+	ok(w)
 }
