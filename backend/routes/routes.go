@@ -88,8 +88,8 @@ var Routes = []Route{
 		Handler: CustomerVisitsHandler,
 		Doc:     `Get customer visits, optionally filtered by date range.`,
 		QueryParams: []QueryParam{
-			{Name: "begin", Description: "Start date in YYYY-MM-DD format", Required: false},
-			{Name: "end", Description: "End date in YYYY-MM-DD format", Required: false},
+			{Name: "from", Description: "Start date in YYYY-MM-DD format", Required: false},
+			{Name: "to", Description: "End date in YYYY-MM-DD format", Required: false},
 		},
 	},
 	{
@@ -109,6 +109,17 @@ var Routes = []Route{
 		Path:    "/stats/customers",
 		Method:  GET,
 		Handler: CustomerStatsHandler,
-		Doc:     `Statistic report for customers.`,
+		Doc:     `Statistic report for customers. Returns "totalCustomers" and "customersByCountry"`,
+	},
+	{
+		Path:    "/stats/visits",
+		Method:  GET,
+		Handler: VisitStatsHandler,
+		Doc: `Statistic report for visits within timespan. The timespan can be at most 1 year. 
+		 Returns "totalVisits" and "visitsByDate"`,
+		QueryParams: []QueryParam{
+			{Name: "from", Description: "Start date in YYYY-MM-DD format", Required: false},
+			{Name: "to", Description: "End date in YYYY-MM-DD format", Required: false},
+		},
 	},
 }

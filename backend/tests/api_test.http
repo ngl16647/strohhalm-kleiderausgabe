@@ -29,6 +29,9 @@ PUT {{base_url}}/customers/1
 ### Get customer by id
 GET {{base_url}}/customers/1
 
+### Get customer by uuid
+GET {{base_url}}/customers/uuid/b2feb2db-25a8-4cba-92de-38ede14e425c
+
 ### Search customer
 GET {{base_url}}/customers?query=
 
@@ -38,10 +41,10 @@ DELETE {{base_url}}/customers/2
 # ---------------
 
 ### Record a visit
-POST {{base_url}}/customers/2/visits
+POST {{base_url}}/customers/1/visits
 
 {
-    "visitDate": "2013-02-23",
+    "visitDate": "2025-02-24",
     "notes": "He farted"
 }
 
@@ -51,7 +54,14 @@ GET {{base_url}}/visits
     &end=
 
 ### Get visit of a customer
-GET {{base_url}}/customers/1/visits
+GET {{base_url}}/customers/4/visits
 
 ### Delete a visit
-DELETE {{base_url}}/visits/3
+DELETE {{base_url}}/visits/8
+
+
+### --- Statistics ---
+GET {{base_url}}/stats/customers
+
+###
+GET {{base_url}}/stats/visits

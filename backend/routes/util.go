@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"strohhalm-backend/db"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -60,4 +61,11 @@ func prepareCustomerData(c *db.Customer) error {
 		return errors.New("first and last name are required")
 	}
 	return nil
+}
+
+func parseDateWithDefault(dateStr string, def time.Time) (time.Time, error) {
+	if dateStr == "" {
+		return def, nil
+	}
+	return time.Parse(db.DateFormat, dateStr)
 }

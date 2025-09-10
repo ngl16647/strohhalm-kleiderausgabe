@@ -58,8 +58,8 @@ func RecordCustomerVisitHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func CustomerVisitsHandler(w http.ResponseWriter, r *http.Request) {
-	beginStr := getParam(r, "begin")
-	endStr := getParam(r, "end")
+	beginStr := getParam(r, "from")
+	endStr := getParam(r, "to")
 
 	var cvs []db.CustomerVisit
 	var err error
@@ -72,6 +72,7 @@ func CustomerVisitsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeJson(w, cvs, http.StatusOK)
+		return
 	}
 
 	// When at least one of time param is provided
