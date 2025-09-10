@@ -63,6 +63,12 @@ var Routes = []Route{
 		Doc:     `Delete a customer, set customer information in corresponding visits to null.`,
 	},
 	{
+		Path:    "/customers/uuid/{uuid}",
+		Method:  GET,
+		Handler: GetCustomerByUuidHandler,
+		Doc:     `Get customer by UUID.`,
+	},
+	{
 		Path:    "/customers/{id}/visits",
 		Method:  POST,
 		Handler: RecordCustomerVisitHandler,

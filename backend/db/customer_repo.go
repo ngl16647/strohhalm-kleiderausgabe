@@ -69,10 +69,21 @@ func AllCustomers() ([]Customer, error) {
 
 func CustomerById(id int64) (Customer, error) {
 	var c Customer
-	err := DB.Get(&c, "SELECT * FROM customers WHERE Id = $1", id)
+	err := DB.Get(&c, "SELECT * FROM customers WHERE id = $1", id)
 	if err != nil {
 		var empty Customer
 		return empty, fmt.Errorf("failed to get customer by id %d: %w", id, err)
+	}
+
+	return c, nil
+}
+
+func CustomerByUuid(uuid string) (Customer, error) {
+	var c Customer
+	err := DB.Get(&c, "SELECT * FROM customers WHERE uuid = $1", uuid)
+	if err != nil {
+		var empty Customer
+		return empty, fmt.Errorf("failed to get customer by uuid %s: %w", uuid, err)
 	}
 
 	return c, nil
