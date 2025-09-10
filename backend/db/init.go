@@ -1,17 +1,11 @@
 package db
 
 import (
-	"errors"
-
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var DB *sqlx.DB
-
-var (
-	ErrNotFound = errors.New("not found")
-)
 
 func initPanic(err error, message string) {
 	if err != nil {

@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strings"
 	"strohhalm-backend/db"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func AddCustomerHandler(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +40,22 @@ func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	c, err := db.CustomerById(id)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJson(w, c, http.StatusOK)
+}
+
+func GetCustomerByUuidHandler(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "uuid")
+
+	c, err := db.CustomerByUuid(id)
+	if err != nil {
+		if strings.Contains(err.Error(), "sql: no rows in result set") {
+			http.Error(w, "customer not foudnd", http.StatusNotFound)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
