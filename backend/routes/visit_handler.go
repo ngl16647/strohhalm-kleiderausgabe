@@ -58,8 +58,8 @@ func RecordCustomerVisitHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func CustomerVisitsHandler(w http.ResponseWriter, r *http.Request) {
-	beginStr := getParam(r, "from")
-	endStr := getParam(r, "to")
+	beginStr := getParam(r, "begin")
+	endStr := getParam(r, "end")
 
 	var cvs []db.CustomerVisit
 	var err error

@@ -17,8 +17,8 @@ func CustomerStatsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func VisitStatsHandler(w http.ResponseWriter, r *http.Request) {
-	fromStr := getParam(r, "from")
-	toStr := getParam(r, "to")
+	fromStr := getParam(r, "begin")
+	toStr := getParam(r, "end")
 
 	from, err := parseDateWithDefault(fromStr, time.Now().AddDate(-1, 0, 0))
 	if err != nil {
