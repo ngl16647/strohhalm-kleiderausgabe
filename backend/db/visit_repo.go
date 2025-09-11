@@ -47,8 +47,8 @@ func AddVisit(customerId int64, visitDate *time.Time, notes string) (Visit, erro
 	return newVisit, nil
 }
 
-func AllCustomerVisits() ([]CustomerVisit, error) {
-	cvs := []CustomerVisit{}
+func AllVisitDetails() ([]VisitDetail, error) {
+	cvs := []VisitDetail{}
 	// LEFT JOIN to include visits with deleted customer
 	// sqlite does not have RIGHT JOIN
 	err := DB.Select(&cvs, `
@@ -69,11 +69,11 @@ func AllCustomerVisits() ([]CustomerVisit, error) {
 	return cvs, nil
 }
 
-func CustomerVisitsBetween(begin time.Time, end time.Time) ([]CustomerVisit, error) {
+func VisitDetailsBetween(begin time.Time, end time.Time) ([]VisitDetail, error) {
 	beginStr := begin.Format(DateFormat)
 	endStr := end.Format(DateFormat)
 
-	var cvs []CustomerVisit
+	var cvs []VisitDetail
 	err := DB.Select(&cvs, `
 		SELECT 
 			v.id AS id,
@@ -96,8 +96,8 @@ func CustomerVisitsBetween(begin time.Time, end time.Time) ([]CustomerVisit, err
 	return cvs, nil
 }
 
-func VisitDetailsOfCustomer(customerId int64) ([]CustomerVisit, error) {
-	var cvs []CustomerVisit
+func VisitDetailsOfCustomer(customerId int64) ([]VisitDetail, error) {
+	var cvs []VisitDetail
 	err := DB.Select(&cvs, `
 		SELECT
 			v.id AS id,

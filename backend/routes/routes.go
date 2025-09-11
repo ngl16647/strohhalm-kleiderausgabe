@@ -73,7 +73,7 @@ var Routes = []Route{
 	{
 		Path:    "/customers/{id}/visits",
 		Method:  POST,
-		Handler: RecordCustomerVisitHandler,
+		Handler: RecordVisitDetailHandler,
 		Doc: `Record a visit. Optionally accepts JSON body with "visitDate" (format: YYYY-MM-DD) and
 		 "notes". Record the visit with today's date if visitDate is not provided. Returns visit id.`,
 	},
@@ -93,8 +93,10 @@ var Routes = []Route{
 	{
 		Path:    "/visits",
 		Method:  GET,
-		Handler: CustomerVisitsHandler,
-		Doc:     `Get customer visits, optionally filtered by date range.`,
+		Handler: VisitDetailsHandler,
+		Doc: `Get visit details. Returns a list consists of data "visitId", "customerId",
+		 "customerUuid", "customerFirstName", "customerLastName", "visitDate" and "notes". Optionally
+		  filtered by date range.`,
 		QueryParams: []QueryParam{
 			{Name: "begin", Description: "Start date in YYYY-MM-DD format", Required: false},
 			{Name: "end", Description: "End date in YYYY-MM-DD format", Required: false},

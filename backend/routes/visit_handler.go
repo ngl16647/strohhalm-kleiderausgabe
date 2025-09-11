@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func RecordCustomerVisitHandler(w http.ResponseWriter, r *http.Request) {
+func RecordVisitDetailHandler(w http.ResponseWriter, r *http.Request) {
 	customerId, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		http.Error(w, "invalid customer ID", http.StatusBadRequest)
@@ -57,16 +57,16 @@ func RecordCustomerVisitHandler(w http.ResponseWriter, r *http.Request) {
 	writeJson(w, visit, http.StatusOK)
 }
 
-func CustomerVisitsHandler(w http.ResponseWriter, r *http.Request) {
+func VisitDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	beginStr := getParam(r, "begin")
 	endStr := getParam(r, "end")
 
-	var cvs []db.CustomerVisit
+	var cvs []db.VisitDetail
 	var err error
 
 	// Return all visits when no time param is provided
 	if beginStr == "" && endStr == "" {
-		cvs, err = db.AllCustomerVisits()
+		cvs, err = db.AllVisitDetails()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -96,7 +96,7 @@ func CustomerVisitsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cvs, err = db.CustomerVisitsBetween(begin, end)
+	cvs, err = db.VisitDetailsBetween(begin, end)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

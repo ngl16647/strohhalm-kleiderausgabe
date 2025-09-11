@@ -20,8 +20,8 @@ type Visit struct {
 	Notes      string `json:"notes,omitempty"`
 }
 
-type CustomerVisit struct {
-	Id                int64   `db:"id" json:"id"`
+type VisitDetail struct {
+	Id                int64   `db:"id" json:"visitId"`
 	CustomerId        *int64  `db:"customer_id" json:"customerId"`
 	CustomerUuid      *string `db:"customer_uuid" json:"customerUuid"`
 	CustomerFirstName *string `db:"first_name" json:"customerFirstName"`

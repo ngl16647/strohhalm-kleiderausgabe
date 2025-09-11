@@ -53,14 +53,14 @@ func TestAddVisit(t *testing.T) {
 		t.Fatal("New Visit ID is not 1")
 	}
 
-	cvs, err := db.AllCustomerVisits()
+	cvs, err := db.AllVisitDetails()
 	FatalErr(t, err)
 	log.Println(cvs)
 
 	t1, _ := time.Parse(db.DateFormat, "2025-08-27")
 	t2, _ := time.Parse(db.DateFormat, "2025-08-28")
 	t.Log(t1)
-	cvs, err = db.CustomerVisitsBetween(t1, t2)
+	cvs, err = db.VisitDetailsBetween(t1, t2)
 	FatalErr(t, err)
 	log.Println(cvs)
 
