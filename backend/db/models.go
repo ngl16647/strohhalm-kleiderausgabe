@@ -14,9 +14,9 @@ type Customer struct {
 
 // Use pointer for nullable values
 type Visit struct {
-	Id         int64  `json:"id"`
-	CustomerId *int64 `db:"customer_id" json:"customer_id"`
-	VisitDate  string `db:"visit_date" json:"visit_date"`
+	Id         int64  `json:"visitId"`
+	CustomerId *int64 `db:"customer_id" json:"customerId"`
+	VisitDate  string `db:"visit_date" json:"visitDate"`
 	Notes      string `json:"notes,omitempty"`
 }
 

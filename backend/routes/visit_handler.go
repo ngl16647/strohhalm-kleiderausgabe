@@ -132,12 +132,28 @@ func DeleteVisitHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid visit id", http.StatusBadRequest)
 	}
 
-	if err = db.DeleteVisit(id); err != nil {
+	lastVisit, err := db.DeleteVisit(id)
+	if err != nil {
 		http.Error(w, "deletion failed", http.StatusInternalServerError)
 		return
 	}
 
-	ok(w)
+	writeJson(w, lastVisit, http.StatusOK)
+}
+
+func DeleteLastVisitOfCustomerHandler(w http.ResponseWriter, r *http.Request) {
+	customerId, err := parseIntFromUrl(r, "id")
+	if err != nil {
+		http.Error(w, "invalid customer id", http.StatusBadRequest)
+	}
+
+	lastVisit, err := db.DeleteLastVisitOfCustomer(customerId)
+	if err != nil {
+		http.Error(w, "deletion failed", http.StatusInternalServerError)
+		return
+	}
+
+	writeJson(w, lastVisit, http.StatusOK)
 }
 
 func VisitsOfCustomerHandler(w http.ResponseWriter, r *http.Request) {
@@ -146,7 +162,7 @@ func VisitsOfCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid visit id", http.StatusBadRequest)
 	}
 
-	cvs, err := db.VisitsOfCustomer(customerId)
+	cvs, err := db.VisitDetailsOfCustomer(customerId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

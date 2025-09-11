@@ -44,9 +44,12 @@ DELETE {{base_url}}/customers/1
 POST {{base_url}}/customers/1/visits
 
 {
-    "visitDate": "2025-02-24",
+    "visitDate": "2025-03-28",
     "notes": "He farted"
 }
+
+### Delete a visit for customer
+DELETE  {{base_url}}/customers/1/visits
 
 ### Get visit
 GET {{base_url}}/visits

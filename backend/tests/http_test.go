@@ -13,11 +13,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-var testRouter = chi.NewRouter()
+var TestRouter = chi.NewRouter()
 
 func TestMain(m *testing.M) {
 	db.InitDatabase(":memory:")
-	routes.InitRoutes(testRouter)
+	routes.InitRoutes(TestRouter)
 
 	addCustomers()
 	addVisits()
@@ -33,44 +33,62 @@ func addCustomers() {
 		"country":   "My House",
 		"birthday":  "1998-03-30",
 	})
-	call("/customers", "POST", map[string]string{
-		"firstName": "Bing",
-		"lastName":  "Pang",
-		"birthday":  "1980-09-10",
-		"notes":     "very handsome",
-	})
-	call("/customers", "POST", map[string]string{
-		"firstName": "Moo",
-		"lastName":  "Quack",
-		"country":   "Heaven",
-	})
+	// call("/customers", "POST", map[string]string{
+	// 	"firstName": "Bing",
+	// 	"lastName":  "Pang",
+	// 	"birthday":  "1980-09-10",
+	// 	"notes":     "very handsome",
+	// })
+	// call("/customers", "POST", map[string]string{
+	// 	"firstName": "Moo",
+	// 	"lastName":  "Quack",
+	// 	"country":   "Heaven",
+	// })
 }
 
 func addVisits() {
 	call("/customers/1/visits", "POST", map[string]string{
-		"visitDate": "2025-09-03",
-	})
-	call("/customers/1/visits", "POST", map[string]string{
 		"visitDate": "2025-08-25",
 	})
 	call("/customers/1/visits", "POST", map[string]string{
-		"visitDate": "2025-08-12",
+		"visitDate": "2025-09-03",
 	})
-	call("/customers/2/visits", "POST", map[string]string{
-		"visitDate": "2025-07-21",
-	})
-	call("/customers/3/visits", "POST", map[string]string{
-		"visitDate": "2025-08-27",
-	})
-	call("/customers/3/visits", "POST", map[string]string{
-		"visitDate": "2025-08-09",
-	})
+	// call("/customers/1/visits", "POST", map[string]string{
+	// 	"visitDate": "2025-08-12",
+	// })
+	// call("/customers/2/visits", "POST", map[string]string{
+	// 	"visitDate": "2025-07-21",
+	// })
+	// call("/customers/3/visits", "POST", map[string]string{
+	// 	"visitDate": "2025-08-27",
+	// })
+	// call("/customers/3/visits", "POST", map[string]string{
+	// 	"visitDate": "2025-08-09",
+	// })
 }
 
 func TestChangeCustomer(t *testing.T) {
 	var rr *httptest.ResponseRecorder
 
-	rr = call("/customers", "GET", nil)
+	rr = call("/customers/1", "GET", nil)
+	logResponse(t, rr)
+
+	rr = call("/customers/1/visits", "DELETE", nil)
+	logResponse(t, rr)
+
+	rr = call("/customers/1", "GET", nil)
+	logResponse(t, rr)
+
+	rr = call("/customers/1/visits", "DELETE", nil)
+	logResponse(t, rr)
+
+	rr = call("/customers/1", "GET", nil)
+	logResponse(t, rr)
+
+	rr = call("/customers/1/visits", "DELETE", nil)
+	logResponse(t, rr)
+
+	rr = call("/customers/1", "GET", nil)
 	logResponse(t, rr)
 }
 
@@ -92,7 +110,7 @@ func call(
 	req := httptest.NewRequest(method, path, body)
 
 	rr := httptest.NewRecorder()
-	testRouter.ServeHTTP(rr, req)
+	TestRouter.ServeHTTP(rr, req)
 
 	return rr
 }

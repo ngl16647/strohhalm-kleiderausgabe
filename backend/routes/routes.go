@@ -32,13 +32,15 @@ var Routes = []Route{
 		 struct.`,
 	},
 	{
-		Path:    "/customers",
+		Path:    "/customers", // TODO
 		Method:  GET,
 		Handler: SearchCustomerHandler,
 		Doc: `Search customer names by query parameter. Get all customers when no query 
 		 parameter is provided.`,
 		QueryParams: []QueryParam{
 			{Name: "query", Description: "Query string for searching", Required: false},
+			{Name: "last_visit_after", Description: "Customer must have last visit after this date", Required: false},
+			{Name: "last_visit_before", Description: "Customer must have last visit before this date", Required: false},
 		},
 	},
 	{
@@ -83,6 +85,12 @@ var Routes = []Route{
 		 "customerUuid", "customerFirstName", "customerLastName", "visitDate" and "notes".`,
 	},
 	{
+		Path:    "/customers/{id}/visits",
+		Method:  DELETE,
+		Handler: DeleteLastVisitOfCustomerHandler,
+		Doc:     `Delete the last visit of a customer. Return the new latest visit of that customer.`,
+	},
+	{
 		Path:    "/visits",
 		Method:  GET,
 		Handler: CustomerVisitsHandler,
@@ -103,7 +111,8 @@ var Routes = []Route{
 		Path:    "/visits/{id}",
 		Method:  DELETE,
 		Handler: DeleteVisitHandler,
-		Doc:     `Delete a visit and update that customer's last visit.`,
+		Doc: `Delete a visit and update that customer's last visit. Return the new latest visit of 
+		 that customer.`,
 	},
 	{
 		Path:    "/stats/customers",

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
@@ -70,8 +71,10 @@ func CustomerById(id int64) (Customer, error) {
 	var c Customer
 	err := DB.Get(&c, "SELECT * FROM customers WHERE id = $1", id)
 	if err != nil {
-		var empty Customer
-		return empty, fmt.Errorf("get customer by id %d: %w", id, err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return c, ErrNotFound
+		}
+		return c, fmt.Errorf("get customer by id %d: %w", id, err)
 	}
 
 	return c, nil
@@ -119,13 +122,20 @@ func SetCustomerLastVisit(customerId int64, newVisit Visit) error {
 	return nil
 }
 
-func UpdateCustomerLastVisit(customerId int64) error {
+func UpdateCustomerLastVisit(customerId int64) (*Visit, error) {
 	lastVisit, err := GetLatestVisitByCustomer(customerId)
 	if err != nil {
-		if err == ErrNotFound {
-			return nil
-		}
-		return fmt.Errorf("find last visit for customer %d: %w", customerId, err)
+		return lastVisit, fmt.Errorf("find last visit for customer %d: %w", customerId, err)
+	}
+
+	var visitId *int64
+	var visitDate *string
+	if lastVisit == nil {
+		visitId = nil
+		visitDate = nil
+	} else {
+		visitId = &lastVisit.Id
+		visitDate = &lastVisit.VisitDate
 	}
 
 	if _, err := DB.Exec(`
@@ -133,10 +143,10 @@ func UpdateCustomerLastVisit(customerId int64) error {
 		SET last_visit_id = $1,
 			last_visit = $2 
 		WHERE id = $3`,
-		lastVisit.Id, lastVisit.VisitDate, customerId); err != nil {
-		return fmt.Errorf("update last visit for customer %d: %w", customerId, err)
+		visitId, visitDate, customerId); err != nil {
+		return lastVisit, fmt.Errorf("update last visit for customer %d: %w", customerId, err)
 	}
-	return nil
+	return lastVisit, nil
 }
 
 func DeleteCustomer(customerId int64) error {

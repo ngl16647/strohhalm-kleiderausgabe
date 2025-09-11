@@ -7,34 +7,19 @@ import (
 	"time"
 )
 
-// func AddVisitNow(customerId int64, notes string) (Visit, error) {
-// 	today := time.Now()
-// 	todayStr := today.Format(DateFormat)
-
-// 	res, err := DB.Exec(
-// 		"INSERT INTO visits (customer_id, visit_date, notes) VALUES ($1, $2, $3)",
-// 		customerId, todayStr, notes,
-// 	)
-// 	if err != nil {
-// 		return Visit{}, fmt.Errorf("insert visit for customer %d: %w", customerId, err)
-// 	}
-
-// 	if err := SetCustomerLastVisit(customerId, today); err != nil {
-// 		return Visit{}, fmt.Errorf("update last visit for customer %d: %w", customerId, err)
-// 	}
-
-// 	visitId, err := res.LastInsertId()
-// 	if err != nil {
-// 		return Visit{}, err
-// 	}
-
-// 	return Visit{
-// 		Id:         visitId,
-// 		CustomerId: &customerId,
-// 		VisitDate:  todayStr,
-// 		Notes:      notes,
-// 	}, nil
-// }
+func VisitById(visitId int64) (Visit, error) {
+	var visit Visit
+	if err := DB.Get(&visit, `
+		SELECT * FROM visits
+		WHERE id = $1
+	`, visitId); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return visit, ErrNotFound
+		}
+		return visit, fmt.Errorf("get visit by id: %w", err)
+	}
+	return visit, nil
+}
 
 func AddVisit(customerId int64, visitDate *time.Time, notes string) (Visit, error) {
 	var visitDateStr string
@@ -111,7 +96,7 @@ func CustomerVisitsBetween(begin time.Time, end time.Time) ([]CustomerVisit, err
 	return cvs, nil
 }
 
-func VisitsOfCustomer(customerId int64) ([]CustomerVisit, error) {
+func VisitDetailsOfCustomer(customerId int64) ([]CustomerVisit, error) {
 	var cvs []CustomerVisit
 	err := DB.Select(&cvs, `
 		SELECT
@@ -128,10 +113,23 @@ func VisitsOfCustomer(customerId int64) ([]CustomerVisit, error) {
 		customerId,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("get visits of customer: %w", err)
+		return nil, fmt.Errorf("get visit details of customer: %w", err)
 	}
 
 	return cvs, nil
+}
+
+func VisitsOfCustomer(customerId int64, limit int) ([]Visit, error) {
+	var vs []Visit
+	err := DB.Select(&vs, `
+		SELECT * FROM visits
+		WHERE customer_id = $1
+	`, customerId,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get visits of customer: %w", err)
+	}
+	return vs, nil
 }
 
 func UpdateVisit(visitId int64, newV Visit) error {
@@ -160,27 +158,49 @@ func UpdateVisit(visitId int64, newV Visit) error {
 	return nil
 }
 
-func DeleteVisit(visitId int64) error {
+func DeleteVisit(visitId int64) (*Visit, error) {
 	var customerId *int64
 	if err := DB.Get(&customerId, `
 		DELETE FROM visits WHERE id = ?
 		RETURNING customer_id
 	`, visitId); err != nil {
-		return err
+		return nil, err
 	}
 
 	if customerId == nil {
-		return nil
+		return nil, nil
 	}
 
-	if err := UpdateCustomerLastVisit(*customerId); err != nil {
-		return err
+	// lastVisit can be nil
+	lastVisit, err := UpdateCustomerLastVisit(*customerId)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return lastVisit, nil
 }
 
-func GetLatestVisitByCustomer(customerId int64) (Visit, error) {
+func DeleteLastVisitOfCustomer(customerId int64) (*Visit, error) {
+	customer, err := CustomerById(customerId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("delete last visit of customer %d: %w", customerId, err)
+	}
+
+	if customer.LastVisitId == nil {
+		return nil, nil
+	}
+
+	lastVisit, err := DeleteVisit(*customer.LastVisitId)
+	if err != nil {
+		return nil, err
+	}
+	return lastVisit, err
+}
+
+func GetLatestVisitByCustomer(customerId int64) (*Visit, error) {
 	var visit Visit
 	if err := DB.Get(&visit, `
 		SELECT * FROM visits
@@ -189,9 +209,9 @@ func GetLatestVisitByCustomer(customerId int64) (Visit, error) {
 		LIMIT 1
 	`, customerId); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return visit, ErrNotFound
+			return nil, nil
 		}
-		return visit, fmt.Errorf("get latest visit for customer %d: %w", customerId, err)
+		return nil, fmt.Errorf("get latest visit for customer %d: %w", customerId, err)
 	}
-	return visit, nil
+	return &visit, nil
 }
