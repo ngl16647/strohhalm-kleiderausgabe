@@ -1,14 +1,15 @@
 package db
 
 type Customer struct {
-	Id        int64  `json:"id"`
-	Uuid      string `json:"uuid"`
-	FirstName string `db:"first_name" json:"firstName"`
-	LastName  string `db:"last_name" json:"lastName"`
-	Birthday  string `json:"birthday"`
-	Country   string `json:"country"`
-	LastVisit string `db:"last_visit" json:"lastVisit"`
-	Notes     string `json:"notes"`
+	Id          int64   `json:"id"`
+	Uuid        string  `json:"uuid"`
+	FirstName   string  `db:"first_name" json:"firstName"`
+	LastName    string  `db:"last_name" json:"lastName"`
+	Birthday    string  `json:"birthday"`
+	Country     string  `json:"country"`
+	LastVisitId *int64  `db:"last_visit_id" json:"lastVisitId"`
+	LastVisit   *string `db:"last_visit" json:"lastVisit"`
+	Notes       string  `json:"notes"`
 }
 
 // Use pointer for nullable values
@@ -21,10 +22,10 @@ type Visit struct {
 
 type CustomerVisit struct {
 	Id                int64   `db:"id" json:"id"`
-	CustomerId        *int64  `db:"customer_id" json:"customerId,omitempty"`
-	CustomerUuid      *string `db:"customer_uuid" json:"customerUuid,omitempty"`
-	CustomerFirstName *string `db:"first_name" json:"customerFirstName,omitempty"`
-	CustomerLastName  *string `db:"last_name" json:"customerLastName,omitempty"`
+	CustomerId        *int64  `db:"customer_id" json:"customerId"`
+	CustomerUuid      *string `db:"customer_uuid" json:"customerUuid"`
+	CustomerFirstName *string `db:"first_name" json:"customerFirstName"`
+	CustomerLastName  *string `db:"last_name" json:"customerLastName"`
 	VisitDate         string  `db:"visit_date" json:"visitDate"`
 	Notes             string  `db:"notes" json:"notes"`
 }
@@ -40,6 +41,7 @@ const (
             last_name TEXT NOT NULL,
 			birthday TEXT,
 			country TEXT,
+			last_visit_id INTEGER,
 			last_visit TEXT,
 			notes TEXT
         );

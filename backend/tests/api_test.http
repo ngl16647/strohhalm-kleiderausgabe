@@ -36,7 +36,7 @@ GET {{base_url}}/customers/uuid/b2feb2db-25a8-4cba-92de-38ede14e425c
 GET {{base_url}}/customers?query=
 
 ### Delete a customer
-DELETE {{base_url}}/customers/2
+DELETE {{base_url}}/customers/1
 
 # ---------------
 
@@ -57,7 +57,7 @@ GET {{base_url}}/visits
 GET {{base_url}}/customers/4/visits
 
 ### Delete a visit
-DELETE {{base_url}}/visits/8
+DELETE {{base_url}}/visits/1
 
 
 ### --- Statistics ---

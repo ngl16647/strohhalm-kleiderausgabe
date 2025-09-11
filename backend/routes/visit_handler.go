@@ -26,19 +26,19 @@ func RecordCustomerVisitHandler(w http.ResponseWriter, r *http.Request) {
 	visitDateStr := req["visitDate"]
 	notes := req["notes"]
 
-	var visit db.Visit
-	var addVisitErr error
+	var visitDate *time.Time
 	if visitDateStr == "" {
-		visit, addVisitErr = db.AddVisitNow(customerId, notes)
+		visitDate = nil
 	} else {
-		visitDate, err := time.Parse(db.DateFormat, visitDateStr)
+		parsedDate, err := time.Parse(db.DateFormat, visitDateStr)
 		if err != nil {
 			http.Error(w, "invalid date format", http.StatusBadRequest)
 			return
 		}
-		visit, addVisitErr = db.AddVisitAt(customerId, visitDate, notes)
+		visitDate = &parsedDate
 	}
 
+	visit, addVisitErr := db.AddVisit(customerId, visitDate, notes)
 	if addVisitErr != nil {
 		// A customer cannot visit twice within a day
 		if strings.Contains(addVisitErr.Error(), "UNIQUE constraint failed") {
