@@ -3,16 +3,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:strohhalm_app/app_settings.dart';
 import 'package:strohhalm_app/database_helper.dart';
+import 'package:strohhalm_app/http_helper.dart';
 import 'package:strohhalm_app/main.dart';
 import 'package:strohhalm_app/user.dart';
 import 'package:strohhalm_app/utilities.dart';
 import 'package:styled_text/styled_text.dart';
 import 'create_qr_code.dart';
+import 'dialog_helper.dart';
 import 'generated/l10n.dart';
 
 class StatPage extends StatefulWidget {
   final User user;
+
+  static Future<User?> showStatPageDialog(BuildContext context, User user) async{
+    return await showDialog<User>(
+        context: context,
+        builder: (context){
+          return StatPage(user: user);
+        });
+  }
 
   const StatPage({super.key, required this.user});
 
@@ -23,19 +34,24 @@ class StatPage extends StatefulWidget {
 class StatPageState extends State<StatPage>{
   List<TookItem> _tookItems = [];
   DateTime? _lastVisit;
-  bool _changed = false;
   bool uploading = false;
+  bool _isMobile = false;
+  bool _useServer = false;
 
   bool get isMoreThan14Days => _lastVisit != null ?  DateTime.now().difference(_lastVisit!) > Duration(days: 13) : true;
 
   @override
   void initState() {
+    _isMobile = MyApp().getDeviceType() == DeviceType.mobile;
+    _useServer = AppSettingsManager.instance.settings.useServer ?? false;
     getVisits();
     super.initState();
   }
 
   Future<void> getVisits() async {
-    _tookItems = widget.user.visits;
+    _useServer
+        ? _tookItems = await HttpHelper().getALlVisitsFromUser(id: widget.user.id)
+        : _tookItems = await DatabaseHelper().getVisits(widget.user.id);
     setState(() {
       if(_tookItems.isNotEmpty) _lastVisit = _tookItems.first.tookTime;
     });
@@ -52,7 +68,7 @@ class StatPageState extends State<StatPage>{
       Expanded(
         child: Container(
           decoration: BoxDecoration(
-            color: _lastVisit == null //TODO: Gray or green?
+            color: _lastVisit == null
                 ? Colors.grey
                 : (isMoreThan14Days)
                 ? Colors.lightGreen
@@ -73,7 +89,7 @@ class StatPageState extends State<StatPage>{
                     StyledText(
                       text: _lastVisit == null
                           ? S.of(context).customer_tile_lastVisit_never
-                          : "${DateFormat("dd.MM.yyyy HH:mm").format(_lastVisit!)} ${Utilities().isSameDay(DateTime.now(), _lastVisit!) ? " (${S.of(context).today})" : ""}",
+                          : "${DateFormat(_useServer ? "dd.MM.yyyy" : "dd.MM.yyyy HH:mm").format(_lastVisit!)} ${Utilities.isSameDay(DateTime.now(), _lastVisit!) && !_isMobile ? " (${S.of(context).today})" : ""}",
                       style: TextStyle(fontSize: 18),
 
                     ),
@@ -83,19 +99,23 @@ class StatPageState extends State<StatPage>{
               _tookItems.isNotEmpty
                   ? TextButton.icon(
                 onPressed: () async {
-                  bool? result = await Utilities().dialogConfirmation(context, S.of(context).stat_page_removeLastVisitConfirmation);
+                  bool? result = await DialogHelper.dialogConfirmation(context, S.of(context).stat_page_removeLastVisitConfirmation, true);
                   if (result != null) {
-                    DateTime? newVisit = await DatabaseHelper().deleteLatestAndReturnPrevious(widget.user);
-                      setState(() {
-                        //_tookItems.removeAt(0);
-                        if(_tookItems.isNotEmpty) _tookItems.removeAt(0);
-                        _lastVisit = newVisit;
-                      });
 
-                    _changed = true;
+                    String? newLastTime;
+                    _useServer
+                        ? newLastTime = await HttpHelper().deleteVisit(customerId: widget.user.id)
+                        : newLastTime = await DatabaseHelper().deleteLatestAndReturnPrevious(widget.user);
+
+                    setState(() {
+                      if(_tookItems.isNotEmpty) _tookItems.removeAt(0);
+                      DateTime? newVisitTime = newLastTime == null ? null : DateTime.parse(newLastTime);
+                      _lastVisit = newVisitTime;
+                      widget.user.lastVisit = newVisitTime;
+                    });
                   }
                 },
-                label: Text(S.of(context).stat_page_removeLastVisit),
+                label: Text(_isMobile ? "" : S.of(context).stat_page_removeLastVisit),
                 icon: Icon(Icons.delete),
               ) : SizedBox.shrink(),
             ],
@@ -145,16 +165,21 @@ class StatPageState extends State<StatPage>{
     ];
   }
 
+  bool editText = false;
+  TextEditingController noteEditController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     final isMobile = MyApp().getDeviceType() == DeviceType.mobile;
-    return  Dialog(
+    return Dialog(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width*0.8
+          ),
           child:PopScope(
             canPop: false,
             onPopInvokedWithResult: (popped, ev){
               if(!popped){
                 //To update List when barrier-dismissing Dialog
-                Navigator.of(context).pop(_changed ? _tookItems : null);
+                Navigator.of(context).pop(widget.user);
               }
             },
             child: Padding(
@@ -172,7 +197,7 @@ class StatPageState extends State<StatPage>{
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           GridView.count(
-                            crossAxisCount: (MediaQuery.of(context).size.width / 180).floor().clamp(1, 10),
+                            crossAxisCount: (MediaQuery.of(context).size.width / 165).toInt(),
                             crossAxisSpacing: 20,
                             mainAxisSpacing: 20,
                             childAspectRatio: isMobile ? 1.5 : 1,
@@ -217,7 +242,7 @@ class StatPageState extends State<StatPage>{
                                 children: [
                                   SizedBox(height: 10,),
                                   Text(S.of(context).stat_page_country),
-                                  Text(CountryLocalizations.of(context)?.countryName(countryCode: widget.user.birthCountry) ?? Country.tryParse(widget.user.birthCountry)!.name, style: TextStyle(color: Colors.grey)),
+                                  Text(CountryLocalizations.of(context)?.countryName(countryCode: widget.user.country) ?? Country.tryParse(widget.user.country)!.name, style: TextStyle(color: Colors.grey)),
                                 ],
                               ),
                               // Has Children
@@ -245,8 +270,43 @@ class StatPageState extends State<StatPage>{
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(S.of(context).stat_page_miscellaneous),
-                              Text(widget.user.miscellaneous ?? "")
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(S.of(context).stat_page_miscellaneous),
+                                  TextButton.icon(
+                                      onPressed: ()async{
+                                        if(!editText){
+                                          setState(() {
+                                            noteEditController.text = widget.user.notes ?? "";
+                                            editText = true;
+                                          });
+                                        } else {
+                                          setState(() {
+                                            widget.user.notes = noteEditController.text;
+                                            editText = false;
+
+                                          });
+                                          _useServer
+                                              ? await HttpHelper().updateCustomer(user: widget.user)
+                                              : await DatabaseHelper().updateUser(widget.user);
+                                        }
+                                      },
+                                      icon: Icon(!editText ? Icons.edit : Icons.check_circle),
+                                      label: Text(!editText ? "Edit" : S.of(context).confirm),
+                                  ),
+                                ],
+                              ),
+                              !editText
+                                  ? Text(widget.user.notes ?? "")
+                                  : TextField(
+                                      controller: noteEditController,
+                                      decoration: InputDecoration(
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                    )
                             ],
                           ),
                           TextButton.icon(
@@ -264,7 +324,7 @@ class StatPageState extends State<StatPage>{
                 ),
                 isMobile
                     ? Container(
-                  constraints: BoxConstraints(maxHeight: 150),
+                  constraints: BoxConstraints(maxHeight: 100),
                   child: Column(
                     spacing: 10,
                     mainAxisSize: MainAxisSize.min,
@@ -299,23 +359,29 @@ class StatPageState extends State<StatPage>{
                         flex: 2,
                         child: TextButton(
                             onPressed: ()async{
-                              if(_tookItems.any((item) => Utilities().isSameDay(item.tookTime, DateTime.now()))) {
+                              //if(_tookItems.any((item) => Utilities.isSameDay(item.tookTime, DateTime.now())))
+                              if(_lastVisit != null && Utilities.isSameDay(_lastVisit!, DateTime.now())) {
                                 if(!context.mounted) return;
-                                Utilities().showToast(context: context, title: "Already Visited Today", description: S.of(context).stat_page_alreadyGotToday, isError: true);
+                                Utilities.showToast(context: context, title:  S.of(context).fail, description: S.of(context).stat_page_alreadyGotToday, isError: true);
                                 return;
                               }
                               setState(() {
                                 uploading = true;
                               });
-                              TookItem newestVisit = await DatabaseHelper().addVisit(widget.user.id);
-                              _tookItems.insert(0,newestVisit);
+                              TookItem? newLastVisit;
+                              _useServer
+                                  ? newLastVisit = await HttpHelper().addVisit(userId: widget.user.id)
+                                  : newLastVisit = await DatabaseHelper().addVisit(widget.user.id);
                               setState(() {
-                                _lastVisit = newestVisit.tookTime;
+                                if(newLastVisit != null) {
+                                 _lastVisit = newLastVisit.tookTime;
+                                  widget.user.lastVisit = newLastVisit.tookTime;
+                                 _tookItems.insert(0, newLastVisit);
+                                 }
                                 uploading = false;
                               });
-                              _changed = true;
                               if(!context.mounted) return;
-                              Utilities().showToast(context: context, title: "Success", description: S.of(context).stat_page_savedVisit);
+                              Utilities.showToast(context: context, title:  S.of(context).success, description: S.of(context).stat_page_savedVisit);
                             },
                             style: TextButton.styleFrom(
                                 backgroundColor: Colors.lime.withAlpha(70),

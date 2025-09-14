@@ -1,18 +1,27 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:strohhalm_app/main.dart';
-import 'package:strohhalm_app/utilities.dart';
-import 'package:toastification/toastification.dart';
-
+import 'app_settings.dart';
+import 'banner_designer.dart';
 import 'generated/l10n.dart';
+
+
 
 class SettingsPage extends StatefulWidget {
   final Function(Color color) changeColor;
+
+  static Future<bool?> showSettingsAsDialog({
+    required BuildContext context,
+    required Function(Color color) changeColor
+  }) async {
+    return await showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context){
+          return  SettingsPage(changeColor: changeColor,);
+        });
+  }
 
   const SettingsPage({
     super.key,
@@ -24,59 +33,118 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  late SharedPreferences pref;
-  File? bannerImage;
-  Color selectedColor = Color.fromRGBO(169, 171, 25, 1.0);
-  final TextEditingController serverController = TextEditingController();
-  final TextEditingController tokenController = TextEditingController();
-  bool obscurePassword = true;
-  bool isSocket = false;
-  bool darkMode = false;
-  bool useServer = false;
+  final GlobalKey<BannerDesignerState> _bannerDesignerKey = GlobalKey();
+  BannerDesigner designer = BannerDesigner(useDesigner: true);
+  final TextEditingController _serverController = TextEditingController();
+  final TextEditingController _tokenController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  Color _selectedColor = Color.fromRGBO(169, 171, 25, 1.0);
+  bool _obscurePassword = true;
+  bool _darkMode = false;
+  bool _useServer = false;
+  bool _isMobile = false;
 
   @override
   void initState() {
     loadSettings();
+    _isMobile = MyApp().getDeviceType() == DeviceType.mobile;
     super.initState();
   }
 
-  Future<void> _pickImage(BuildContext context) async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
-    if (result != null && result.files.single.path != null) {
-      final pickedFile = File(result.files.single.path!);
-      final image = await decodeImageFromList(await pickedFile.readAsBytes());
-      final aspectRatio = image.width / image.height;
-      if (aspectRatio < 6) {
-        if(!context.mounted) return;
-        Utilities().showToast(context: context, title: "Wrong Aspect Ratio", description: "Image Aspectratio is to small, should be at least 6:1", isError: true);
-        return;
-      }
+  Future<void> loadSettings() async {
+    final settings = AppSettingsManager.instance.settings;
 
-      final appDir = await getApplicationDocumentsDirectory();
-      final bannerDir = Directory(join(appDir.path,"bannerImages"));
-      if (!(await bannerDir.exists())) {
-        await bannerDir.create(recursive: true);
-      }
+    _selectedColor = settings.selectedColor ?? Color.fromRGBO(169, 171, 25, 1.0);
+    _serverController.text = settings.url ?? "";
+    _tokenController.text = settings.token ?? "";
+    _darkMode = settings.darkMode ?? false;
+    _useServer = settings.useServer ?? false;
+     var useBannerDesigner = settings.useBannerDesigner ?? true;
+     var bannerWholeImage = settings.bannerSingleImage;
+     var bannerDesignerImage = settings.bannerDesignerImageContainer;
 
-      final fileName = pickedFile.uri.pathSegments.last;
-      final savedImage = await pickedFile.copy(join(bannerDir.path,fileName));
+     designer = BannerDesigner(
+         key: _bannerDesignerKey,
+         useDesigner: useBannerDesigner,
+         bannerDesignerImage: bannerDesignerImage,
+         wholeBannerImage: bannerWholeImage,
+     );
+    setState(() {});
+  }
 
-      setState(() {
-        bannerImage = savedImage;
-      });
+  Future<void> saveSettings() async {
+    final manager = AppSettingsManager.instance;
+    manager.setSelectedColor(_selectedColor);
+    manager.setServerUrl(_serverController.text);
+    manager.setToken(_tokenController.text);
+    manager.setDarkMode(_darkMode);
+    manager.setUseServer(_useServer);
+
+    _bannerDesignerKey.currentState?.saveBanner();
+
+    Navigator.of(context).pop(true);
+  }
+
+  Widget createTitleWidget({
+    required String title,
+    required String toolTipDescription,
+    required BuildContext context,
+    String? switchDescription,
+    bool? switchBool,
+    Function(bool)? switchChanged,
+  }) {
+    final switchWidget = (switchBool != null)
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!_isMobile && switchDescription != null) Text(switchDescription),
+              Switch(value: switchBool, onChanged: switchChanged, padding: EdgeInsets.symmetric(horizontal: 10),),
+            ],
+          )
+        : SizedBox.shrink();
+
+    final titleRow = Row(
+      children: [
+        Text(title, style: Theme.of(context).textTheme.titleMedium),
+        Spacer(),
+        if (!_isMobile) switchWidget,
+        Tooltip(
+          message: toolTipDescription,
+          child: Icon(Icons.help_outline_rounded, size: 20),
+        ),
+      ],
+    );
+
+    if (_isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          titleRow,
+          if (switchBool != null) Row(
+            children: [
+              if (switchDescription != null) Text(switchDescription),
+              Spacer(),
+              switchWidget,
+            ],
+          ),
+        ],
+      );
     }
+
+    return titleRow;
   }
 
   Future<void> _pickColor(BuildContext context) async {
     final picked = await showDialog<Color>(
       context: context,
       builder: (context) {
-        Color tempColor = selectedColor;
+        Color tempColor = _selectedColor;
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12)
+              borderRadius: BorderRadius.circular(12)
           ),
-          title: Text("Farbe auswählen"),
+          title: Text(S.of(context).settings_pick_Color),
           content: SingleChildScrollView(
             child: ColorPicker(
               hexInputBar: true,
@@ -104,519 +172,184 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (picked != null) {
       setState(() {
-        selectedColor = picked;
+        _selectedColor = picked;
       });
     }
   }
 
-  Future<void> loadSettings() async {
-    final settings = AppSettingsManager.instance.settings;
-    bannerImage = settings.bannerImage;
-    selectedColor = settings.selectedColor ?? Color.fromRGBO(169, 171, 25, 1.0);
-    serverController.text = settings.url ?? "";
-    tokenController.text = settings.token ?? "";
-    isSocket = settings.isSocket ?? false;
-    darkMode = settings.darkMode ?? false;
-    useServer = settings.useServer ?? false;
-
-    setState(() {});
-  }
-
-  Future<void> saveSettings() async {
-    final manager = AppSettingsManager.instance;
-
-    manager.setBannerImage(bannerImage);
-    manager.setSelectedColor(selectedColor);
-    manager.setServerUrl(serverController.text);
-    manager.setToken(tokenController.text);
-    //manager.setSerialPort(_selectedPort ?? "");
-    manager.setScannerMode(isSocket);
-    manager.setDarkMode(darkMode);
-    manager.setUseServer(useServer);
-    navigatorKey.currentState?.pop(true);
-  }
-
-  Widget createTitleWidget(String title, String toolTipDescription, BuildContext context){
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium,),
-        Tooltip(
-          message: toolTipDescription,
-          child: Icon(Icons.help_outline_rounded, size: 20),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width*0.5 > 500 ? MediaQuery.of(context).size.width*0.5 : 500
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12)
-      ),
-      child: Padding(
-          padding:  EdgeInsets.all(16.0),
-          child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Einstellungen",style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center,),
-                    IconButton(
-                        onPressed: Navigator.of(context).pop,
-                        icon: Icon(Icons.close)
-                    ),
-                  ],
-                ),
-                Expanded(
-                    child: ListView(
-                      children: [
-                        createTitleWidget("Theme-Mode",  "Bild das oben auf der Seite dargestellt wird", context),
-                        SizedBox(height: 8),
-                        Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).listTileTheme.tileColor,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.all(5),
-                              child: Row(
-                                children: [
-                                  Text("Dark-Mode"),
-                                  Spacer(),
-                                  Switch.adaptive(
-                                      value: darkMode,
-                                      onChanged: (ev){
-                                        MyApp.of(context).changeTheme(ev ? ThemeMode.dark : ThemeMode.light);
-                                        setState(() {
-                                          darkMode = ev;
-                                          pref.setBool("darkMode", darkMode);
-                                        });
-                                      })
-                                ],
-                              ),
-                            )
-                        ),
-                        SizedBox(height:8),Divider(),SizedBox(height:8),
-                        createTitleWidget("Banner / Bild (Aspect-Ratio > 6:1)", "Bild das oben auf der Seite dargestellt wird", context),
-                        SizedBox(height: 8),
-                        bannerImage != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(15),
-                                child: Image.file(bannerImage!, fit: BoxFit.fitHeight),
-                              )
-                            :  Text("Kein Bild ausgewählt"),
-                        SizedBox(height: 10,),
-                        Row(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Expanded(
-                              flex: 1,
-                              child: ElevatedButton.icon(
-                                onPressed: () => _pickImage(context),
-                                label:  Text("Bild hochladen"),
-                                icon: Icon(Icons.add_photo_alternate),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: ElevatedButton.icon(
-                                onPressed: ()async{
-                                  final appDir = await getApplicationDocumentsDirectory();
-                                  final bannerDir = Directory(join(appDir.path,"bannerImages"));
-                                  if(!await bannerDir.exists()) return;
-                                  final files = bannerDir.listSync().whereType<File>().toList();
-                                  if(!context.mounted) return;
-                                  final result = await showDialog<File?>(
-                                      context: context,
-                                      builder: (context){
-                                        return Dialog(
-                                          constraints: BoxConstraints(
-                                            maxWidth: MediaQuery.of(context).size.width*0.6
-                                          ),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Padding(padding: EdgeInsets.all(5),child: Align(
-                                                alignment: AlignmentGeometry.centerRight,
-                                                child: IconButton(
-                                                    onPressed: Navigator.of(context).pop,
-                                                    icon: Icon(Icons.close)),
-                                              ),),
-                                              Expanded(
-                                                child: GridView.count(
-                                                crossAxisCount: 2,
-                                                childAspectRatio: 2,
-                                                children: [
-                                                  for(int i= 0; i < files.length; i++)...{
-                                                    Padding(
-                                                      padding: EdgeInsets.all(15),
-                                                      child: Material(
-                                                        elevation: 5,
-                                                        borderRadius: BorderRadius.circular(6),
-                                                        color: Theme.of(context).listTileTheme.tileColor,
-                                                        child: Column(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                          children: [
-                                                            SizedBox(),
-                                                            Padding(
-                                                                padding: EdgeInsets.all(5),
-                                                                child: ClipRRect(
-                                                                  borderRadius: BorderRadius.circular(12),
-                                                                  child: FittedBox(
-                                                                    fit: BoxFit.contain,
-                                                                    child: Image.file(files.elementAt(i)),
-                                                                  ),
-                                                                )
-                                                            ),
-                                                            bannerImage == null || files[i].path != bannerImage!.path ? Row(
-                                                              children: [
-                                                                Expanded(
-                                                                  flex: 3,
-                                                                    child: TextButton.icon(
-                                                                    onPressed: (){
-                                                                      Navigator.of(context).pop(files.elementAt(i));
-                                                                    },
-                                                                    label: Text("Pick"),
-                                                                    icon: Icon(Icons.hdr_auto_select),
-                                                                    style: TextButton.styleFrom(
-                                                                        minimumSize: Size(double.infinity, 32)
-                                                                    ),
-                                                                )),
-                                                                IconButton(
-                                                                    onPressed: (){
-                                                                      files[i].delete();
-                                                                      setState(() {
-                                                                        files.removeAt(i);
-                                                                      });
-                                                                    },
-                                                                    icon: Icon(Icons.delete),
-                                                                ),
-                                                              ],
-                                                            ) : Padding(
-                                                              padding: EdgeInsets.all(4),
-                                                              child: Text("Currently Selected!"),
-                                                            )
+    return !_isMobile
+        ? Dialog(
+            constraints:  BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width*0.5 > 500 ? MediaQuery.of(context).size.width*0.5 : 500
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)
+            ),
+            child: pageContent(context),
+        ).animate().slideY(duration: 300.ms, begin: 0.2).fadeIn(duration: 300.ms)
+        : Scaffold(
+            appBar: AppBar(
+              title: Text( S.of(context).settings),
+            ),
+            body: pageContent(context),
+        );
+  }
 
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    )
-                                                  }
-                                                ],
-                                              ),),
-                                              TextButton(
-                                                  onPressed: Navigator.of(context).pop,
-                                                  style: TextButton.styleFrom(
-                                                    minimumSize: Size(double.infinity, 42)
-                                                  ),
-                                                  child: Text(S.of(context).back),
-                                              )
-                                            ],
-                                          ),
-                                        );
+  ///Contains the actual content. So Desktop can use Dialog, mobile can use own page
+  Widget pageContent(BuildContext context){
+    return Padding(
+      padding:  EdgeInsets.only(left: 16.0, top: 6, bottom: 6, right: 6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if(!_isMobile)Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text( S.of(context).settings,style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center,),
+              IconButton(
+                  onPressed: Navigator.of(context).pop,
+                  icon: Icon(Icons.close)
+              ),
+            ],
+          ),
+          Expanded(
+              child: Scrollbar(
+                  thumbVisibility: true,
+                  trackVisibility: true,
+                  interactive: true,
+                  controller: _scrollController,
+                  child: ListView(
+                    controller: _scrollController,
+                    padding: EdgeInsets.only(right: 20),
+                    children: [
+                      createTitleWidget(
+                          title :  S.of(context).settings_themeMode_Title,
+                          toolTipDescription :  S.of(context).settings_themeMode_desc,
+                          context :context),
+                      SizedBox(height: 8),
+                      Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).listTileTheme.tileColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(5),
+                            child: Row(
+                              children: [
+                                Text("Dark-Mode"),
+                                Spacer(),
+                                Switch(
+                                    value: _darkMode,
+                                    onChanged: (ev){
+                                      MyApp.of(context).changeTheme(ev ? ThemeMode.dark : ThemeMode.light);
+                                      setState(() {
+                                        _darkMode = ev;
+                                        AppSettingsManager.instance.setDarkMode(_darkMode);
                                       });
-                                  if(result != null){
-                                    setState(() {
-                                      bannerImage = result;
-                                    });
-                                  }
-                                },
-                                label: Text("Vorherige Banner"),
-                                icon: Icon(Icons.photo_album),
-                              ),
+                                    })
+                              ],
                             ),
-                            Expanded(
-                                flex: 0,
-                                child: IconButton(
-                                  icon: Icon(Icons.delete,),
-                                  onPressed: (){
-                                    setState(() {
-                                      bannerImage = null;
-                                    });
-                                  },
-                                ))
-                          ]
+                          )
+                      ),
+                      SizedBox(height:8),Divider(),SizedBox(height:8),
+                      createTitleWidget(
+                        title :  S.of(context).settings_banner_title,
+                        toolTipDescription : S.of(context).settings_banner_desc,
+                        context :context,
+                      ),
+                      SizedBox(height: 10,),
+                      designer,
+                      SizedBox(height:8),Divider(),SizedBox(height:8),
+                      createTitleWidget(
+                          title :  S.of(context).settings_color_title,
+                          toolTipDescription : S.of(context).settings_color_desc,
+                          context :context),
+                      SizedBox(height: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).listTileTheme.tileColor,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        SizedBox(height:8),Divider(),SizedBox(height:8),
-                        createTitleWidget("Farbe", "Akzentfarbe für die Anwendung", context),
-                        SizedBox(height: 8),
-                        Row(
+                        padding: EdgeInsets.all(10),
+                        child: Row(
                           children: [
                             Expanded(child: Container(
                               decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(6),
-                                  color: selectedColor
+                                  color: _selectedColor
                               ),
                               width: double.infinity,
                               height: 40,
                             ),),
                             SizedBox(width: 50),
                             ElevatedButton(
-                                onPressed: () => _pickColor(context), child:  Text("Farbe wählen")),
+                                onPressed: () => _pickColor(context), child:  Text( S.of(context).settings_pick_Color)),
                           ],
                         ),
-                        SizedBox(height:8),Divider(),SizedBox(height:8),
-                        Row(
-                          children: [
-                            Text("Server Einstellungen", style: Theme.of(context).textTheme.titleMedium),
-                            Spacer(),
-                            Text("Use Server?"),
-                            SizedBox(width: 10,),
-                            Switch(
-                                value: useServer,
-                                onChanged: (ev){
-                                  setState(() {
-                                    useServer = ev;
-                                  });
-                                }),
-                            SizedBox(width: 15,),
-                            Tooltip(
-                              message: "Online verwenden?",
-                              child: Icon(Icons.help_outline_rounded, size: 20,),
-                            ),
-                          ],
+                      ),
+                      SizedBox(height:8),Divider(),SizedBox(height:8),
+                      createTitleWidget(
+                        title : S.of(context).settings_server_title,
+                        toolTipDescription : S.of(context).settings_server_desc,
+                        context :context,
+                        switchDescription:  S.of(context).settings_server_switch,
+                        switchBool: _useServer,
+                        switchChanged: (ev) => setState(() {
+                          _useServer = ev;
+                        }),
+                      ),
+                      SizedBox(height: 16),
+                      if(_useServer) Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).listTileTheme.tileColor,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        SizedBox(height: 16),
-                       if(useServer) Column(
+                        padding: EdgeInsets.all(10),
+                        child: Column(
                           children: [
                             TextField(
-                              controller: serverController,
+                              controller: _serverController,
                               decoration:  InputDecoration(
-                                labelText: "Server URL / IP", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                labelText:  S.of(context).settings_server_urlHint, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                             ),
                             SizedBox(height: 12),
                             TextField(
-                              obscureText: obscurePassword,
+                              obscureText: _obscurePassword,
                               obscuringCharacter: "*",
-                              controller: tokenController,
+                              controller: _tokenController,
                               decoration: InputDecoration(
-                                  labelText: "Token", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  labelText: S.of(context).settings_server_tokenHint, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                                   suffixIcon: IconButton(
-                                      onPressed: () => setState(() {
-                                        obscurePassword = !obscurePassword;
-                                      }),
-                                      icon: Icon(obscurePassword ? Icons.visibility : Icons.visibility_off)
+                                      onPressed: () async {
+                                          setState(() {
+                                            _obscurePassword = !_obscurePassword;
+                                          });
+                                        },
+                                      icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off)
                                   )
                               ),
                             )
                           ],
                         ),
-
-                        SizedBox(height: 20,),
-
-                      ],
-                    )
-                ),
-                ElevatedButton.icon(
-                  onPressed: saveSettings,
-                  icon:  Icon(Icons.save),
-                  label:  Text("Speichern"),
-                  style: ElevatedButton.styleFrom(
-                      minimumSize: Size(double.infinity,   42)
-                  ),
-                )
-              ],
-            ),
+                      ),
+                      SizedBox(height: 20,),
+                    ],
+                  )
+              ),
           ),
+          ElevatedButton.icon(
+            onPressed: saveSettings,
+            icon:  Icon(Icons.save),
+            label:  Text(S.of(context).save),
+            style: ElevatedButton.styleFrom(
+                minimumSize: Size(double.infinity,   42)
+            ),
+          )
+        ],
+      ),
     );
   }
 }
-
-class AppSettings{
-  File? bannerImage;
-  Color? selectedColor;
-  String? url;
-  String? token;
-  bool? isSocket;
-  bool? darkMode;
-  bool? useServer;
-  String? languageCode;
-
-  AppSettings({
-    this.bannerImage,
-    this.selectedColor,
-    this.url,
-    this.token,
-    this.isSocket,
-    this.darkMode,
-    this.useServer,
-    this.languageCode,
-  });
-
-  @override
-  String toString() {
-    return "AppSettings("
-        "\nbannerImage: ${bannerImage?.path}, "
-        "\nselectedColor: $selectedColor, "
-        "\nurl: $url, "
-        "\ntoken: $token, "
-        "\nisSocket: $isSocket, "
-        "\ndarkMode: $darkMode, "
-        "\nuseServer: $useServer, "
-        "\nlanguageCode: $languageCode"
-      ")";
-  }
-}
-
-class AppSettingsManager {
-  // Singleton
-  AppSettingsManager._privateConstructor();
-  static final AppSettingsManager instance = AppSettingsManager._privateConstructor();
-
-  AppSettings? _settings;
-
-  Future<void> load() async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-
-    File? bannerFile;
-    if (pref.getString("bannerFileName") != null) {
-      final fileName = pref.getString("bannerFileName");
-
-      if (fileName != null) {
-        final appDir = await getApplicationDocumentsDirectory();
-        final bannerDir = join(appDir.path, "bannerImages");
-        bannerFile = File(join(bannerDir, fileName));
-
-        if (!await bannerFile.exists()) {
-          bannerFile = null;
-        }
-      }
-    }
-
-    Color selectColor = Color.fromRGBO(169, 171, 25, 1.0);
-    if (pref.getInt("selectedColor") != null) {
-      selectColor = Color(pref.getInt("selectedColor")!);
-    }
-
-    _settings = AppSettings(
-      bannerImage: bannerFile,
-      selectedColor: selectColor,
-      url: pref.getString("serverUrl"),
-      token: pref.getString("servertoken"),
-      isSocket: pref.getBool("scannerMode"),
-      darkMode: pref.getBool("darkMode"),
-      useServer: pref.getBool("useServer"),
-      languageCode: pref.getString("languageCode")
-    );
-  }
-
-  AppSettings get settings {
-    if (_settings == null) throw Exception("Settings not loaded. Call load() first.");
-    return _settings!;
-  }
-
-  Future<void> setUseServer(bool value) async {
-    _settings?.useServer = value;
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    await pref.setBool("useServer", value);
-  }
-
-  Future<void> setServerUrl(String url) async {
-    _settings?.url = url;
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    await pref.setString("serverUrl", url);
-  }
-
-  Future<void> setToken(String token) async {
-    _settings?.token = token;
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    await pref.setString("servertoken", token);
-  }
-
-  Future<void> setBannerImage(File? banner) async {
-    _settings?.bannerImage = banner;
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    if(banner == null) {
-      pref.remove("bannerFileName");
-      return;
-    }
-    await pref.setString("bannerFileName", banner.uri.pathSegments.last);
-  }
-
-  Future<void> setSelectedColor(Color color) async {
-    _settings?.selectedColor = color;
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    await pref.setInt("selectedColor", color.intValue);
-  }
-
-  Future<void> setScannerMode(bool isSocket) async {
-    _settings?.isSocket = isSocket;
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    await pref.setBool("scannerMode", isSocket);
-  }
-
-  Future<void> setDarkMode(bool darkMode) async {
-    _settings?.darkMode = darkMode;
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    await pref.setBool("darkMode", darkMode);
-  }
-
-  Future<void> setLanguage(String langCode) async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    await pref.setString("languageCode", langCode);
-  }
-}
-
-/* TODO: If scannerType has to be selected/COM-port manually set
-   SizedBox(height:8),Divider(),SizedBox(height:8),
-   Text("Scanner", style: Theme.of(context).textTheme.titleMedium),
-   SizedBox(height: 8),
-   Container(
-       decoration: BoxDecoration(
-         color: Theme.of(context).listTileTheme.tileColor,
-         borderRadius: BorderRadius.circular(12),
-       ),
-       child: Padding(
-         padding: EdgeInsets.all(5),
-         child: Column(
-           mainAxisSize: MainAxisSize.min,
-           children: [
-             Row(
-               children: [
-                 Text("Scanner-Mode"),
-                 Spacer(),
-                 Text(isSocket ? "Socket" : "HDI"),
-                 SizedBox(width: 10,),
-                 Switch(
-                     value: isSocket,
-                     onChanged: (value){
-                       setState(() {
-                         isSocket = value;
-                       });
-                       //print(SerialPort(SerialPort.availablePorts.first).productName);
-                     })
-               ],
-             ),
-             if(isSocket) Flexible(
-                 child: RadioGroup(
-                     onChanged: (ev){
-                       print(ev);
-                       setState(() {
-                         _selectedPort = ev;
-                       });
-                     },
-                     groupValue: _selectedPort,
-                     child: Column(
-                       mainAxisSize: MainAxisSize.min,
-                       children: [
-                         for (final portName in SerialPort.availablePorts)
-                           RadioListTile<String>(
-                             title: Text("${SerialPort(portName).productName ?? "Kein Name"} ($portName)"),
-                             value: portName,
-                           ),
-                       ],
-                     ))
-             )
-           ],
-         )
-         ,
-       )
-   ),*/

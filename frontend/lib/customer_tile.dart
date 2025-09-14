@@ -1,6 +1,7 @@
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:strohhalm_app/app_settings.dart';
 import 'package:strohhalm_app/create_qr_code.dart';
 import 'package:strohhalm_app/database_helper.dart';
 import 'package:strohhalm_app/user.dart';
@@ -8,13 +9,13 @@ import 'package:strohhalm_app/utilities.dart';
 import 'package:styled_text/styled_text.dart';
 
 import 'generated/l10n.dart';
+import 'http_helper.dart';
 
-//TODO: Maybe combine List and Grid_Tile in a single Class
 class CustomerTile extends StatefulWidget {
   final bool isListView;
   final User user;
   final VoidCallback click;
-  final VoidCallback delete;
+  final VoidCallback updatedVisit;
   final VoidCallback update;
 
   const CustomerTile({
@@ -22,7 +23,7 @@ class CustomerTile extends StatefulWidget {
     required this.isListView,
     required this.user,
     required this.click,
-    required this.delete,
+    required this.updatedVisit,
     required this.update,
   });
 
@@ -34,12 +35,14 @@ class CustomerTileState extends State<CustomerTile>{
   late User _user;
   bool _mouseIsOver = false;
   DateTime? _lastVisit;
-  bool uploading = false;
+  bool _uploading = false;
+  bool _useServer = false;
 
   @override
   void initState() {
+    _useServer = AppSettingsManager.instance.settings.useServer ?? false;
     _user = widget.user;
-    if(widget.user.visits.isNotEmpty) _lastVisit = _user.visits.first.tookTime;
+    _lastVisit = _user.lastVisit;
     super.initState();
   }
 
@@ -47,13 +50,13 @@ class CustomerTileState extends State<CustomerTile>{
 
   String _buildLastVisitStyledText() {
     if (_lastVisit == null) {
-      // Noch nie da gewesen
+      // Never visited
       return S.of(context).customer_tile_lastVisit_never;
-    } else if (Utilities().isSameDay(DateTime.now(), _lastVisit!)) {
-      // Heute da gewesen
+    } else if (Utilities.isSameDay(DateTime.now(), _lastVisit!)) {
+      // visited today
       return S.of(context).customer_tile_lastVisit_today;
     } else {
-      // An einem anderen Tag da gewesen
+      // Visited on !today
       final dateString = DateFormat("dd.MM.yyyy").format(_lastVisit!);
       return S.of(context).customer_tile_lastVisit_onDate(dateString);
     }
@@ -64,14 +67,20 @@ class CustomerTileState extends State<CustomerTile>{
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if(!visitMoreThan14Days) Expanded( //TODO: adapt logic of buttons -> if lessThan14Days, last Entry should be deletable AND should be able to override, else dont show
+        if(!visitMoreThan14Days) Expanded(
           child:  TextButton(
             onPressed: () async {
-              DateTime? newLastTime = await DatabaseHelper().deleteLatestAndReturnPrevious(_user); //Deletes last entry and returns new last as millisecondsSinceEpoch
+              String? newLastTime;
+              _useServer
+                  ? newLastTime = await HttpHelper().deleteVisit(customerId: _user.id)
+                  : newLastTime = await DatabaseHelper().deleteLatestAndReturnPrevious(_user);
+              if(newLastTime == "-1") return;
+              DateTime? newVisitTime = newLastTime == null ? null : DateTime.parse(newLastTime);
               setState(() {
-                _lastVisit = newLastTime;
-                if(widget.user.visits.isNotEmpty) widget.user.visits.removeAt(0);
+                widget.user.lastVisit = newVisitTime;
+                _lastVisit = newVisitTime;
               });
+              widget.updatedVisit();
             },
             style: TextButton.styleFrom(
                 minimumSize: Size(double.infinity, 45),
@@ -83,22 +92,27 @@ class CustomerTileState extends State<CustomerTile>{
             child: Text(S.of(context).customer_tile_deleteLastEntry, textAlign: TextAlign.center,),
           ),
         ),
-        if(!visitMoreThan14Days && !Utilities().isSameDay(DateTime.now(), _lastVisit!)) SizedBox(width: 5,),
-        if(_lastVisit == null || !Utilities().isSameDay(DateTime.now(), _lastVisit!))
+        if(!visitMoreThan14Days && !Utilities.isSameDay(DateTime.now(), _lastVisit!)) SizedBox(width: 5,),
+        if(_lastVisit == null || !Utilities.isSameDay(DateTime.now(), _lastVisit!))
           Expanded(
             child: TextButton(
               onPressed: () async {
                 setState(() {
-                  uploading = true;
+                  _uploading = true;
                 });
-                TookItem item = await DatabaseHelper().addVisit(_user.id);
-                widget.user.visits.insert(0, item);
+
+                TookItem? newLastVisit;
+                _useServer
+                    ? newLastVisit = await HttpHelper().addVisit(userId: widget.user.id)
+                    : newLastVisit = await DatabaseHelper().addVisit(_user.id);
                 setState(() {
-                  _lastVisit = item.tookTime;
-                  uploading = false;
+                  widget.user.lastVisit = newLastVisit?.tookTime;
+                  _lastVisit = newLastVisit?.tookTime;
+                  _uploading = false;
                 });
                 if(!mounted) return;
-                Utilities().showToast(context: context, title: "Success", description: S.of(context).stat_page_savedVisit);
+                Utilities.showToast(context: context, title:  S.of(context).success, description: S.of(context).stat_page_savedVisit);
+                widget.updatedVisit();
               },
               style: TextButton.styleFrom(
                   minimumSize: Size(double.infinity, 45),
@@ -107,7 +121,7 @@ class CustomerTileState extends State<CustomerTile>{
                       borderRadius: BorderRadius.circular(8)
                   )
               ),
-              child: uploading ? SizedBox(
+              child: _uploading ? SizedBox(
                 height: 24, // kleiner als 40
                 width: 24,
                 child: CircularProgressIndicator(strokeWidth: 2),
@@ -144,7 +158,7 @@ class CustomerTileState extends State<CustomerTile>{
                       ),
                       SizedBox(width: 10),
                       Text(
-                        CountryLocalizations.of(context)?.countryName(countryCode: _user.birthCountry) ?? Country.tryParse(_user.birthCountry)!.name,
+                        CountryLocalizations.of(context)?.countryName(countryCode: _user.country) ?? Country.tryParse(_user.country)!.name,
                         style: TextStyle(color: Theme.of(context).textTheme.headlineSmall!.color?.withAlpha(170)),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -226,7 +240,7 @@ class CustomerTileState extends State<CustomerTile>{
                 children: [
                   Text("${_user.firstName} ${_user.lastName}", style: TextStyle(fontWeight: FontWeight.bold)),
                   Text(DateFormat("dd.MM.yyyy").format(_user.birthDay), style: TextStyle(color: Colors.grey)),
-                  Text(CountryLocalizations.of(context)?.countryName(countryCode: _user.birthCountry) ?? Country.tryParse(_user.birthCountry)!.name, style: TextStyle(color: Colors.grey))
+                  Text(CountryLocalizations.of(context)?.countryName(countryCode: _user.country) ?? Country.tryParse(_user.country)!.name, style: TextStyle(color: Colors.grey))
                 ],
               )
 

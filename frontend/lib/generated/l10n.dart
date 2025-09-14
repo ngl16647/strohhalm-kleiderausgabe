@@ -105,6 +105,21 @@ class S {
     return Intl.message('Update', name: 'update', desc: '', args: []);
   }
 
+  /// `Save`
+  String get save {
+    return Intl.message('Save', name: 'save', desc: '', args: []);
+  }
+
+  /// `Success`
+  String get success {
+    return Intl.message('Success', name: 'success', desc: '', args: []);
+  }
+
+  /// `Failure`
+  String get fail {
+    return Intl.message('Failure', name: 'fail', desc: '', args: []);
+  }
+
   /// `Strohhalm Clothing Distribution`
   String get application_name {
     return Intl.message(
@@ -413,10 +428,10 @@ class S {
     );
   }
 
-  /// `Total visits:`
+  /// `Visits:`
   String get stat_page_visits {
     return Intl.message(
-      'Total visits:',
+      'Visits:',
       name: 'stat_page_visits',
       desc: '',
       args: [],
@@ -537,6 +552,396 @@ class S {
       name: 'statistic_page_show_top_countries',
       desc: '',
       args: [cutOffNumber, overAllNumberOfCountries],
+    );
+  }
+
+  /// `Settings`
+  String get settings {
+    return Intl.message('Settings', name: 'settings', desc: '', args: []);
+  }
+
+  /// `Theme`
+  String get settings_themeMode_Title {
+    return Intl.message(
+      'Theme',
+      name: 'settings_themeMode_Title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Light or Dark mode`
+  String get settings_themeMode_desc {
+    return Intl.message(
+      'Light or Dark mode',
+      name: 'settings_themeMode_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Banner / Image`
+  String get settings_banner_title {
+    return Intl.message(
+      'Banner / Image',
+      name: 'settings_banner_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Image displayed at the top of the page.\nAlso used as header for printing`
+  String get settings_banner_desc {
+    return Intl.message(
+      'Image displayed at the top of the page.\\nAlso used as header for printing',
+      name: 'settings_banner_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Pick color`
+  String get settings_pick_Color {
+    return Intl.message(
+      'Pick color',
+      name: 'settings_pick_Color',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Color`
+  String get settings_color_title {
+    return Intl.message(
+      'Color',
+      name: 'settings_color_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Accent color for the application`
+  String get settings_color_desc {
+    return Intl.message(
+      'Accent color for the application',
+      name: 'settings_color_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Server Settings`
+  String get settings_server_title {
+    return Intl.message(
+      'Server Settings',
+      name: 'settings_server_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `If a server is to be used, URL and password can be entered here`
+  String get settings_server_desc {
+    return Intl.message(
+      'If a server is to be used, URL and password can be entered here',
+      name: 'settings_server_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Use server?`
+  String get settings_server_switch {
+    return Intl.message(
+      'Use server?',
+      name: 'settings_server_switch',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Server URL / IP`
+  String get settings_server_urlHint {
+    return Intl.message(
+      'Server URL / IP',
+      name: 'settings_server_urlHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Password`
+  String get settings_server_tokenHint {
+    return Intl.message(
+      'Password',
+      name: 'settings_server_tokenHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The image's aspect ratio is too small!\nIt should be at least 6:1`
+  String get banner_designer_wrongAspectRatio {
+    return Intl.message(
+      'The image\'s aspect ratio is too small!\nIt should be at least 6:1',
+      name: 'banner_designer_wrongAspectRatio',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select`
+  String get banner_designer_pick {
+    return Intl.message(
+      'Select',
+      name: 'banner_designer_pick',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Just selected!`
+  String get banner_designer_picked {
+    return Intl.message(
+      'Just selected!',
+      name: 'banner_designer_picked',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete`
+  String get banner_designer_delete {
+    return Intl.message(
+      'Delete',
+      name: 'banner_designer_delete',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New`
+  String get banner_designer_new {
+    return Intl.message('New', name: 'banner_designer_new', desc: '', args: []);
+  }
+
+  /// `Existing`
+  String get banner_designer_existing {
+    return Intl.message(
+      'Existing',
+      name: 'banner_designer_existing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Image`
+  String get banner_designer_bannerImageSubTitle {
+    return Intl.message(
+      'Image',
+      name: 'banner_designer_bannerImageSubTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Designer`
+  String get banner_designer_bannerDesignerSubTitle {
+    return Intl.message(
+      'Designer',
+      name: 'banner_designer_bannerDesignerSubTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Banner Image`
+  String get banner_designer_bannerImageTitle {
+    return Intl.message(
+      'Banner Image',
+      name: 'banner_designer_bannerImageTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Banner Designer`
+  String get banner_designer_bannerDesignerTitle {
+    return Intl.message(
+      'Banner Designer',
+      name: 'banner_designer_bannerDesignerTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Title`
+  String get banner_designer_titleText {
+    return Intl.message(
+      'Title',
+      name: 'banner_designer_titleText',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No image selected`
+  String get banner_designer_noImage {
+    return Intl.message(
+      'No image selected',
+      name: 'banner_designer_noImage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Upload image`
+  String get banner_designer_uploadImage {
+    return Intl.message(
+      'Upload image',
+      name: 'banner_designer_uploadImage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `inactive Visitors`
+  String get deletion_request_page_title {
+    return Intl.message(
+      'inactive Visitors',
+      name: 'deletion_request_page_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Last Visit:`
+  String get deletion_request_page_lastVisit {
+    return Intl.message(
+      'Last Visit:',
+      name: 'deletion_request_page_lastVisit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `reset Visitor`
+  String get deletion_request_page_resetUser {
+    return Intl.message(
+      'reset Visitor',
+      name: 'deletion_request_page_resetUser',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `delete Visitor`
+  String get deletion_request_page_delete {
+    return Intl.message(
+      'delete Visitor',
+      name: 'deletion_request_page_delete',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete All`
+  String get deletion_request_page_deleteAll {
+    return Intl.message(
+      'Delete All',
+      name: 'deletion_request_page_deleteAll',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete All old Customers at once`
+  String get deletion_request_page_deleteAllDesc {
+    return Intl.message(
+      'Delete All old Customers at once',
+      name: 'deletion_request_page_deleteAllDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Deletion failed`
+  String get deletion_failed {
+    return Intl.message(
+      'Deletion failed',
+      name: 'deletion_failed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Deletion successful`
+  String get deletion_success {
+    return Intl.message(
+      'Deletion successful',
+      name: 'deletion_success',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Adding failed`
+  String get add_failed {
+    return Intl.message(
+      'Adding failed',
+      name: 'add_failed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Adding successful`
+  String get add_success {
+    return Intl.message(
+      'Adding successful',
+      name: 'add_success',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Update failed`
+  String get update_failed {
+    return Intl.message(
+      'Update failed',
+      name: 'update_failed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Update successful`
+  String get update_success {
+    return Intl.message(
+      'Update successful',
+      name: 'update_success',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid number!\nPlease enter a correct number`
+  String get number_fail {
+    return Intl.message(
+      'Invalid number!\nPlease enter a correct number',
+      name: 'number_fail',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed UuId Check!\nMake sure your Keyboard-Language (Left-Alt + Left-Shift) is the same as the Barcode-Scanner!`
+  String get uuId_fail_keyboard {
+    return Intl.message(
+      'Failed UuId Check!\nMake sure your Keyboard-Language (Left-Alt + Left-Shift) is the same as the Barcode-Scanner!',
+      name: 'uuId_fail_keyboard',
+      desc: '',
+      args: [],
     );
   }
 }

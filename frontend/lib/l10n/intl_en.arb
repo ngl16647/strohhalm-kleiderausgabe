@@ -11,6 +11,9 @@
   "close": "Close",
   "today": "Today",
   "update": "Update",
+  "save": "Save",
+  "success": "Success",
+  "fail": "Failure",
 
   "application_name": "Strohhalm Clothing Distribution",
   "language_de": "German",
@@ -51,7 +54,7 @@
 
   "stat_page_country": "Country of origin:",
   "stat_page_children": "Has children:",
-  "stat_page_visits": "Total visits:",
+  "stat_page_visits": "Visits:",
   "stat_page_miscellaneous": "Miscellaneous:",
   "stat_page_alreadyGotToday": "Already received something today",
   "stat_page_savedVisit": "Visit recorded!",
@@ -63,5 +66,51 @@
   "statistic_page_numberOfVisits": "Number of visits",
   "statistic_page_visits": "{count, plural, one{Visit} other{Visits}}",
   "statistic_page_switchYearDisplay": "{showYear, select, true{To month view} false{To year view}}",
-  "statistic_page_show_top_countries": "Show top {cutOffNumber} countries of {overAllNumberOfCountries}"
+  "statistic_page_show_top_countries": "Show top {cutOffNumber} countries of {overAllNumberOfCountries}",
+
+  "settings": "Settings",
+  "settings_themeMode_Title": "Theme",
+  "settings_themeMode_desc": "Light or Dark mode",
+  "settings_banner_title": "Banner / Image",
+  "settings_banner_desc": "Image displayed at the top of the page.\\nAlso used as header for printing",
+  "settings_pick_Color": "Pick color",
+  "settings_color_title": "Color",
+  "settings_color_desc": "Accent color for the application",
+  "settings_server_title": "Server Settings",
+  "settings_server_desc": "If a server is to be used, URL and password can be entered here",
+  "settings_server_switch": "Use server?",
+  "settings_server_urlHint": "Server URL / IP",
+  "settings_server_tokenHint": "Password",
+
+  "banner_designer_wrongAspectRatio": "The image's aspect ratio is too small!\nIt should be at least 6:1",
+  "banner_designer_pick": "Select",
+  "banner_designer_picked": "Just selected!",
+  "banner_designer_delete": "Delete",
+  "banner_designer_new": "New",
+  "banner_designer_existing": "Existing",
+  "banner_designer_bannerImageSubTitle": "Image",
+  "banner_designer_bannerDesignerSubTitle": "Designer",
+  "banner_designer_bannerImageTitle": "Banner Image",
+  "banner_designer_bannerDesignerTitle": "Banner Designer",
+  "banner_designer_titleText": "Title",
+  "banner_designer_noImage": "No image selected",
+  "banner_designer_uploadImage": "Upload image",
+
+  "deletion_request_page_title": "inactive Visitors",
+  "deletion_request_page_lastVisit": "Last Visit:",
+  "deletion_request_page_resetUser": "reset Visitor",
+  "deletion_request_page_delete": "delete Visitor",
+  "deletion_request_page_deleteAll": "Delete All",
+  "deletion_request_page_deleteAllDesc": "Delete All old Customers at once",
+
+  "deletion_failed": "Deletion failed",
+  "deletion_success": "Deletion successful",
+  "add_failed": "Adding failed",
+  "add_success": "Adding successful",
+  "update_failed": "Update failed",
+  "update_success": "Update successful",
+  "number_fail": "Invalid number!\nPlease enter a correct number",
+  "uuId_fail_keyboard": "Failed UuId Check!\nMake sure your Keyboard-Language (Left-Alt + Left-Shift) is the same as the Barcode-Scanner!"
+
+
 }

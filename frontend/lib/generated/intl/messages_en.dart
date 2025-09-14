@@ -46,6 +46,8 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "accept": MessageLookupByLibrary.simpleMessage("Accept"),
+    "add_failed": MessageLookupByLibrary.simpleMessage("Adding failed"),
+    "add_success": MessageLookupByLibrary.simpleMessage("Adding successful"),
     "add_user_birthDay": MessageLookupByLibrary.simpleMessage(
       "Select birth date*",
     ),
@@ -67,6 +69,36 @@ class MessageLookup extends MessageLookupByLibrary {
       "Strohhalm Clothing Distribution",
     ),
     "back": MessageLookupByLibrary.simpleMessage("Back"),
+    "banner_designer_bannerDesignerSubTitle":
+        MessageLookupByLibrary.simpleMessage("Designer"),
+    "banner_designer_bannerDesignerTitle": MessageLookupByLibrary.simpleMessage(
+      "Banner Designer",
+    ),
+    "banner_designer_bannerImageSubTitle": MessageLookupByLibrary.simpleMessage(
+      "Image",
+    ),
+    "banner_designer_bannerImageTitle": MessageLookupByLibrary.simpleMessage(
+      "Banner Image",
+    ),
+    "banner_designer_delete": MessageLookupByLibrary.simpleMessage("Delete"),
+    "banner_designer_existing": MessageLookupByLibrary.simpleMessage(
+      "Existing",
+    ),
+    "banner_designer_new": MessageLookupByLibrary.simpleMessage("New"),
+    "banner_designer_noImage": MessageLookupByLibrary.simpleMessage(
+      "No image selected",
+    ),
+    "banner_designer_pick": MessageLookupByLibrary.simpleMessage("Select"),
+    "banner_designer_picked": MessageLookupByLibrary.simpleMessage(
+      "Just selected!",
+    ),
+    "banner_designer_titleText": MessageLookupByLibrary.simpleMessage("Title"),
+    "banner_designer_uploadImage": MessageLookupByLibrary.simpleMessage(
+      "Upload image",
+    ),
+    "banner_designer_wrongAspectRatio": MessageLookupByLibrary.simpleMessage(
+      "The image\'s aspect ratio is too small!\nIt should be at least 6:1",
+    ),
     "barCode_scanner_error": MessageLookupByLibrary.simpleMessage(
       "Please scan a barcode",
     ),
@@ -88,6 +120,29 @@ class MessageLookup extends MessageLookupByLibrary {
       "Visited <bold>today</bold>",
     ),
     "delete": MessageLookupByLibrary.simpleMessage("Delete"),
+    "deletion_failed": MessageLookupByLibrary.simpleMessage("Deletion failed"),
+    "deletion_request_page_delete": MessageLookupByLibrary.simpleMessage(
+      "delete Visitor",
+    ),
+    "deletion_request_page_deleteAll": MessageLookupByLibrary.simpleMessage(
+      "Delete All",
+    ),
+    "deletion_request_page_deleteAllDesc": MessageLookupByLibrary.simpleMessage(
+      "Delete All old Customers at once",
+    ),
+    "deletion_request_page_lastVisit": MessageLookupByLibrary.simpleMessage(
+      "Last Visit:",
+    ),
+    "deletion_request_page_resetUser": MessageLookupByLibrary.simpleMessage(
+      "reset Visitor",
+    ),
+    "deletion_request_page_title": MessageLookupByLibrary.simpleMessage(
+      "inactive Visitors",
+    ),
+    "deletion_success": MessageLookupByLibrary.simpleMessage(
+      "Deletion successful",
+    ),
+    "fail": MessageLookupByLibrary.simpleMessage("Failure"),
     "language_de": MessageLookupByLibrary.simpleMessage("German"),
     "language_en": MessageLookupByLibrary.simpleMessage("English"),
     "language_ru": MessageLookupByLibrary.simpleMessage("Russian"),
@@ -110,9 +165,44 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_statistic": MessageLookupByLibrary.simpleMessage("Statistics"),
     "main_page_theme": m3,
     "no": MessageLookupByLibrary.simpleMessage("No"),
+    "number_fail": MessageLookupByLibrary.simpleMessage(
+      "Invalid number!\nPlease enter a correct number",
+    ),
     "print": MessageLookupByLibrary.simpleMessage("Print"),
     "qr_code_print": MessageLookupByLibrary.simpleMessage("Print QR Code"),
     "qr_code_share": MessageLookupByLibrary.simpleMessage("Share QR Code"),
+    "save": MessageLookupByLibrary.simpleMessage("Save"),
+    "settings": MessageLookupByLibrary.simpleMessage("Settings"),
+    "settings_banner_desc": MessageLookupByLibrary.simpleMessage(
+      "Image displayed at the top of the page.\\nAlso used as header for printing",
+    ),
+    "settings_banner_title": MessageLookupByLibrary.simpleMessage(
+      "Banner / Image",
+    ),
+    "settings_color_desc": MessageLookupByLibrary.simpleMessage(
+      "Accent color for the application",
+    ),
+    "settings_color_title": MessageLookupByLibrary.simpleMessage("Color"),
+    "settings_pick_Color": MessageLookupByLibrary.simpleMessage("Pick color"),
+    "settings_server_desc": MessageLookupByLibrary.simpleMessage(
+      "If a server is to be used, URL and password can be entered here",
+    ),
+    "settings_server_switch": MessageLookupByLibrary.simpleMessage(
+      "Use server?",
+    ),
+    "settings_server_title": MessageLookupByLibrary.simpleMessage(
+      "Server Settings",
+    ),
+    "settings_server_tokenHint": MessageLookupByLibrary.simpleMessage(
+      "Password",
+    ),
+    "settings_server_urlHint": MessageLookupByLibrary.simpleMessage(
+      "Server URL / IP",
+    ),
+    "settings_themeMode_Title": MessageLookupByLibrary.simpleMessage("Theme"),
+    "settings_themeMode_desc": MessageLookupByLibrary.simpleMessage(
+      "Light or Dark mode",
+    ),
     "stat_page_alreadyGotToday": MessageLookupByLibrary.simpleMessage(
       "Already received something today",
     ),
@@ -136,7 +226,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "stat_page_savedVisit": MessageLookupByLibrary.simpleMessage(
       "Visit recorded!",
     ),
-    "stat_page_visits": MessageLookupByLibrary.simpleMessage("Total visits:"),
+    "stat_page_visits": MessageLookupByLibrary.simpleMessage("Visits:"),
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Number of visits",
     ),
@@ -144,8 +234,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "statistic_page_switchYearDisplay": m5,
     "statistic_page_visits": m6,
     "statistic_page_xAxis": m7,
+    "success": MessageLookupByLibrary.simpleMessage("Success"),
     "today": MessageLookupByLibrary.simpleMessage("Today"),
     "update": MessageLookupByLibrary.simpleMessage("Update"),
+    "update_failed": MessageLookupByLibrary.simpleMessage("Update failed"),
+    "update_success": MessageLookupByLibrary.simpleMessage("Update successful"),
+    "uuId_fail_keyboard": MessageLookupByLibrary.simpleMessage(
+      "Failed UuId Check!\nMake sure your Keyboard-Language (Left-Alt + Left-Shift) is the same as the Barcode-Scanner!",
+    ),
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
   };
 }

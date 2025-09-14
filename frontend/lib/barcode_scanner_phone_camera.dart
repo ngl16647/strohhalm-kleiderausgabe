@@ -12,13 +12,21 @@ class BarcodeScannerSmartPhoneCamera extends StatefulWidget {
     super.key,
   });
 
+  static Future<String?> showBarcodeScannerDialog(BuildContext context)async{
+    return await showDialog(
+        context: context,
+        builder: (context){
+          return BarcodeScannerSmartPhoneCamera();
+        });
+  }
+
   @override
   State<BarcodeScannerSmartPhoneCamera> createState() => _BarcodeScannerSmartPhoneCameraState();
 }
 
 class _BarcodeScannerSmartPhoneCameraState extends State<BarcodeScannerSmartPhoneCamera> {
   Barcode? _barcode;
-  bool codeFound = false;
+  bool _codeFound = false;
 
   Widget _buildBarcode(Barcode? value) {
     if (value == null) {
@@ -36,8 +44,8 @@ class _BarcodeScannerSmartPhoneCameraState extends State<BarcodeScannerSmartPhon
 
 
   Future<void> _handleBarcode(BarcodeCapture barcodes) async {
-    if (mounted && !codeFound) {
-        codeFound = true; //Hier, damit der Barcode nicht mehrmals gescannt wird was im Zusammenhang mit dem 1 Sekunden delay zu crashes führt
+    if (mounted && !_codeFound) {
+        _codeFound = true; //Hier, damit der Barcode nicht mehrmals gescannt wird was im Zusammenhang mit dem 1 Sekunden delay zu crashes führt
         _barcode = barcodes.barcodes.firstOrNull;
         setState(() {
           _barcode;
@@ -93,7 +101,7 @@ class _BarcodeScannerSmartPhoneCameraState extends State<BarcodeScannerSmartPhon
                     ),
                   ],
                 ),
-                if(codeFound) SizedBox(
+                if(_codeFound) SizedBox(
                   height: 80,
                   child: Center(
                     child: _buildBarcode(_barcode),

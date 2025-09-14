@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_libserialport/flutter_libserialport.dart';
 import 'package:uuid/uuid.dart';
 
-//TODO: Test if reaction to new/lost-devices work and Serialports get closed correctly
 
 class BarcodeScannerListener {
   //For Serial
@@ -15,7 +14,7 @@ class BarcodeScannerListener {
   String? _activePort;
   List<String> _lastPorts = [];
   Timer? _newDeviceWatcher;
-  bool checkRunning = false;
+  bool _checkRunning = false;
 
   //For HDI
   String _keyEventBuffer = ""; //Since the Scanner "writes" as a keyboard
@@ -32,49 +31,6 @@ class BarcodeScannerListener {
     _lastPorts = ports;
     checkForNewDevice();
     HardwareKeyboard.instance.addHandler(onHDIScan);
-  }
-
-  ///Listen for specific port
-  void listenToPort(String portName) {
-      dispose();
-
-      final port = SerialPort(portName);
-      var config = SerialPortConfig();
-      config.baudRate = 9600;
-      config.bits = 8;
-      config.stopBits = 1;
-      config.parity = 0;
-      config.xonXoff = 0;
-      config.rts = 1;
-      config.cts = 0;
-      config.dsr = 0;
-      config.dtr = 1;
-      port.config = config;
-      config.dispose();
-
-      if(!port.openRead()) return;
-
-      final reader = SerialPortReader(port);
-      _readers[portName] = reader;
-      reader.stream.listen((data) {
-        final str = utf8.decode(data);
-        _portStringBuffers[portName] = (_portStringBuffers[portName]! + str).trim();
-
-        _bufferTimers[portName]?.cancel();
-        //Timer fires after reader hasn't received data for 50ms
-        _bufferTimers[portName] = Timer(const Duration(milliseconds: 50), () {
-          final finishedString = _portStringBuffers[portName]!.trim();
-          _portStringBuffers[portName] = "";
-
-          try {
-            if (Uuid.isValidUUID(fromString: finishedString)) {
-              debugPrint("UUID $finishedString gefunden auf Port $portName");
-              //onSuccessScan!(finishedString);
-            }
-          } catch (_) {
-            debugPrint("Ungültiger Scan auf Port $portName: $finishedString");
-          }});
-      });
   }
 
   //TODO: research if it works on MAC/Linux?
@@ -117,7 +73,7 @@ class BarcodeScannerListener {
           try {
             if (Uuid.isValidUUID(fromString: finishedString)) {
               debugPrint("UUID $finishedString gefunden auf Port $portName");
-              checkRunning = false;
+              _checkRunning = false;
               _activePort = portName;
               //Close all other ports except right one
               _readers.forEach((otherName, reader) {
@@ -134,15 +90,15 @@ class BarcodeScannerListener {
           }});
       },
         onError: (ev){
-           print(ev);
-           if (_activePort == portName && !checkRunning) {
+          debugPrint("Stream error: $ev | $portName $_activePort");
+           if (_activePort == portName && !_checkRunning) {
              _activePort = null;
-             checkForNewDevice();
+             checkForNewDevice(); //TODO: Check without if port stays open even if disconnected
            }
         },
         onDone: (){
           debugPrint("Stream geschlossen $portName $_activePort");
-          if (_activePort == portName && !checkRunning) {
+          if (_activePort == portName && !_checkRunning) {
             _activePort = null;
             checkForNewDevice();
           }
@@ -183,7 +139,7 @@ class BarcodeScannerListener {
     debugPrint("started check for devices");
     dispose();
     _detectScannerPort();
-    checkRunning = true;
+    _checkRunning = true;
     _newDeviceWatcher?.cancel();
     _newDeviceWatcher = Timer.periodic(const Duration(seconds: 2), (ev) {
       var ports = SerialPort.availablePorts;
@@ -211,7 +167,7 @@ class BarcodeScannerListener {
         reader.close();
         debugPrint("readers should be closed");
       } catch (ev) {
-        print(ev);
+        debugPrint("$ev");
       }
     });
     _readers.clear();
@@ -222,3 +178,48 @@ class BarcodeScannerListener {
     _portStringBuffers.clear();
   }
 }
+
+/*
+//Listen for specific port
+  void listenToPort(String portName) {
+      dispose();
+
+      final port = SerialPort(portName);
+      var config = SerialPortConfig();
+      config.baudRate = 9600;
+      config.bits = 8;
+      config.stopBits = 1;
+      config.parity = 0;
+      config.xonXoff = 0;
+      config.rts = 1;
+      config.cts = 0;
+      config.dsr = 0;
+      config.dtr = 1;
+      port.config = config;
+      config.dispose();
+
+      if(!port.openRead()) return;
+
+      final reader = SerialPortReader(port);
+      _readers[portName] = reader;
+      reader.stream.listen((data) {
+        final str = utf8.decode(data);
+        _portStringBuffers[portName] = (_portStringBuffers[portName]! + str).trim();
+
+        _bufferTimers[portName]?.cancel();
+        //Timer fires after reader hasn't received data for 50ms
+        _bufferTimers[portName] = Timer(const Duration(milliseconds: 50), () {
+          final finishedString = _portStringBuffers[portName]!.trim();
+          _portStringBuffers[portName] = "";
+
+          try {
+            if (Uuid.isValidUUID(fromString: finishedString)) {
+              debugPrint("UUID $finishedString gefunden auf Port $portName");
+              //onSuccessScan!(finishedString);
+            }
+          } catch (_) {
+            debugPrint("Ungültiger Scan auf Port $portName: $finishedString");
+          }});
+      });
+  }
+ */
