@@ -136,7 +136,7 @@ var Routes = []Route{
 	{
 		Path:    "/stats/export",
 		Method:  GET,
-		Handler: ExportHandler,
-		Doc:     `Export data into JSON format.`,
+		Handler: ExportCsvHandler,
+		Doc:     `Export data into CSV format.`,
 	},
 }

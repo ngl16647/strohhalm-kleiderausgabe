@@ -1,7 +1,10 @@
 package routes
 
 import (
+	"encoding/csv"
+	"fmt"
 	"net/http"
+	"strings"
 	"strohhalm-backend/db"
 	"time"
 )
@@ -54,4 +57,32 @@ func ExportHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJson(w, output, http.StatusOK)
+}
+
+func ExportCsvHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", "attachment; filename=\"customers_visits.csv\"")
+
+	csvWriter := csv.NewWriter(w)
+	defer csvWriter.Flush()
+
+	data, err := db.ExportJson()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	csvWriter.Write([]string{"id", "firstname", "lastname", "birthday", "country", "notes", "visits"})
+
+	for _, c := range data {
+		visitsStr := strings.Join(c.Visits, ";") // Join visits with semicolon
+		csvWriter.Write([]string{
+			fmt.Sprint(c.Id),
+			c.Firstname,
+			c.Lastname,
+			c.Birthday,
+			c.Country,
+			c.Notes,
+			visitsStr,
+		})
+	}
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-type CustomerRow struct {
+type CustomerJsonRow struct {
 	Id        int64    `json:"id"`
 	Firstname string   `json:"firstname"`
 	Lastname  string   `json:"lastname"`
@@ -14,23 +14,23 @@ type CustomerRow struct {
 	Visits    []string `json:"visits"`
 }
 
-func ExportJson() ([]CustomerRow, error) {
+func ExportJson() ([]CustomerJsonRow, error) {
 	cs, err := AllCustomers()
 	if err != nil {
-		return []CustomerRow{}, fmt.Errorf("export json: %w", err)
+		return []CustomerJsonRow{}, fmt.Errorf("export json: %w", err)
 	}
 
 	vs, err := AllVisits()
 	if err != nil {
-		return []CustomerRow{}, fmt.Errorf("export json: %w", err)
+		return []CustomerJsonRow{}, fmt.Errorf("export json: %w", err)
 	}
 
-	data := make([]CustomerRow, len(cs))
+	data := make([]CustomerJsonRow, len(cs))
 	customerIdMap := make(map[int64]int)
-	for index, _ := range data {
+	for index := range data {
 		c := cs[index]
 		customerIdMap[c.Id] = index
-		data[index] = CustomerRow{
+		data[index] = CustomerJsonRow{
 			Id:        c.Id,
 			Firstname: c.FirstName,
 			Lastname:  c.LastName,

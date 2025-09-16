@@ -22,7 +22,7 @@ PUT {{base_url}}/customers/1
     "firstName": "Poop",
     "lastName": "Bing",
     "birthday": "2000-01-01",
-    "notes": "morbidly obese"
+    "notes": "morbidly obese, and stupid"
 }
 
 
