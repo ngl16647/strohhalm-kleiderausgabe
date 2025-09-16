@@ -64,9 +64,18 @@ func AllVisitDetails() ([]VisitDetail, error) {
         LEFT JOIN customers c ON c.id = v.customer_id
         ORDER BY v.visit_date DESC`)
 	if err != nil {
-		return nil, fmt.Errorf("get customer visits: %w", err)
+		return cvs, fmt.Errorf("get visit details: %w", err)
 	}
 	return cvs, nil
+}
+
+func AllVisits() ([]Visit, error) {
+	var vs []Visit
+	err := DB.Select(&vs, `SELECT * FROM visits`)
+	if err != nil {
+		return vs, fmt.Errorf("get all visits: %w", err)
+	}
+	return vs, nil
 }
 
 func VisitDetailsBetween(begin time.Time, end time.Time) ([]VisitDetail, error) {

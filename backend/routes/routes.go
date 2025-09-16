@@ -133,4 +133,10 @@ var Routes = []Route{
 			{Name: "end", Description: "End date in YYYY-MM-DD format", Required: false},
 		},
 	},
+	{
+		Path:    "/stats/export",
+		Method:  GET,
+		Handler: ExportHandler,
+		Doc:     `Export data into JSON format.`,
+	},
 }

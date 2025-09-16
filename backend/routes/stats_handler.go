@@ -46,3 +46,12 @@ func VisitStatsHandler(w http.ResponseWriter, r *http.Request) {
 
 	writeJson(w, statistics, http.StatusOK)
 }
+
+func ExportHandler(w http.ResponseWriter, r *http.Request) {
+	output, err := db.ExportJson()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	writeJson(w, output, http.StatusOK)
+}

@@ -41,10 +41,10 @@ DELETE {{base_url}}/customers/1
 # ---------------
 
 ### Record a visit
-POST {{base_url}}/customers/1/visits
+POST {{base_url}}/customers/2/visits
 
 {
-    "visitDate": "2025-03-28",
+    "visitDate": "2025-07-28",
     "notes": "He farted"
 }
 
@@ -68,3 +68,7 @@ GET {{base_url}}/stats/customers
 
 ###
 GET {{base_url}}/stats/visits
+
+
+### export data
+GET {{base_url}}/stats/export

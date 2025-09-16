@@ -67,7 +67,7 @@ func addVisits() {
 	// })
 }
 
-func TestChangeCustomer(t *testing.T) {
+func TestDeleteVisit(t *testing.T) {
 	var rr *httptest.ResponseRecorder
 
 	rr = call("/customers/1", "GET", nil)

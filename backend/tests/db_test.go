@@ -67,3 +67,8 @@ func TestAddVisit(t *testing.T) {
 	c, _ = db.CustomerById(1)
 	t.Log(c)
 }
+
+func TestExport(t *testing.T) {
+	output, _ := db.ExportJson()
+	t.Log(output)
+}
