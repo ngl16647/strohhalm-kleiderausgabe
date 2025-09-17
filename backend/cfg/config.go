@@ -19,9 +19,8 @@ type Config struct {
 		Port int
 	}
 	Api struct {
-		UseKeys  bool   `yaml:"use_keys"`
-		ApiKey   string `yaml:"api_key"`
-		AdminKey string `yaml:"admin_key"`
+		UseApiKey bool   `yaml:"use_api_key"`
+		ApiKey    string `yaml:"api_key"`
 	}
 	Data string
 }
@@ -32,7 +31,7 @@ func defaultConfig() *Config {
 	cfg := &Config{}
 	cfg.Server.Host = "0.0.0.0"
 	cfg.Server.Port = 8080
-	cfg.Api.UseKeys = false
+	cfg.Api.UseApiKey = false
 	cfg.Data = "data.db"
 	return cfg
 }
@@ -54,12 +53,12 @@ func InitConfig() {
 	flag.IntVar(&GlobalConfig.Server.Port, "port", GlobalConfig.Server.Port, "Server port")
 
 	noKey := flag.Bool("no-key", false, "Turn off API key verification")
-	newKey := flag.Bool("new-key", false, "Generate new API key and admin key")
+	newKey := flag.Bool("new-key", false, "Generate new API key")
 	docsFlag := flag.Bool("docs", false, "Print API documentation")
 
 	flag.Parse()
 
-	GlobalConfig.Api.UseKeys = !*noKey
+	GlobalConfig.Api.UseApiKey = !*noKey
 	if *noKey {
 		log.Println("WARNING: Server running without API key verification")
 	}
@@ -70,13 +69,9 @@ func InitConfig() {
 		os.Exit(0) // do not run the server
 	}
 
-	if GlobalConfig.Api.UseKeys {
+	if GlobalConfig.Api.UseApiKey {
 		if GlobalConfig.Api.ApiKey == "" || *newKey {
 			resetApiKey(GlobalConfig)
-			rewriteConfigFile = true
-		}
-		if GlobalConfig.Api.AdminKey == "" || *newKey {
-			resetAdminKey(GlobalConfig)
 			rewriteConfigFile = true
 		}
 	}
@@ -116,18 +111,6 @@ func resetApiKey(config *Config) error {
 	}
 
 	fmt.Println("API key: ", config.Api.ApiKey)
-
-	return nil
-}
-
-func resetAdminKey(config *Config) error {
-	var err error
-	config.Api.AdminKey, err = keyOfLength(8)
-	if err != nil {
-		return fmt.Errorf("setting new admin key: %w", err)
-	}
-
-	fmt.Println("Admin key: ", config.Api.AdminKey)
 
 	return nil
 }

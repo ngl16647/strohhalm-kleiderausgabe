@@ -8,7 +8,6 @@ type Route struct {
 	Handler     http.HandlerFunc
 	Doc         string
 	QueryParams []QueryParam
-	Admin       bool
 }
 
 type QueryParam struct {
