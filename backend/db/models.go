@@ -1,5 +1,7 @@
 package db
 
+import "time"
+
 type Customer struct {
 	Id          int64   `json:"id"`
 	Uuid        string  `json:"uuid"`
@@ -31,6 +33,11 @@ type VisitDetail struct {
 }
 
 const DateFormat = "2006-01-02"
+
+var (
+	MinDate = time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
+	MaxDate = time.Date(9999, 12, 31, 0, 0, 0, 0, time.UTC)
+)
 
 const (
 	CustomerInitStr = `

@@ -65,17 +65,36 @@ func GetCustomerByUuidHandler(w http.ResponseWriter, r *http.Request) {
 
 func SearchCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	query := strings.TrimSpace(getParam(r, "query"))
+	beginStr := strings.TrimSpace(getParam(r, "last_visit_after"))
+	endStr := strings.TrimSpace(getParam(r, "last_visit_before"))
 
 	var cs []db.Customer
-	var err error
+	var queryErr error
 
-	if query == "" {
-		cs, err = db.AllCustomers()
+	if query == "" && beginStr == "" && endStr == "" {
+		// all results
+		cs, queryErr = db.AllCustomers()
+	} else if beginStr == "" && endStr == "" {
+		// no date constraint
+		cs, queryErr = db.SearchCustomer(query)
 	} else {
-		cs, err = db.SearchCustomer(query)
+		// have query and date requirement
+		begin, err := parseDateWithDefault(beginStr, db.MinDate)
+		if err != nil {
+			http.Error(w, "invalid begin date", http.StatusBadRequest)
+			return
+		}
+
+		end, err := parseDateWithDefault(endStr, db.MaxDate)
+		if err != nil {
+			http.Error(w, "invalid end date", http.StatusBadRequest)
+			return
+		}
+
+		cs, queryErr = db.SearchCustomerWithinDates(query, begin, end)
 	}
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if queryErr != nil {
+		http.Error(w, queryErr.Error(), http.StatusInternalServerError)
 		return
 	}
 

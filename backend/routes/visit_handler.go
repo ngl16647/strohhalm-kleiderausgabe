@@ -76,21 +76,13 @@ func VisitDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// When at least one of time param is provided
-	if beginStr == "" {
-		beginStr = "0000-01-01"
-	}
-
-	if endStr == "" {
-		endStr = "9999-12-31"
-	}
-
-	begin, err := time.Parse(db.DateFormat, beginStr)
+	begin, err := parseDateWithDefault(beginStr, db.MinDate)
 	if err != nil {
 		http.Error(w, "invalid begin date", http.StatusBadRequest)
 		return
 	}
 
-	end, err := time.Parse(db.DateFormat, endStr)
+	end, err := parseDateWithDefault(endStr, db.MaxDate)
 	if err != nil {
 		http.Error(w, "invalid end date", http.StatusBadRequest)
 		return

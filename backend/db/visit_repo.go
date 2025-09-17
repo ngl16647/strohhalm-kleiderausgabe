@@ -82,7 +82,7 @@ func VisitDetailsBetween(begin time.Time, end time.Time) ([]VisitDetail, error) 
 	beginStr := begin.Format(DateFormat)
 	endStr := end.Format(DateFormat)
 
-	var cvs []VisitDetail
+	cvs := []VisitDetail{}
 	err := DB.Select(&cvs, `
 		SELECT 
 			v.id AS id,
@@ -106,7 +106,7 @@ func VisitDetailsBetween(begin time.Time, end time.Time) ([]VisitDetail, error) 
 }
 
 func VisitDetailsOfCustomer(customerId int64) ([]VisitDetail, error) {
-	var cvs []VisitDetail
+	cvs := []VisitDetail{}
 	err := DB.Select(&cvs, `
 		SELECT
 			v.id AS id,
@@ -129,7 +129,7 @@ func VisitDetailsOfCustomer(customerId int64) ([]VisitDetail, error) {
 }
 
 func VisitsOfCustomer(customerId int64, limit int) ([]Visit, error) {
-	var vs []Visit
+	vs := []Visit{}
 	err := DB.Select(&vs, `
 		SELECT * FROM visits
 		WHERE customer_id = $1

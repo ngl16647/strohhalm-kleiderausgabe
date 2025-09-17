@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -59,7 +60,7 @@ func UpdateCustomer(customerId int64, newC Customer) error {
 }
 
 func AllCustomers() ([]Customer, error) {
-	var cs []Customer
+	cs := []Customer{}
 	err := DB.Select(&cs, "SELECT * FROM customers")
 	if err != nil {
 		return nil, fmt.Errorf("get all customers: %w", err)
@@ -96,11 +97,25 @@ func SearchCustomer(query string) ([]Customer, error) {
 		return AllCustomers()
 	}
 
-	var cs []Customer
+	cs := []Customer{}
 	err := DB.Select(&cs,
 		`SELECT * FROM customers
 			WHERE LOWER(first_name || ' ' || last_name) LIKE $1`,
 		"%"+strings.ToLower(query)+"%",
+	)
+	if err != nil {
+		return nil, fmt.Errorf("search customer: %w", err)
+	}
+	return cs, nil
+}
+
+func SearchCustomerWithinDates(query string, begin time.Time, end time.Time) ([]Customer, error) {
+	cs := []Customer{}
+	err := DB.Select(&cs,
+		`SELECT * FROM customers
+			WHERE LOWER(first_name || ' ' || last_name) LIKE $1
+			AND last_visit BETWEEN $2 AND $3`,
+		"%"+strings.ToLower(query)+"%", begin.Format(DateFormat), end.Format(DateFormat),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("search customer: %w", err)
