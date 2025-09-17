@@ -11,7 +11,7 @@ import (
 
 func InitGlobalMiddlewares(r chi.Router) {
 	r.Use(middleware.Logger)
-	if cfg.GlobalConfig.Api.UseApiKey {
+	if cfg.GlobalConfig.Api.UseKeys {
 		r.Use(APIKeyAuth(cfg.GlobalConfig.Api.ApiKey))
 	}
 }
@@ -47,7 +47,7 @@ func AdminKeyAuth(validKey string) func(http.Handler) http.Handler {
 			// Expect "Bearer <key>"
 			const prefix = "Bearer "
 			if !strings.HasPrefix(authHeader, prefix) {
-				http.Error(w, "missing or invalid API key", http.StatusUnauthorized)
+				http.Error(w, "missing or invalid admin key", http.StatusUnauthorized)
 				return
 			}
 

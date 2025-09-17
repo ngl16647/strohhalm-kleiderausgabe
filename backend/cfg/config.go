@@ -19,9 +19,9 @@ type Config struct {
 		Port int
 	}
 	Api struct {
-		UseApiKey     bool   `yaml:"user_key"`
-		ApiKey        string `yaml:"api_key"`
-		AdminPassword string `yaml:"admin_password"`
+		UseKeys  bool   `yaml:"use_keys"`
+		ApiKey   string `yaml:"api_key"`
+		AdminKey string `yaml:"admin_key"`
 	}
 	Data string
 }
@@ -32,7 +32,7 @@ func defaultConfig() *Config {
 	cfg := &Config{}
 	cfg.Server.Host = "0.0.0.0"
 	cfg.Server.Port = 8080
-	cfg.Api.UseApiKey = false
+	cfg.Api.UseKeys = false
 	cfg.Data = "data.db"
 	return cfg
 }
@@ -54,12 +54,12 @@ func InitConfig() {
 	flag.IntVar(&GlobalConfig.Server.Port, "port", GlobalConfig.Server.Port, "Server port")
 
 	noKey := flag.Bool("no-key", false, "Turn off API key verification")
-	newKey := flag.Bool("new-key", false, "Generate new API key and admin password")
+	newKey := flag.Bool("new-key", false, "Generate new API key and admin key")
 	docsFlag := flag.Bool("docs", false, "Print API documentation")
 
 	flag.Parse()
 
-	GlobalConfig.Api.UseApiKey = !*noKey
+	GlobalConfig.Api.UseKeys = !*noKey
 	if *noKey {
 		log.Println("WARNING: Server running without API key verification")
 	}
@@ -70,13 +70,13 @@ func InitConfig() {
 		os.Exit(0) // do not run the server
 	}
 
-	if GlobalConfig.Api.UseApiKey {
+	if GlobalConfig.Api.UseKeys {
 		if GlobalConfig.Api.ApiKey == "" || *newKey {
 			resetApiKey(GlobalConfig)
 			rewriteConfigFile = true
 		}
-		if GlobalConfig.Api.AdminPassword == "" || *newKey {
-			resetAdminPasword(GlobalConfig)
+		if GlobalConfig.Api.AdminKey == "" || *newKey {
+			resetAdminKey(GlobalConfig)
 			rewriteConfigFile = true
 		}
 	}
@@ -120,14 +120,14 @@ func resetApiKey(config *Config) error {
 	return nil
 }
 
-func resetAdminPasword(config *Config) error {
+func resetAdminKey(config *Config) error {
 	var err error
-	config.Api.AdminPassword, err = keyOfLength(8)
+	config.Api.AdminKey, err = keyOfLength(8)
 	if err != nil {
-		return fmt.Errorf("setting new admin password: %w", err)
+		return fmt.Errorf("setting new admin key: %w", err)
 	}
 
-	fmt.Println("Admin password: ", config.Api.AdminPassword)
+	fmt.Println("Admin key: ", config.Api.AdminKey)
 
 	return nil
 }

@@ -2,7 +2,7 @@ server:
     host: 0.0.0.0
     port: 8080
 api:
-    user_key: true
+    use_keys: true
     api_key: ""
-    admin_password: ""
+    admin_key: ""
 data: data.db
