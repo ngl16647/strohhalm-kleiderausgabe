@@ -3,6 +3,7 @@ package middlewares
 import (
 	"net/http"
 	"strings"
+	"strohhalm-backend/cfg"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -10,7 +11,9 @@ import (
 
 func InitGlobalMiddlewares(r chi.Router) {
 	r.Use(middleware.Logger)
-	r.Use(APIKeyAuth("12345"))
+	if cfg.GlobalConfig.Api.UseApiKey {
+		r.Use(APIKeyAuth(cfg.GlobalConfig.Api.ApiKey))
+	}
 }
 
 func APIKeyAuth(validKey string) func(http.Handler) http.Handler {

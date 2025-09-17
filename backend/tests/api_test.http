@@ -34,6 +34,7 @@ GET {{base_url}}/customers/uuid/b2feb2db-25a8-4cba-92de-38ede14e425c
 
 ### Search customer
 GET {{base_url}}/customers?query=
+Authorization: Bearer 12345
 
 ### Delete a customer
 DELETE {{base_url}}/customers/1
