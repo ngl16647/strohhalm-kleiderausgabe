@@ -1,14 +1,11 @@
 name: Build Backend Win64
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
 
 env:
   WORK_DIR: backend
-  ARTIFACT_NAME: backend-winx64
+  ARTIFACT_NAME: backend-win64
 
 jobs:
   build:
@@ -32,9 +29,4 @@ jobs:
         name: ${{ env.ARTIFACT_NAME }}
         path: ${{ env.WORK_DIR }}/${{ env.ARTIFACT_NAME }}.exe
 
-    - name: Release # This happens only when tags are pushed
-      uses: softprops/action-gh-release@v2
-      if: github.ref_type == 'tag'
-      with:
-        name: Release ${{ github.ref_name }}
-        files: ${{ env.WORK_DIR }}/${{ env.ARTIFACT_NAME }}.exe
+    # Due to Windows' anti-virus policy, do not release win64 version

@@ -9,7 +9,7 @@ on:
 env:
   WORK_DIR: frontend
   BUILD_DIR: frontend/build/windows/x64/runner
-  ARTIFACT_NAME: frontend-winx64
+  ARTIFACT_NAME: frontend-win64
 
 jobs:
   build:
