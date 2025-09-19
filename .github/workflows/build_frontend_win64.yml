@@ -9,8 +9,7 @@ on:
 env:
   WORK_DIR: frontend
   BUILD_DIR: frontend/build/windows/x64/runner
-  ARTIFACT_NAME: frontend-winx64-${{ github.ref_name }}
-  VERSION: ${{ github.ref_name }}
+  ARTIFACT_NAME: frontend-winx64
 
 jobs:
   build:
@@ -51,4 +50,5 @@ jobs:
       if: github.ref_type == 'tag'
       uses: softprops/action-gh-release@v2
       with:
+        name: Release ${{ github.ref_name }}
         files: ${{ env.ARTIFACT_NAME }}.zip

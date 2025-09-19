@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func registerRoute(r *chi.Mux, route Route) {
+func registerRoute(r chi.Router, route Route) {
 	switch route.Method {
 	case http.MethodGet:
 		r.Get(route.Path, route.Handler)
@@ -22,7 +22,7 @@ func registerRoute(r *chi.Mux, route Route) {
 	}
 }
 
-func InitRoutes(r *chi.Mux) {
+func InitRoutes(r chi.Router) {
 	for _, route := range Routes {
 		registerRoute(r, route)
 	}

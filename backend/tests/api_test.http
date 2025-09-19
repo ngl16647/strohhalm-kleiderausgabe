@@ -7,27 +7,69 @@ GET {{base_url}}/health
 
 ### Add customer
 POST {{base_url}}/customers
-content-type: application/json
 
 {
     "firstName": "Pop",
     "lastName": "Bang",
-    "birthday": "2000-01-01"
+    "birthday": "2000-01-01",
+    "country": "Homeland"
 }
 
 ### Update customer
 PUT {{base_url}}/customers/1
-content-type: application/json
 
 {
     "firstName": "Poop",
     "lastName": "Bing",
-    "birthday": "2000-01-01"
+    "birthday": "2000-01-01",
+    "notes": "morbidly obese, and stupid"
 }
 
 
 ### Get customer by id
 GET {{base_url}}/customers/1
 
+### Get customer by uuid
+GET {{base_url}}/customers/uuid/b2feb2db-25a8-4cba-92de-38ede14e425c
+
 ### Search customer
 GET {{base_url}}/customers?query=
+Authorization: Bearer 12345
+
+### Delete a customer
+DELETE {{base_url}}/customers/1
+
+# ---------------
+
+### Record a visit
+POST {{base_url}}/customers/2/visits
+
+{
+    "visitDate": "2025-07-28",
+    "notes": "He farted"
+}
+
+### Delete a visit for customer
+DELETE  {{base_url}}/customers/1/visits
+
+### Get visit
+GET {{base_url}}/visits
+    ?begin=2000-07-20
+    &end=
+
+### Get visit of a customer
+GET {{base_url}}/customers/4/visits
+
+### Delete a visit
+DELETE {{base_url}}/visits/1
+
+
+### --- Statistics ---
+GET {{base_url}}/stats/customers
+
+###
+GET {{base_url}}/stats/visits
+
+
+### export data
+GET {{base_url}}/stats/export

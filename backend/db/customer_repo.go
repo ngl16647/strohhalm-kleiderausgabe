@@ -2,106 +2,94 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
+	"time"
+
+	"github.com/google/uuid"
 )
 
-// helper
-func scanCustomers(rows *sql.Rows) ([]Customer, error) {
-	defer rows.Close()
-
-	var customers []Customer
-	for rows.Next() {
-		var c Customer
-
-		// Scanning rows
-		if err := rows.Scan(
-			&c.Id,
-			&c.FirstName,
-			&c.LastName,
-			&c.Birthday,
-			&c.Notes,
-		); err != nil {
-			return nil, err
-		}
-
-		customers = append(customers, c)
+func AddCustomer(c Customer) (Customer, error) {
+	if c.Uuid == "" {
+		c.Uuid = uuid.NewString()
 	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return customers, nil
-}
-
-func AddCustomer(c Customer) (int64, error) {
-	res, err := DB.Exec(
-		"INSERT INTO customers (FirstName, LastName, Birthday, Notes) VALUES (?, ?, ?, ?)",
-		c.FirstName, c.LastName, c.Birthday, c.Notes,
+	res, err := DB.NamedExec(
+		`INSERT INTO customers (uuid, first_name, last_name, birthday, country, notes) 
+			VALUES (:uuid, :first_name, :last_name, :birthday, :country, :notes)`,
+		&c,
 	)
 	if err != nil {
-		return 0, fmt.Errorf("failed to add customer %s %s: %w", c.FirstName, c.LastName, err)
+		return Customer{}, fmt.Errorf("failed to add customer %s %s: %w", c.FirstName, c.LastName, err)
 	}
-	return res.LastInsertId()
+	id, err := res.LastInsertId()
+	if err != nil {
+		return Customer{}, fmt.Errorf("unable to get user id")
+	}
+	c.Id = id
+	return c, nil
 }
 
 func UpdateCustomer(customerId int64, newC Customer) error {
-	res, err := DB.Exec(`
+	newC.Id = customerId
+	// uuid cannot be updated
+	res, err := DB.NamedExec(`
         UPDATE customers
-        SET FirstName = ?, LastName = ?, Birthday = ?, Notes = ?
-        WHERE Id = ?`,
-		newC.FirstName, newC.LastName, newC.Birthday, newC.Notes,
-		customerId,
+        SET first_name = :first_name,
+			last_name = :last_name,
+			birthday = :birthday,
+			country = :country,
+			notes = :notes
+        WHERE id = :id`,
+		&newC,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to update customer %d: %w", customerId, err)
+		return fmt.Errorf("update customer %d: %w", customerId, err)
 	}
 
 	rows, err := res.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("failed to check update result for customer %d: %w", customerId, err)
+		return fmt.Errorf("check update result for customer %d: %w", customerId, err)
 	}
 
 	if rows == 0 {
-		return fmt.Errorf("customer %d not found", customerId)
+		return errors.New("custome not found")
 	}
 
 	return nil
 }
 
 func AllCustomers() ([]Customer, error) {
-	rows, err := DB.Query("SELECT Id, FirstName, LastName, Birthday, Notes FROM customers")
+	cs := []Customer{}
+	err := DB.Select(&cs, "SELECT * FROM customers")
 	if err != nil {
-		return nil, fmt.Errorf("failed to get all customers: %w", err)
+		return nil, fmt.Errorf("get all customers: %w", err)
 	}
-	return scanCustomers(rows)
+	return cs, nil
 }
 
 func CustomerById(id int64) (Customer, error) {
-	rows, err := DB.Query(`
-		SELECT Id, FirstName, LastName, Birthday, Notes
-			FROM customers 
-			WHERE Id = ?
-		`, id,
-	)
+	var c Customer
+	err := DB.Get(&c, "SELECT * FROM customers WHERE id = $1", id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return c, ErrNotFound
+		}
+		return c, fmt.Errorf("get customer by id %d: %w", id, err)
+	}
+
+	return c, nil
+}
+
+func CustomerByUuid(uuid string) (Customer, error) {
+	var c Customer
+	err := DB.Get(&c, "SELECT * FROM customers WHERE uuid = $1", uuid)
 	if err != nil {
 		var empty Customer
-		return empty, fmt.Errorf("failed to get customer by id %d: %w", id, err)
+		return empty, fmt.Errorf("get customer by uuid %s: %w", uuid, err)
 	}
 
-	cs, err := scanCustomers(rows)
-	if err != nil {
-		var empty Customer
-		return empty, fmt.Errorf("failed to get customer by id %d: %w", id, err)
-	}
-
-	if len(cs) == 0 {
-		var empty Customer
-		return empty, ErrNotFound
-	}
-
-	return cs[0], nil
+	return c, nil
 }
 
 func SearchCustomer(query string) ([]Customer, error) {
@@ -109,14 +97,77 @@ func SearchCustomer(query string) ([]Customer, error) {
 		return AllCustomers()
 	}
 
-	rows, err := DB.Query(`
-		SELECT Id, FirstName, LastName, Birthday, Notes
-			FROM customers
-			WHERE LOWER(FirstName || ' ' || LastName) LIKE ?
-		`, "%"+strings.ToLower(query)+"%",
+	cs := []Customer{}
+	err := DB.Select(&cs,
+		`SELECT * FROM customers
+			WHERE LOWER(first_name || ' ' || last_name) LIKE $1`,
+		"%"+strings.ToLower(query)+"%",
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query customer: %w", err)
+		return nil, fmt.Errorf("search customer: %w", err)
 	}
-	return scanCustomers(rows)
+	return cs, nil
+}
+
+func SearchCustomerWithinDates(query string, begin time.Time, end time.Time) ([]Customer, error) {
+	cs := []Customer{}
+	err := DB.Select(&cs,
+		`SELECT * FROM customers
+			WHERE LOWER(first_name || ' ' || last_name) LIKE $1
+			AND last_visit BETWEEN $2 AND $3`,
+		"%"+strings.ToLower(query)+"%", begin.Format(DateFormat), end.Format(DateFormat),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("search customer: %w", err)
+	}
+	return cs, nil
+}
+
+func SetCustomerLastVisit(customerId int64, newVisit Visit) error {
+	if _, err := DB.Exec(`
+		UPDATE customers
+		SET last_visit_id = $1,
+			last_visit = $2
+		WHERE id = $3
+		AND (last_visit IS NULL OR last_visit < $2)`,
+		newVisit.Id, newVisit.VisitDate, customerId,
+	); err != nil {
+		return fmt.Errorf("update last visit for customer %d: %w", customerId, err)
+	}
+	return nil
+}
+
+func UpdateCustomerLastVisit(customerId int64) (*Visit, error) {
+	lastVisit, err := GetLatestVisitByCustomer(customerId)
+	if err != nil {
+		return lastVisit, fmt.Errorf("find last visit for customer %d: %w", customerId, err)
+	}
+
+	var visitId *int64
+	var visitDate *string
+	if lastVisit == nil {
+		visitId = nil
+		visitDate = nil
+	} else {
+		visitId = &lastVisit.Id
+		visitDate = &lastVisit.VisitDate
+	}
+
+	if _, err := DB.Exec(`
+		UPDATE customers
+		SET last_visit_id = $1,
+			last_visit = $2 
+		WHERE id = $3`,
+		visitId, visitDate, customerId); err != nil {
+		return lastVisit, fmt.Errorf("update last visit for customer %d: %w", customerId, err)
+	}
+	return lastVisit, nil
+}
+
+func DeleteCustomer(customerId int64) error {
+	_, err := DB.Exec("DELETE FROM customers WHERE id = ?", customerId)
+	if err != nil {
+		return fmt.Errorf("delete customer: %w", err)
+	}
+	return nil
 }

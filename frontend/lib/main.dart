@@ -70,6 +70,7 @@ class MyApp extends StatefulWidget {
 
 class MyAppState extends State<MyApp> {
   ThemeMode themeMode = ThemeMode.light;
+  Color seedColor = Colors.limeAccent;
   Locale? _locale;
 
   void setLocale(Locale locale) {
@@ -100,7 +101,7 @@ class MyAppState extends State<MyApp> {
       ],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.limeAccent,
+          seedColor: seedColor,
           brightness: Brightness.light,
         ),
         scaffoldBackgroundColor: CupertinoColors.lightBackgroundGray,
@@ -123,7 +124,7 @@ class MyAppState extends State<MyApp> {
       ),
       darkTheme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.limeAccent,
+            seedColor: seedColor,
             brightness: Brightness.dark,
           ),
           scaffoldBackgroundColor: Colors.blueGrey[900],
@@ -150,9 +151,15 @@ class MyAppState extends State<MyApp> {
     );
   }
 
-  void changeTheme() {
+  void changeSeedColor(Color color){
     setState(() {
-      themeMode = themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      seedColor = color;
+    });
+  }
+
+  void changeTheme(ThemeMode theme) {
+    setState(() {
+      themeMode = theme;
     });
   }
 }
