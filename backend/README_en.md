@@ -13,7 +13,7 @@ You then have 2 options to deploy the app.
 - **Deploy with native binary (recommended when using Ubuntu):**
 
 ```bash
-$ curl -L -o server \
+curl -L -o server \
     https://github.com/ngl16647/strohhalm-kleiderausgabe/releases/latest/download/backend-ubuntu && \
     chmod +x server && \
     ./server
@@ -22,7 +22,7 @@ $ curl -L -o server \
 - **Deploy with Docker:**
 
 ```bash
-$ touch data.db config.yml && \
+touch data.db config.yml && \
     docker run \
         --name strohhalm-kleiderausgabe-backend \
         -v $(pwd)/data.db:/app/data.db \
@@ -47,3 +47,5 @@ After installing, you can start your SQL query by
 ```bash
 sqlite3 data.db
 ``` 
+
+You can backup data by copying the file `data.db`.

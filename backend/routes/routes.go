@@ -56,7 +56,7 @@ var Routes = []Route{
 		Handler: UpdateCustomerHandler,
 		Doc: `Update customer. Expects JSON body with "firstName", "lastName", "birthday", "country"
 		 and "notes". 
-		 IMPORTANT: omitted fields will be recorded as empty values. "uuid" cannot be changed.`,
+		 IMPORTANT: Omitted fields will be recorded as empty values. "uuid" cannot be changed.`,
 	},
 	{
 		Path:    "/customers/{id}",
@@ -137,6 +137,16 @@ var Routes = []Route{
 		Path:    "/stats/export",
 		Method:  GET,
 		Handler: ExportCsvHandler,
-		Doc:     `Export data into CSV format.`,
+		Doc:     `Export data into downloadable CSV file.`,
+	},
+	{
+		Path:    "/stats/import",
+		Method:  POST,
+		Handler: ImportCsvHandler,
+		Doc: `Import CSV file. All customers are treated as different persons and will be recorded 
+		 regardless of current data in database, which means the "id" column is effectively meaningless.
+		 Import does NOT stop when error occors. Test data can be found in "backend/tests/test_data.csv"
+		 IMPORTANT: This is a highly dangerous endpoint. Either use it on a completely empty backend,
+		 or backup your current data before import.`,
 	},
 }

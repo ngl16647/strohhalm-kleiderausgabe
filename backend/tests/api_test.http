@@ -73,3 +73,19 @@ GET {{base_url}}/stats/visits
 
 ### export data
 GET {{base_url}}/stats/export
+
+
+
+### import data
+POST {{base_url}}/stats/import
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="data.csv"
+Content-Type: text/csv
+
+id,Vorname,Nachname,Geburtstag,Land,Sonstiges,Besuche
+2,Pop,Bang,,Homeland,,2025-03-28,2025-07-28
+1,Poop,Bing,,,"morbidly obese, and stupid",2025-03-28
+3,Pop,Bang,,Homeland,,
+--boundary--

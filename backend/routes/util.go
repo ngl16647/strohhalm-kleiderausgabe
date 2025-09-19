@@ -69,3 +69,18 @@ func parseDateWithDefault(dateStr string, def time.Time) (time.Time, error) {
 	}
 	return time.Parse(db.DateFormat, dateStr)
 }
+
+func csvLine(row ...string) string {
+	result := ""
+	for i, str := range row {
+		if i != 0 {
+			result += ","
+		}
+		if strings.Contains(str, ",") {
+			result += fmt.Sprintf(`"%s"`, str)
+		} else {
+			result += str
+		}
+	}
+	return result
+}

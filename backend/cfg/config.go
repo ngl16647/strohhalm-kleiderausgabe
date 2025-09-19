@@ -114,7 +114,7 @@ func keyOfLength(length int) (string, error) {
 	length += length/4 - 1 // make space for dashes
 	key := make([]byte, length)
 	for i := 0; i < length; i++ {
-		if i%5 == 4 {
+		if i%5 == 4 && i != length-1 {
 			key[i] = '-'
 			continue
 		}
