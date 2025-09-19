@@ -58,9 +58,8 @@ func InitConfig() {
 
 	flag.Parse()
 
-	GlobalConfig.Api.UseApiKey = !*noKey
 	if *noKey {
-		log.Println("WARNING: Server running without API key verification")
+		GlobalConfig.Api.UseApiKey = false
 	}
 
 	// print docs if --docs flag is on
@@ -71,9 +70,16 @@ func InitConfig() {
 
 	if GlobalConfig.Api.UseApiKey {
 		if GlobalConfig.Api.ApiKey == "" || *newKey {
-			resetApiKey(GlobalConfig)
+			var err error
+			GlobalConfig.Api.ApiKey, err = keyOfLength(16)
+			if err != nil {
+				log.Fatal("Unable to generate new keys")
+			}
+			fmt.Println("API key: ", GlobalConfig.Api.ApiKey)
 			rewriteConfigFile = true
 		}
+	} else {
+		log.Println("WARNING: Server running without API key verification")
 	}
 
 	if rewriteConfigFile {
@@ -103,22 +109,16 @@ func loadConfig(path string, cfg *Config) error {
 	return nil
 }
 
-func resetApiKey(config *Config) error {
-	var err error
-	config.Api.ApiKey, err = keyOfLength(16)
-	if err != nil {
-		return fmt.Errorf("setting new API keys: %w", err)
-	}
-
-	fmt.Println("API key: ", config.Api.ApiKey)
-
-	return nil
-}
-
 func keyOfLength(length int) (string, error) {
-	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	length += length/4 - 1 // make space for dashes
 	key := make([]byte, length)
 	for i := 0; i < length; i++ {
+		if i%5 == 4 {
+			key[i] = '-'
+			continue
+		}
+
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
 		if err != nil {
 			return "", err
