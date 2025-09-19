@@ -2,8 +2,15 @@ package routes
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
+	"strohhalm-backend/db"
+	"time"
+
+	"github.com/go-chi/chi/v5"
 )
 
 const (
@@ -13,7 +20,7 @@ const (
 	DELETE = http.MethodDelete
 )
 
-func WriteJson(w http.ResponseWriter, data any, status int) {
+func writeJson(w http.ResponseWriter, data any, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
@@ -23,13 +30,42 @@ func WriteJson(w http.ResponseWriter, data any, status int) {
 	}
 }
 
-func GetParam(r *http.Request, param string) string {
+func getParam(r *http.Request, param string) string {
 	return r.URL.Query().Get(param)
 }
 
-func DecodeBody(r *http.Request, data any) error {
+func decodeBody(r *http.Request, data any) error {
 	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
-		return fmt.Errorf("invalid JSON: %w", err)
+		return fmt.Errorf("invalid JSON body: %w", err)
 	}
 	return nil
+}
+
+func ok(w http.ResponseWriter) {
+	w.Write([]byte("ok"))
+}
+
+func parseIntFromUrl(r *http.Request, name string) (int64, error) {
+	id, err := strconv.ParseInt(chi.URLParam(r, name), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+func prepareCustomerData(c *db.Customer) error {
+	c.FirstName = strings.TrimSpace(c.FirstName)
+	c.LastName = strings.TrimSpace(c.LastName)
+	c.Notes = strings.TrimSpace(c.Notes)
+	if c.FirstName == "" || c.LastName == "" {
+		return errors.New("first and last name are required")
+	}
+	return nil
+}
+
+func parseDateWithDefault(dateStr string, def time.Time) (time.Time, error) {
+	if dateStr == "" {
+		return def, nil
+	}
+	return time.Parse(db.DateFormat, dateStr)
 }

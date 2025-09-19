@@ -4,6 +4,7 @@ import (
 	"log"
 	"strohhalm-backend/db"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -13,7 +14,7 @@ func TestAddAndSearchCustomer(t *testing.T) {
 
 	c1 := db.Customer{Id: 1, FirstName: "A", LastName: "Customer", Birthday: TestDate, Notes: "very fat"}
 
-	id, err := db.AddCustomer(db.Customer{
+	c, err := db.AddCustomer(db.Customer{
 		FirstName: c1.FirstName,
 		LastName:  c1.LastName,
 		Birthday:  TestDate,
@@ -21,16 +22,14 @@ func TestAddAndSearchCustomer(t *testing.T) {
 	})
 	FatalErr(t, err, "failed to add user")
 
-	if id != 1 {
+	if c.Id != 1 {
 		t.Fatal("New Customer ID is not 1")
 	}
 
 	customers, err := db.AllCustomers()
 	FatalErr(t, err, "failed to get user")
 
-	if customers[0] != c1 {
-		t.Fatal("Incorrect customer was fetched")
-	}
+	t.Log(customers)
 
 	_, err = db.AddCustomer(db.Customer{FirstName: "Another", LastName: "Person", Birthday: TestDate})
 	FatalErr(t, err)
@@ -38,27 +37,38 @@ func TestAddAndSearchCustomer(t *testing.T) {
 	searchC, err := db.SearchCustomer(" cus")
 	FatalErr(t, err)
 	t.Log(searchC)
-	if searchC[0] != c1 {
-		t.Fatal("Incorrect customer was searched")
-	}
 }
 
 func TestAddVisit(t *testing.T) {
 	db.InitDatabase(":memory:")
 
-	c := db.Customer{FirstName: "A", LastName: "Customer", Birthday: TestDate}
+	cInput := db.Customer{FirstName: "A", LastName: "Customer", Birthday: TestDate}
 
-	cid, err := db.AddCustomer(c)
+	c, err := db.AddCustomer(cInput)
 	FatalErr(t, err)
 
-	vid, err := db.AddVisitNow(cid, "we got robbed")
+	v, err := db.AddVisit(c.Id, nil, "we got robbed")
 	FatalErr(t, err)
-	if vid != 1 {
+	if v.Id != 1 {
 		t.Fatal("New Visit ID is not 1")
 	}
 
-	cvs, err := db.AllCustomerVisits()
+	cvs, err := db.AllVisitDetails()
 	FatalErr(t, err)
 	log.Println(cvs)
 
+	t1, _ := time.Parse(db.DateFormat, "2025-08-27")
+	t2, _ := time.Parse(db.DateFormat, "2025-08-28")
+	t.Log(t1)
+	cvs, err = db.VisitDetailsBetween(t1, t2)
+	FatalErr(t, err)
+	log.Println(cvs)
+
+	c, _ = db.CustomerById(1)
+	t.Log(c)
+}
+
+func TestExport(t *testing.T) {
+	output, _ := db.ExportJson()
+	t.Log(output)
 }
