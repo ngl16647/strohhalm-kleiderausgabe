@@ -6,19 +6,27 @@ import 'package:strohhalm_app/main.dart';
 import 'generated/l10n.dart';
 
 ///QR-Code Scanner Seite
-class BarcodeScannerSimple extends StatefulWidget {
+class BarcodeScannerSmartPhoneCamera extends StatefulWidget {
 
-  const BarcodeScannerSimple({
+  const BarcodeScannerSmartPhoneCamera({
     super.key,
   });
 
+  static Future<String?> showBarcodeScannerDialog(BuildContext context)async{
+    return await showDialog(
+        context: context,
+        builder: (context){
+          return BarcodeScannerSmartPhoneCamera();
+        });
+  }
+
   @override
-  State<BarcodeScannerSimple> createState() => _BarcodeScannerSimpleState();
+  State<BarcodeScannerSmartPhoneCamera> createState() => _BarcodeScannerSmartPhoneCameraState();
 }
 
-class _BarcodeScannerSimpleState extends State<BarcodeScannerSimple> {
+class _BarcodeScannerSmartPhoneCameraState extends State<BarcodeScannerSmartPhoneCamera> {
   Barcode? _barcode;
-  bool codeFound = false;
+  bool _codeFound = false;
 
   Widget _buildBarcode(Barcode? value) {
     if (value == null) {
@@ -36,8 +44,8 @@ class _BarcodeScannerSimpleState extends State<BarcodeScannerSimple> {
 
 
   Future<void> _handleBarcode(BarcodeCapture barcodes) async {
-    if (mounted && !codeFound) {
-        codeFound = true; //Hier, damit der Barcode nicht mehrmals gescannt wird was im Zusammenhang mit dem 1 Sekunden delay zu crashes führt
+    if (mounted && !_codeFound) {
+        _codeFound = true; //Hier, damit der Barcode nicht mehrmals gescannt wird was im Zusammenhang mit dem 1 Sekunden delay zu crashes führt
         _barcode = barcodes.barcodes.firstOrNull;
         setState(() {
           _barcode;
@@ -93,7 +101,7 @@ class _BarcodeScannerSimpleState extends State<BarcodeScannerSimple> {
                     ),
                   ],
                 ),
-                if(codeFound) SizedBox(
+                if(_codeFound) SizedBox(
                   height: 80,
                   child: Center(
                     child: _buildBarcode(_barcode),

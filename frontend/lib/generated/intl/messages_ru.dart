@@ -66,6 +66,38 @@ class MessageLookup extends MessageLookupByLibrary {
       "Распределение одежды Straw",
     ),
     "back": MessageLookupByLibrary.simpleMessage("Назад"),
+    "banner_designer_bannerDesignerSubTitle":
+        MessageLookupByLibrary.simpleMessage("Конструктор"),
+    "banner_designer_bannerDesignerTitle": MessageLookupByLibrary.simpleMessage(
+      "Конструктор баннера",
+    ),
+    "banner_designer_bannerImageSubTitle": MessageLookupByLibrary.simpleMessage(
+      "Изображение",
+    ),
+    "banner_designer_bannerImageTitle": MessageLookupByLibrary.simpleMessage(
+      "Изображение баннера",
+    ),
+    "banner_designer_delete": MessageLookupByLibrary.simpleMessage("Удалить"),
+    "banner_designer_existing": MessageLookupByLibrary.simpleMessage(
+      "Существующее",
+    ),
+    "banner_designer_new": MessageLookupByLibrary.simpleMessage("Новое"),
+    "banner_designer_noImage": MessageLookupByLibrary.simpleMessage(
+      "Изображение не выбрано",
+    ),
+    "banner_designer_pick": MessageLookupByLibrary.simpleMessage("Выбрать"),
+    "banner_designer_picked": MessageLookupByLibrary.simpleMessage(
+      "Только что выбрано!",
+    ),
+    "banner_designer_titleText": MessageLookupByLibrary.simpleMessage(
+      "Заголовок",
+    ),
+    "banner_designer_uploadImage": MessageLookupByLibrary.simpleMessage(
+      "Загрузить изображение",
+    ),
+    "banner_designer_wrongAspectRatio": MessageLookupByLibrary.simpleMessage(
+      "Соотношение сторон изображения слишком маленькое!\nОно должно быть не менее 6:1",
+    ),
     "barCode_scanner_error": MessageLookupByLibrary.simpleMessage(
       "Пожалуйста, отсканируйте штрихкод!",
     ),
@@ -87,6 +119,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Был <bold>сегодня</bold>",
     ),
     "delete": MessageLookupByLibrary.simpleMessage("Удалить"),
+    "deletion_failed": MessageLookupByLibrary.simpleMessage(
+      "Удаление не удалось",
+    ),
+    "deletion_success": MessageLookupByLibrary.simpleMessage(
+      "Удаление успешно",
+    ),
+    "fail": MessageLookupByLibrary.simpleMessage("Ошибка"),
     "language_de": MessageLookupByLibrary.simpleMessage("Немецкий"),
     "language_en": MessageLookupByLibrary.simpleMessage("Английский"),
     "language_ru": MessageLookupByLibrary.simpleMessage("Русский"),
@@ -111,10 +150,43 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_statistic": MessageLookupByLibrary.simpleMessage("Статистика"),
     "main_page_theme": m3,
     "no": MessageLookupByLibrary.simpleMessage("Нет"),
+    "number_fail": MessageLookupByLibrary.simpleMessage(
+      "Неверное число!\nПожалуйста, введите правильное число",
+    ),
     "print": MessageLookupByLibrary.simpleMessage("Печать"),
     "qr_code_print": MessageLookupByLibrary.simpleMessage("Печать QR-кода"),
     "qr_code_share": MessageLookupByLibrary.simpleMessage(
       "Поделиться QR-кодом",
+    ),
+    "save": MessageLookupByLibrary.simpleMessage("Сохранить"),
+    "settings": MessageLookupByLibrary.simpleMessage("Настройки"),
+    "settings_banner_desc": MessageLookupByLibrary.simpleMessage(
+      "Изображение, отображаемое в верхней части страницы.\nТакже используется как заголовок для печати",
+    ),
+    "settings_banner_title": MessageLookupByLibrary.simpleMessage(
+      "Баннер / Изображение",
+    ),
+    "settings_color_desc": MessageLookupByLibrary.simpleMessage(
+      "Акцентный цвет приложения",
+    ),
+    "settings_color_title": MessageLookupByLibrary.simpleMessage("Цвет"),
+    "settings_pick_Color": MessageLookupByLibrary.simpleMessage("Выбрать цвет"),
+    "settings_server_desc": MessageLookupByLibrary.simpleMessage(
+      "Если используется сервер, здесь можно ввести URL и пароль",
+    ),
+    "settings_server_switch": MessageLookupByLibrary.simpleMessage(
+      "Использовать сервер?",
+    ),
+    "settings_server_title": MessageLookupByLibrary.simpleMessage(
+      "Настройки сервера",
+    ),
+    "settings_server_tokenHint": MessageLookupByLibrary.simpleMessage("Пароль"),
+    "settings_server_urlHint": MessageLookupByLibrary.simpleMessage(
+      "URL / IP сервера",
+    ),
+    "settings_themeMode_Title": MessageLookupByLibrary.simpleMessage("Тема"),
+    "settings_themeMode_desc": MessageLookupByLibrary.simpleMessage(
+      "Светлая или тёмная тема",
     ),
     "stat_page_alreadyGotToday": MessageLookupByLibrary.simpleMessage(
       "Сегодня уже получил что-то",
@@ -145,6 +217,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "statistic_page_switchYearDisplay": m5,
     "statistic_page_visits": m6,
     "statistic_page_xAxis": m7,
+    "success": MessageLookupByLibrary.simpleMessage("Успех"),
+    "today": MessageLookupByLibrary.simpleMessage("сегодня"),
+    "update_failed": MessageLookupByLibrary.simpleMessage(
+      "Обновление не удалось",
+    ),
+    "update_success": MessageLookupByLibrary.simpleMessage(
+      "Обновление успешно",
+    ),
+    "uuId_fail_keyboard": MessageLookupByLibrary.simpleMessage(
+      "Ошибка проверки UUID!\nУбедитесь, что язык клавиатуры (Левый Alt + Левый Shift) совпадает с языком сканера штрих-кодов!",
+    ),
     "yes": MessageLookupByLibrary.simpleMessage("Да"),
   };
 }

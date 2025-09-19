@@ -47,6 +47,12 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "accept": MessageLookupByLibrary.simpleMessage("Akzeptieren"),
+    "add_failed": MessageLookupByLibrary.simpleMessage(
+      "Hinzufügen fehlgeschlagen",
+    ),
+    "add_success": MessageLookupByLibrary.simpleMessage(
+      "Hinzufügen erfolgreich",
+    ),
     "add_user_birthDay": MessageLookupByLibrary.simpleMessage(
       "Geburtsdatum wählen*",
     ),
@@ -66,6 +72,38 @@ class MessageLookup extends MessageLookupByLibrary {
       "Strohhalm Kleiderausgabe",
     ),
     "back": MessageLookupByLibrary.simpleMessage("Zurück"),
+    "banner_designer_bannerDesignerSubTitle":
+        MessageLookupByLibrary.simpleMessage("Designer"),
+    "banner_designer_bannerDesignerTitle": MessageLookupByLibrary.simpleMessage(
+      "Banner Designer",
+    ),
+    "banner_designer_bannerImageSubTitle": MessageLookupByLibrary.simpleMessage(
+      "Bild",
+    ),
+    "banner_designer_bannerImageTitle": MessageLookupByLibrary.simpleMessage(
+      "Banner Bild",
+    ),
+    "banner_designer_delete": MessageLookupByLibrary.simpleMessage("Löschen"),
+    "banner_designer_existing": MessageLookupByLibrary.simpleMessage(
+      "Vorherige",
+    ),
+    "banner_designer_new": MessageLookupByLibrary.simpleMessage("Neu"),
+    "banner_designer_noImage": MessageLookupByLibrary.simpleMessage(
+      "Kein Bild ausgewählt",
+    ),
+    "banner_designer_pick": MessageLookupByLibrary.simpleMessage("Auswählen"),
+    "banner_designer_picked": MessageLookupByLibrary.simpleMessage(
+      "Gerade Ausgewählt!",
+    ),
+    "banner_designer_titleText": MessageLookupByLibrary.simpleMessage(
+      "Überschrift",
+    ),
+    "banner_designer_uploadImage": MessageLookupByLibrary.simpleMessage(
+      "Bild hochladen",
+    ),
+    "banner_designer_wrongAspectRatio": MessageLookupByLibrary.simpleMessage(
+      "Das Seitenverhältnis des Bildes ist zu klein!\nSollte mindestens 6:1 sein",
+    ),
     "barCode_scanner_error": MessageLookupByLibrary.simpleMessage(
       "Scanne einen BarCode!",
     ),
@@ -87,6 +125,31 @@ class MessageLookup extends MessageLookupByLibrary {
       "War <bold>heute</bold> da",
     ),
     "delete": MessageLookupByLibrary.simpleMessage("Löschen"),
+    "deletion_failed": MessageLookupByLibrary.simpleMessage(
+      "Löschen fehlgeschlagen",
+    ),
+    "deletion_request_page_delete": MessageLookupByLibrary.simpleMessage(
+      "Besucher löschen",
+    ),
+    "deletion_request_page_deleteAll": MessageLookupByLibrary.simpleMessage(
+      "Alle löschen",
+    ),
+    "deletion_request_page_deleteAllDesc": MessageLookupByLibrary.simpleMessage(
+      "Alle inaktiven Besucher auf einmal löschen",
+    ),
+    "deletion_request_page_lastVisit": MessageLookupByLibrary.simpleMessage(
+      "Letzter Besuch:",
+    ),
+    "deletion_request_page_resetUser": MessageLookupByLibrary.simpleMessage(
+      "Besucher zurücksetzen",
+    ),
+    "deletion_request_page_title": MessageLookupByLibrary.simpleMessage(
+      "Inaktive Besucher",
+    ),
+    "deletion_success": MessageLookupByLibrary.simpleMessage(
+      "Löschen erfolgreich",
+    ),
+    "fail": MessageLookupByLibrary.simpleMessage("Fehlschlag"),
     "language_de": MessageLookupByLibrary.simpleMessage("Deutsch"),
     "language_en": MessageLookupByLibrary.simpleMessage("Englisch"),
     "language_ru": MessageLookupByLibrary.simpleMessage("Russisch"),
@@ -109,20 +172,53 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_statistic": MessageLookupByLibrary.simpleMessage("Statistiken"),
     "main_page_theme": m3,
     "no": MessageLookupByLibrary.simpleMessage("Nein"),
+    "number_fail": MessageLookupByLibrary.simpleMessage(
+      "Keine erlaubte Zahl!\nBitte gib eine korrekte Zahl ein",
+    ),
     "print": MessageLookupByLibrary.simpleMessage("Drucken"),
     "qr_code_print": MessageLookupByLibrary.simpleMessage("QR-Code Drucken"),
     "qr_code_share": MessageLookupByLibrary.simpleMessage("QR-Code Teilen"),
+    "save": MessageLookupByLibrary.simpleMessage("Speichern"),
+    "settings": MessageLookupByLibrary.simpleMessage("Einstellungen"),
+    "settings_banner_desc": MessageLookupByLibrary.simpleMessage(
+      "Bild das oben auf der Seite dargestellt wird.\\nWird außerdem als Header fürs drucken verwendet",
+    ),
+    "settings_banner_title": MessageLookupByLibrary.simpleMessage(
+      "Banner / Bild",
+    ),
+    "settings_color_desc": MessageLookupByLibrary.simpleMessage(
+      "Akzentfarbe für die Anwendung",
+    ),
+    "settings_color_title": MessageLookupByLibrary.simpleMessage("Farbe"),
+    "settings_pick_Color": MessageLookupByLibrary.simpleMessage("Farbe wählen"),
+    "settings_server_desc": MessageLookupByLibrary.simpleMessage(
+      "Falls ein Server verwendet werden soll können hier Url und Passwort eingegeben werden",
+    ),
+    "settings_server_switch": MessageLookupByLibrary.simpleMessage(
+      "Server verwenden?",
+    ),
+    "settings_server_title": MessageLookupByLibrary.simpleMessage(
+      "Server Einstellungen",
+    ),
+    "settings_server_tokenHint": MessageLookupByLibrary.simpleMessage(
+      "Passwort",
+    ),
+    "settings_server_urlHint": MessageLookupByLibrary.simpleMessage(
+      "Server Url / IP",
+    ),
+    "settings_themeMode_Title": MessageLookupByLibrary.simpleMessage("Thema"),
+    "settings_themeMode_desc": MessageLookupByLibrary.simpleMessage(
+      "Heller oder Dunkler Modus",
+    ),
     "stat_page_alreadyGotToday": MessageLookupByLibrary.simpleMessage(
       "Hat heute schon was bekommen",
     ),
     "stat_page_children": MessageLookupByLibrary.simpleMessage("Hat Kinder:"),
     "stat_page_country": MessageLookupByLibrary.simpleMessage("Herkunftsland:"),
     "stat_page_lastTimeTookClothes": MessageLookupByLibrary.simpleMessage(
-      "Das letzte mal Kleidung ausgeliehen am:",
+      "Letzter Besuch am am:",
     ),
-    "stat_page_miscellaneous": MessageLookupByLibrary.simpleMessage(
-      "Sonstiges:",
-    ),
+    "stat_page_miscellaneous": MessageLookupByLibrary.simpleMessage("Notizen:"),
     "stat_page_removeLastVisit": MessageLookupByLibrary.simpleMessage(
       "Letzten\nBesuch löschen",
     ),
@@ -133,9 +229,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "stat_page_savedVisit": MessageLookupByLibrary.simpleMessage(
       "Besuch eingetragen!",
     ),
-    "stat_page_visits": MessageLookupByLibrary.simpleMessage(
-      "Besuche insgesamt:",
-    ),
+    "stat_page_visits": MessageLookupByLibrary.simpleMessage("Besuche:"),
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Anzahl an Besuchen",
     ),
@@ -143,6 +237,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "statistic_page_switchYearDisplay": m5,
     "statistic_page_visits": m6,
     "statistic_page_xAxis": m7,
+    "success": MessageLookupByLibrary.simpleMessage("Erfolg"),
+    "today": MessageLookupByLibrary.simpleMessage("Heute"),
+    "update": MessageLookupByLibrary.simpleMessage("Updaten"),
+    "update_failed": MessageLookupByLibrary.simpleMessage(
+      "Update fehlgeschlagen",
+    ),
+    "update_success": MessageLookupByLibrary.simpleMessage(
+      "Update erfolgreich",
+    ),
+    "uuId_fail_keyboard": MessageLookupByLibrary.simpleMessage(
+      "uuId-Check Fehlgeschlagen!!\nStelle sicher, dass die Tastatur/System-Sprache (Links-Alt + Links-Umschalt) die gleiche ist, die auch beim Scanner eingestellt ist!",
+    ),
     "yes": MessageLookupByLibrary.simpleMessage("Ja"),
   };
 }

@@ -9,6 +9,10 @@
   "delete": "Удалить",
   "back": "Назад",
   "close": "Закрыть",
+  "today": "сегодня",
+  "save": "Сохранить",
+  "success": "Успех",
+  "fail": "Ошибка",
 
   "application_name": "Распределение одежды Straw",
   "language_de": "Немецкий",
@@ -61,5 +65,41 @@
   "statistic_page_numberOfVisits": "Количество посещений",
   "statistic_page_visits": "{count, plural, one{Посещение} other{Посещения}}",
   "statistic_page_switchYearDisplay": "{showYear, select, true{к просмотру по месяцам} false{к просмотру по годам}}",
-  "statistic_page_show_top_countries": "Показать топ {cutOffNumber} стран из {overAllNumberOfCountries}"
+  "statistic_page_show_top_countries": "Показать топ {cutOffNumber} стран из {overAllNumberOfCountries}",
+
+  "settings": "Настройки",
+  "settings_themeMode_Title": "Тема",
+  "settings_themeMode_desc": "Светлая или тёмная тема",
+  "settings_banner_title": "Баннер / Изображение",
+  "settings_banner_desc": "Изображение, отображаемое в верхней части страницы.\nТакже используется как заголовок для печати",
+  "settings_pick_Color": "Выбрать цвет",
+  "settings_color_title": "Цвет",
+  "settings_color_desc": "Акцентный цвет приложения",
+  "settings_server_title": "Настройки сервера",
+  "settings_server_desc": "Если используется сервер, здесь можно ввести URL и пароль",
+  "settings_server_switch": "Использовать сервер?",
+  "settings_server_urlHint": "URL / IP сервера",
+  "settings_server_tokenHint": "Пароль",
+
+  "banner_designer_wrongAspectRatio": "Соотношение сторон изображения слишком маленькое!\nОно должно быть не менее 6:1",
+  "banner_designer_pick": "Выбрать",
+  "banner_designer_picked": "Только что выбрано!",
+  "banner_designer_delete": "Удалить",
+  "banner_designer_new": "Новое",
+  "banner_designer_existing": "Существующее",
+  "banner_designer_bannerImageSubTitle": "Изображение",
+  "banner_designer_bannerDesignerSubTitle": "Конструктор",
+  "banner_designer_bannerImageTitle": "Изображение баннера",
+  "banner_designer_bannerDesignerTitle": "Конструктор баннера",
+  "banner_designer_titleText": "Заголовок",
+  "banner_designer_noImage": "Изображение не выбрано",
+  "banner_designer_uploadImage": "Загрузить изображение",
+
+  "deletion_failed": "Удаление не удалось",
+  "deletion_success": "Удаление успешно",
+  "update_failed": "Обновление не удалось",
+  "update_success": "Обновление успешно",
+  "number_fail": "Неверное число!\nПожалуйста, введите правильное число",
+  "uuId_fail_keyboard": "Ошибка проверки UUID!\nУбедитесь, что язык клавиатуры (Левый Alt + Левый Shift) совпадает с языком сканера штрих-кодов!"
+
 }
