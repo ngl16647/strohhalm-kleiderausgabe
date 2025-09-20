@@ -1,11 +1,9 @@
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
-import 'package:strohhalm_app/database_helper.dart';
 import 'package:strohhalm_app/dialog_helper.dart';
 import 'package:strohhalm_app/export_csv.dart';
 import 'package:strohhalm_app/http_helper.dart';
@@ -485,89 +483,3 @@ class _SettingsPageState extends State<SettingsPage> {
    });
   }
 }
-
-/* TODO: Up/download to/from server
-if(!serverSettingsAreSetAndSame) Row(
-                              children: [
-                                Expanded(
-                                  child: ElevatedButton(onPressed: () async {
-
-                                    var manager = AppSettingsManager.instance;
-                                    manager.setServerUrl(_serverController.text);
-                                    await manager.setToken(_tokenController.text);
-                                    manager.setDarkMode(_darkMode);
-                                    manager.setUseServer(_useServer);
-
-                                    checkServerSettings();
-                                    //TODO: Check If either database is empty
-                                    var customers = await HttpHelper().searchCustomers(query: ""); //Also checks if connection exists
-                                    var customersLocal = await DatabaseHelper().countAllUsers();
-                                    onlineDbIsEmpty = customers == null || customers.isEmpty;
-                                    localDbIsEmpty = customersLocal == 0;
-                                  },
-                                    child: Text("Save Server-Settings for First-Server-Setup-Options"),
-                                  ),
-                                )
-                              ],
-                            ),
-                            SizedBox(height: 10),
-                            if((localDbIsEmpty || onlineDbIsEmpty) && serverSettingsAreSetAndSame) Row(
-                              children: [
-                                Text("Leere Datenbank Operationen", textAlign: TextAlign.start, style: Theme.of(context).textTheme.titleSmall,),
-                              ],
-                            ),
-                            SizedBox(height: 8,),
-                            //TODO: if((!onlineDbIsEmpty || !localDbIsEmpty) && serverSettingsChecked)
-                            if(serverSettingsAreSetAndSame && (isOnline == null || !isOnline!) && (localDbIsEmpty || onlineDbIsEmpty))
-                              Row(
-                              children: [
-                                Expanded(
-                                    child: ElevatedButton.icon(
-                                        onPressed: () async {
-                                          isOnline = await HttpHelper().isServerOnline();
-                                          if(!isOnline!) Utilities.showToast(context: context, title: S.of(context).fail, description: "Keine Verbindung", isError: true);
-                                          setState(() {
-                                            isOnline;
-                                          });
-                                        },
-                                        label: Text(isOnline == null ? "Check Connection before up/downloading" : !isOnline! ? "Failed! Try Again?" : "Connected!"),
-                                        icon: Icon(isOnline == null || !isOnline! ? Icons.refresh : Icons.check_circle)
-                                    )
-                                )
-                              ],
-                            ),
-                            if(isOnline != null && isOnline!) Row(
-                              children: [
-                                if(onlineDbIsEmpty || true)Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      Text("Online Datenbank ist leer!"),
-                                      ElevatedButton(
-                                          onPressed: (){
-                                            //TODO: Upload local to Server (if user exists => get id from server => upload visits if visitTime doesnt exist online (could be problematic with lastvisit)
-                                            //TODO: OR just check if local lastVisit > server lastVisist
-                                            //TODO: OR dont upload at all if exists
-                                          },
-                                          child: Text("Upload to Server")
-                                      ),
-                                    ],
-                                  )
-                                ),
-                                if(localDbIsEmpty || true)Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      Text("Lokale Datenbank ist leer!"),
-                                      ElevatedButton(
-                                          onPressed: ()async{
-                                            await DataBaseExportFunctions.importCSVFromServer(context);
-                                          },
-                                          child: Text("Download from Server")
-                                      )
-                                    ],
-                                  ),
-                                )
-                              ],
-                            )
- */

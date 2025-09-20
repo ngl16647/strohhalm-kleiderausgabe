@@ -424,7 +424,6 @@ class HttpHelper {
     if(!useServer || baseUrl.isEmpty) return null;
 
     final uri = buildUri(
-      //host: baseUrl,
       path: "/stats/customers",
     );
 
@@ -449,14 +448,22 @@ class HttpHelper {
     }
   }
 
-
-
   Future<void> uploadCsv(File csvFile) async {
-    // URL des Endpoints
-    final uri = Uri.parse('http://example.com/stats/import');
+    if(!useServer || baseUrl.isEmpty) return;
 
-    // Multipart Request erstellen
-    var request = http.MultipartRequest('POST', uri);
+    final uri = buildUri(
+      path: "/stats/import",
+    );
+
+    var request = http.MultipartRequest(
+        'POST',
+        uri,
+    );
+
+    request.headers.addAll({
+      "Authorization": "Bearer $key",
+      //"Content-Type": "multipart/form-data",
+    });
 
     // Datei hinzufügen
     request.files.add(
@@ -467,10 +474,10 @@ class HttpHelper {
     );
 
     try {
-      // Request senden
+
       var response = await request.send();
 
-      // Response auslesen
+
       if (response.statusCode == 200) {
         print('Upload erfolgreich!');
         final respStr = await response.stream.bytesToString();
