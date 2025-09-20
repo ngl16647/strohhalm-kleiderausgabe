@@ -66,7 +66,7 @@
   "statistic_page_numberOfVisits": "Anzahl an Besuchen",
   "statistic_page_visits": "{count, plural, one{Besuch} other{Besuche}}",
   "statistic_page_switchYearDisplay": "{showYear, select, true{zur Monatsansicht} false{zur Jahresansicht}}",
-  "statistic_page_show_top_countries": "Zeige die Top {cutOffNumber} Länder von {overAllNumberOfCountries}",
+  "statistic_page_show_top_countries": "Zeige die Top {cutOffNumber} von {overAllNumberOfCountries} Ländern",
 
   "settings": "Einstellungen",
   "settings_themeMode_Title": "Thema",
@@ -98,10 +98,10 @@
 
   "deletion_request_page_title": "Inaktive Besucher",
   "deletion_request_page_lastVisit": "Letzter Besuch:",
-  "deletion_request_page_resetUser": "Besucher zurücksetzen",
+  "deletion_request_page_resetUser": "Der letzte Besuch des Besuchers wird auf „Noch Nie“ gesetzt",
   "deletion_request_page_delete": "Besucher löschen",
   "deletion_request_page_deleteAll": "Alle löschen",
-  "deletion_request_page_deleteAllDesc": "Alle inaktiven Besucher auf einmal löschen",
+  "deletion_request_page_deleteAllDesc": "Alle inaktiven Besucher auf einmal zum Löschen markieren",
 
   "deletion_failed": "Löschen fehlgeschlagen",
   "deletion_success": "Löschen erfolgreich",
@@ -110,5 +110,19 @@
   "update_failed": "Update fehlgeschlagen",
   "update_success": "Update erfolgreich",
   "number_fail": "Keine erlaubte Zahl!\nBitte gib eine korrekte Zahl ein",
-  "uuId_fail_keyboard": "uuId-Check Fehlgeschlagen!!\nStelle sicher, dass die Tastatur/System-Sprache (Links-Alt + Links-Umschalt) die gleiche ist, die auch beim Scanner eingestellt ist!"
+  "uuId_fail_keyboard": "uuId-Check Fehlgeschlagen!!\nStelle sicher, dass die Tastatur/System-Sprache (Links-Alt + Links-Umschalt) die gleiche ist, die auch beim Scanner eingestellt ist!",
+
+  "visit_plural": "{count, plural, =1{Besuch} other{Besuche}}",
+  "statistic_page_visitsPerVisitor": "{visitorCount, plural, =1{{visitorCount} Besucher} other{{visitorCount} Besucher}}\nmit {visitCount} {visitCount, plural, =1{Besuch} other{Besuche}}",
+  "statistic_page_visitsPerPerson": "Besucher pro Besuch-Anzahl",
+  "statistic_page_visitsPerPerson_Persons": "Anzahl von Besuchern",
+  "statistic_page_visitsPerPerson_Visits": "Anzahl von Besuchern",
+  "statistic_page_noData": "Keine Daten oder Internetverbindung.\nSobald wieder Internet verfügbar ist werden die Daten automatisch geladen!",
+
+
+
+  "same_user_exists": "Benutzer mit gleichen Daten existiert schon!",
+  "no_internet": "Keine Verbindung zum Internet",
+  "no_server": "Keine Verbindung zum Server",
+  "reconnected": "Verbindung wieder hergestellt!"
 }

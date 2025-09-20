@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:strohhalm_app/main.dart';
 import 'package:strohhalm_app/utilities.dart';
 import 'app_settings.dart';
 import 'generated/l10n.dart';
@@ -46,15 +47,15 @@ class BannerImage{
     //bool leftExists = leftPath != null ? await File(leftPath).exists() : false;
     //bool rightExists = rightPath != null ? await File(rightPath).exists() : false;
 
-    Future<File?> resolveFile(String? fileName) async {
+    Future<File?> joinAndCheckFile(String? fileName) async {
       if (fileName == null || fileName.isEmpty) return null;
       final path = join(bannerDir, fileName);
       return await File(path).exists() ? File(path) : null;
     }
 
     return BannerImage(
-      leftImage: await resolveFile(bannerMap["imageLeft"]),
-      rightImage: await resolveFile(bannerMap["imageRight"]),
+      leftImage: await joinAndCheckFile(bannerMap["imageLeft"]),
+      rightImage: await joinAndCheckFile(bannerMap["imageRight"]),
       title: bannerMap["title"] == "" ? null : bannerMap["title"],
     );
   }
@@ -82,9 +83,11 @@ class BannerDesignerState extends State<BannerDesigner>{
   BannerImage? bannerDesignerImage;
   final Color _selectedColor = Color.fromRGBO(169, 171, 25, 1.0);
   bool _useBannerDesigner = true;
+  bool _isMobile = false;
 
   @override
   void initState() {
+    _isMobile = MyApp().getDeviceType() == DeviceType.mobile;
     _useBannerDesigner = widget.useDesigner;
     _bannerWholeImage = widget.wholeBannerImage;
     bannerDesignerImage = widget.bannerDesignerImage ?? BannerImage();
@@ -174,7 +177,7 @@ class BannerDesignerState extends State<BannerDesigner>{
         builder: (context){
           return Dialog(
             constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width*0.6
+                maxWidth: _isMobile ? double.infinity : MediaQuery.of(context).size.width*0.6
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -190,7 +193,7 @@ class BannerDesignerState extends State<BannerDesigner>{
                 ),
                 Expanded(
                   child: GridView.count(
-                    crossAxisCount: 2,
+                    crossAxisCount:_isMobile ? 1 : 2,
                     childAspectRatio: 2,
                     children: [
                       for(int i= 0; i < files.length; i++)...{
@@ -210,11 +213,11 @@ class BannerDesignerState extends State<BannerDesigner>{
                                       borderRadius: BorderRadius.circular(12),
                                       child: SizedBox(
                                         height: 75,
-                                        child:  Image.file(files.elementAt(i)),
+                                        child:  Image.file(files.elementAt(i), fit: BoxFit.fitHeight,),
                                       ),
                                     )
                                 ),
-                                _bannerWholeImage == null || files[i].path != _bannerWholeImage!.path ? Row(
+                                aspectRatio == null || _bannerWholeImage == null || files[i].path != _bannerWholeImage!.path ? Row(
                                   children: [
                                     Expanded(
                                         flex: 3,
@@ -272,7 +275,12 @@ class BannerDesignerState extends State<BannerDesigner>{
     required VoidCallback onAddOrDelete,
     required VoidCallback onPick,
   }){
-    return Stack(
+    double maxWidth = _isMobile ? MediaQuery.of(context).size.width*0.2 : MediaQuery.of(context).size.width*0.3;
+    return ConstrainedBox(
+        constraints: BoxConstraints(
+        maxWidth: maxWidth
+    ),
+    child:  Stack(
       alignment: AlignmentGeometry.center,
       children: [
         if(dynBannerImage != null) SizedBox(
@@ -282,6 +290,34 @@ class BannerDesignerState extends State<BannerDesigner>{
             fit: BoxFit.contain,
           ),
         ),
+        _isMobile
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: (){
+                      onAddOrDelete();
+                    },
+                    icon: Icon(dynBannerImage != null ? Icons.delete : Icons.add_a_photo, size: 22,),
+                    style: TextButton.styleFrom(
+                        minimumSize: Size(20, 25),
+                        backgroundColor: Colors.transparent,
+                        alignment: AlignmentGeometry.center
+                    ),
+                  ),
+                  if(dynBannerImage == null)IconButton(
+                    onPressed: () async {
+                      onPick();
+                    },
+                    icon: Icon(Icons.photo_album, size: 22,),
+                    style: TextButton.styleFrom(
+                        minimumSize: Size(20, 25),
+                        backgroundColor: Colors.transparent
+                    ),
+                  )
+                ],
+              )
+            :
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -290,7 +326,7 @@ class BannerDesignerState extends State<BannerDesigner>{
                 onAddOrDelete();
               },
               icon: Icon(dynBannerImage != null ? Icons.delete : Icons.add_a_photo, size: 22,),
-              label : Text(dynBannerImage != null ? S.of(context).delete : S.of(context).banner_designer_new),
+              label :  Text(dynBannerImage != null ? S.of(context).delete : S.of(context).banner_designer_new),
               style: TextButton.styleFrom(
                   minimumSize: Size(20, 25),
                   backgroundColor: Colors.transparent,
@@ -310,7 +346,8 @@ class BannerDesignerState extends State<BannerDesigner>{
             )
           ],
         )
-      ],
+      ]
+    ),
     );
   }
 
@@ -338,7 +375,7 @@ class BannerDesignerState extends State<BannerDesigner>{
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     Expanded(
-                      flex: 1,
+                      flex: 0,
                       child: ElevatedButton.icon(
                         onPressed: () => _pickImage(context, null),
                         label:  Text(S.of(context).banner_designer_uploadImage),
@@ -396,27 +433,29 @@ class BannerDesignerState extends State<BannerDesigner>{
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Row(
+                          spacing: 2,
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             buildDynamicBannerButtons(
-                                context: context,
-                                dynBannerImage: bannerDesignerImage?.leftImage,
-                                onAddOrDelete: (){
-                                  if(bannerDesignerImage?.leftImage != null){
-                                    bannerDesignerImage?.leftImage = null;
-                                  } else {
-                                    _pickImage(context, true);
-                                  }
-                                  setState(() {});
-                                },
-                                onPick: () async {
-                                  var result = await showExistingImagePicker(context, null);
-                                  if(result != null){
-                                    setState(() {
-                                      bannerDesignerImage?.leftImage = result;
-                                    });
-                                  }
-                                }),
+                                  context: context,
+                                  dynBannerImage: bannerDesignerImage?.leftImage,
+                                  onAddOrDelete: (){
+                                    if(bannerDesignerImage?.leftImage != null){
+                                      bannerDesignerImage?.leftImage = null;
+                                    } else {
+                                      _pickImage(context, true);
+                                    }
+                                    setState(() {});
+                                  },
+                                  onPick: () async {
+                                    var result = await showExistingImagePicker(context, null);
+                                    if(result != null){
+                                      setState(() {
+                                        bannerDesignerImage?.leftImage = result;
+                                      });
+                                    }
+                                  },
+                            ),
                             Expanded(
                               child: TextField(
                                 controller: _bannerTitleController,
@@ -431,7 +470,6 @@ class BannerDesignerState extends State<BannerDesigner>{
                                 },
                               ),
                             ),
-                            SizedBox(width: 40,),
                             buildDynamicBannerButtons(
                                 context: context,
                                 dynBannerImage: bannerDesignerImage?.rightImage,
@@ -563,7 +601,7 @@ class _CustomTabsState extends State<CustomTabs> {
           ],
         ),
         //Tab-Body
-        ConstrainedBox(
+        Expanded(child: ConstrainedBox(
           constraints: BoxConstraints(
               minHeight: 160
           ),
@@ -583,7 +621,7 @@ class _CustomTabsState extends State<CustomTabs> {
                   .slide(begin: Offset(0, 0.2)),
             ),
 
-          ),)
+          ),))
       ],
     );
   }

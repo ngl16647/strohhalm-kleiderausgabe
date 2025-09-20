@@ -24,18 +24,20 @@ class User{
   });
 
   User copyWith({
+    int? newId,
+    String? newUuId,
     String? firstName,
     String? lastName,
     DateTime? birthDay,
     String? country,
     bool? hasChild,
     String? notes,
-    List<TookItem>? tookItems,
+    List<Visit>? tookItems,
     DateTime? lastVisit
   }) {
     return User(
-      id: id ,
-      uuId: uuId,
+      id: newId ?? id ,
+      uuId: newUuId ?? uuId,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       birthDay: birthDay ?? this.birthDay,
@@ -60,6 +62,14 @@ class User{
     );
   }
 
+  bool equals(User user){
+    return user.firstName == firstName &&
+           user.lastName == lastName &&
+           user.birthDay == birthDay &&
+           user.country == country &&
+           user.notes == notes;
+  }
+
   @override
   String toString() {
     return "User(id: $id, uuId: $uuId, firstName: $firstName, lastName: $lastName, "
@@ -68,23 +78,23 @@ class User{
   }
 }
 
-class TookItem{
+class Visit{
   final int id;
   final int? userId; //TODO: While testing, was being changed to null if user deleted, now gets set to -1
   final DateTime tookTime;
-  final bool? wasBedSheet;
 
-  const TookItem({
+  const Visit({
     required this.id,
     required this.userId,
     required this.tookTime,
-    this.wasBedSheet});
+  });
 
-  static TookItem fromMap(Map map){
-    return TookItem(
-        id: map["visitId"] ?? map["id"], //A litte hacky
+  static Visit fromMap(Map map){
+    //A litte hacky
+    return Visit(
+        id: map["visitId"] ?? map["id"],
         userId: map["customerId"] ?? map["userId"] ?? map["customer_id"],
-        tookTime: DateTime.parse(map["visitDate"] ?? map["visit_date"])
+        tookTime: DateTime.parse(map["visitDate"] ?? map["visit_date"]),
     );
   }
 

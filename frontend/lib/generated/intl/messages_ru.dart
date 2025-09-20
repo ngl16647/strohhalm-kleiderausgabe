@@ -41,7 +41,7 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m6(count) =>
       "${Intl.plural(count, one: 'Посещение', other: 'Посещения')}";
 
-  static String m7(showYear) =>
+  static String m8(showYear) =>
       "${Intl.select(showYear, {'true': 'Месяц', 'false': 'День'})}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -216,7 +216,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "statistic_page_show_top_countries": m4,
     "statistic_page_switchYearDisplay": m5,
     "statistic_page_visits": m6,
-    "statistic_page_xAxis": m7,
+    "statistic_page_xAxis": m8,
     "success": MessageLookupByLibrary.simpleMessage("Успех"),
     "today": MessageLookupByLibrary.simpleMessage("сегодня"),
     "update_failed": MessageLookupByLibrary.simpleMessage(

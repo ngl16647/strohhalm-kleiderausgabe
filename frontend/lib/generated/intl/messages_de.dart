@@ -33,7 +33,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "${Intl.select(isDarkMode, {'true': 'Helle Ansicht', 'false': 'Dunkle Ansicht'})}";
 
   static String m4(cutOffNumber, overAllNumberOfCountries) =>
-      "Zeige die Top ${cutOffNumber} Länder von ${overAllNumberOfCountries}";
+      "Zeige die Top ${cutOffNumber} von ${overAllNumberOfCountries} Ländern";
 
   static String m5(showYear) =>
       "${Intl.select(showYear, {'true': 'zur Monatsansicht', 'false': 'zur Jahresansicht'})}";
@@ -41,8 +41,14 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m6(count) =>
       "${Intl.plural(count, one: 'Besuch', other: 'Besuche')}";
 
-  static String m7(showYear) =>
+  static String m7(visitorCount, visitCount) =>
+      "${Intl.plural(visitorCount, one: '${visitorCount} Besucher', other: '${visitorCount} Besucher')}\nmit ${visitCount} ${Intl.plural(visitCount, one: 'Besuch', other: 'Besuche')}";
+
+  static String m8(showYear) =>
       "${Intl.select(showYear, {'true': 'Monat', 'false': 'Tag'})}";
+
+  static String m9(count) =>
+      "${Intl.plural(count, one: 'Besuch', other: 'Besuche')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -135,13 +141,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Alle löschen",
     ),
     "deletion_request_page_deleteAllDesc": MessageLookupByLibrary.simpleMessage(
-      "Alle inaktiven Besucher auf einmal löschen",
+      "Alle inaktiven Besucher auf einmal zum Löschen markieren",
     ),
     "deletion_request_page_lastVisit": MessageLookupByLibrary.simpleMessage(
       "Letzter Besuch:",
     ),
     "deletion_request_page_resetUser": MessageLookupByLibrary.simpleMessage(
-      "Besucher zurücksetzen",
+      "Der letzte Besuch des Besuchers wird auf „Noch Nie“ gesetzt",
     ),
     "deletion_request_page_title": MessageLookupByLibrary.simpleMessage(
       "Inaktive Besucher",
@@ -172,12 +178,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_statistic": MessageLookupByLibrary.simpleMessage("Statistiken"),
     "main_page_theme": m3,
     "no": MessageLookupByLibrary.simpleMessage("Nein"),
+    "no_internet": MessageLookupByLibrary.simpleMessage(
+      "Keine Verbindung zum Internet",
+    ),
+    "no_server": MessageLookupByLibrary.simpleMessage(
+      "Keine Verbindung zum Server",
+    ),
     "number_fail": MessageLookupByLibrary.simpleMessage(
       "Keine erlaubte Zahl!\nBitte gib eine korrekte Zahl ein",
     ),
     "print": MessageLookupByLibrary.simpleMessage("Drucken"),
     "qr_code_print": MessageLookupByLibrary.simpleMessage("QR-Code Drucken"),
     "qr_code_share": MessageLookupByLibrary.simpleMessage("QR-Code Teilen"),
+    "reconnected": MessageLookupByLibrary.simpleMessage(
+      "Verbindung wieder hergestellt!",
+    ),
+    "same_user_exists": MessageLookupByLibrary.simpleMessage(
+      "Benutzer mit gleichen Daten existiert schon!",
+    ),
     "save": MessageLookupByLibrary.simpleMessage("Speichern"),
     "settings": MessageLookupByLibrary.simpleMessage("Einstellungen"),
     "settings_banner_desc": MessageLookupByLibrary.simpleMessage(
@@ -230,13 +248,24 @@ class MessageLookup extends MessageLookupByLibrary {
       "Besuch eingetragen!",
     ),
     "stat_page_visits": MessageLookupByLibrary.simpleMessage("Besuche:"),
+    "statistic_page_noData": MessageLookupByLibrary.simpleMessage(
+      "Keine Daten oder Internetverbindung.\nSobald wieder Internet verfügbar ist werden die Daten automatisch geladen!",
+    ),
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Anzahl an Besuchen",
     ),
     "statistic_page_show_top_countries": m4,
     "statistic_page_switchYearDisplay": m5,
     "statistic_page_visits": m6,
-    "statistic_page_xAxis": m7,
+    "statistic_page_visitsPerPerson": MessageLookupByLibrary.simpleMessage(
+      "Besucher pro Besuch-Anzahl",
+    ),
+    "statistic_page_visitsPerPerson_Persons":
+        MessageLookupByLibrary.simpleMessage("Anzahl von Besuchern"),
+    "statistic_page_visitsPerPerson_Visits":
+        MessageLookupByLibrary.simpleMessage("Anzahl von Besuchern"),
+    "statistic_page_visitsPerVisitor": m7,
+    "statistic_page_xAxis": m8,
     "success": MessageLookupByLibrary.simpleMessage("Erfolg"),
     "today": MessageLookupByLibrary.simpleMessage("Heute"),
     "update": MessageLookupByLibrary.simpleMessage("Updaten"),
@@ -249,6 +278,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "uuId_fail_keyboard": MessageLookupByLibrary.simpleMessage(
       "uuId-Check Fehlgeschlagen!!\nStelle sicher, dass die Tastatur/System-Sprache (Links-Alt + Links-Umschalt) die gleiche ist, die auch beim Scanner eingestellt ist!",
     ),
+    "visit_plural": m9,
     "yes": MessageLookupByLibrary.simpleMessage("Ja"),
   };
 }

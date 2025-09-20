@@ -1,10 +1,12 @@
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:strohhalm_app/app_settings.dart';
+import 'package:strohhalm_app/check_connection.dart';
 import 'package:strohhalm_app/http_helper.dart';
 import 'package:strohhalm_app/main.dart';
-import 'package:strohhalm_app/user.dart';
+import 'package:strohhalm_app/user_and_visit.dart';
 import 'package:strohhalm_app/utilities.dart';
 import 'package:uuid/uuid.dart';
 import 'database_helper.dart';
@@ -24,7 +26,10 @@ class AddUserReturn{
 class AddUserDialog extends StatefulWidget {
   final User? user;
 
-  static Future<dynamic> showAddUpdateUserDialog(BuildContext context, User? user) async {
+  static Future<dynamic> showAddUpdateUserDialog({
+    required BuildContext context,
+    User? user
+  }) async {
     return await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -45,7 +50,7 @@ class AddUserDialog extends StatefulWidget {
 class AddUserDialogState extends State<AddUserDialog> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  final _miscellaneousController = TextEditingController();
+  final _noteController = TextEditingController();
   DateTime? _selectedDate;
   Country _selectedCountry = Country.worldWide;
   bool uploading = false;
@@ -57,7 +62,7 @@ class AddUserDialogState extends State<AddUserDialog> {
     if(widget.user != null){
       _firstNameController.text = widget.user!.firstName;
       _lastNameController.text = widget.user!.lastName;
-      _miscellaneousController.text = widget.user!.notes ?? "";
+      _noteController.text = widget.user!.notes ?? "";
 
       _selectedDate = widget.user!.birthDay;
       _selectedCountry = Country.tryParse(widget.user!.country) ?? Country.worldWide;
@@ -165,7 +170,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                        CountryLocalizations.of(context)?.countryName(countryCode: _selectedCountry.countryCode) ?? _selectedCountry.name,
+                          Utilities.getLocalizedCountryNameFromCode(context, _selectedCountry.countryCode),
                           style: TextStyle(
                             color: Theme.of(context).textTheme.bodyMedium!.color?.withAlpha(150),
                           ),
@@ -176,13 +181,15 @@ class AddUserDialogState extends State<AddUserDialog> {
                   ),
                 ),
                 TextField(
+                  minLines: 1,
+                  maxLines: 5,
                   decoration: InputDecoration(
                     hintText: S.of(context).add_user_miscellaneous,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  controller: _miscellaneousController,
+                  controller: _noteController,
                 ),
               ],
             ),
@@ -226,55 +233,81 @@ class AddUserDialogState extends State<AddUserDialog> {
                             lastName: _lastNameController.text,
                             birthDay: _selectedDate!,
                             country: _selectedCountry.countryCode,
-                            notes: _miscellaneousController.text,
+                            notes: _noteController.text,
                             lastVisit: widget.user!.lastVisit
                         );
-                        _useServer //TODO: Add failed return
-                            ? await HttpHelper().updateCustomer(user: user)
-                            : await DatabaseHelper().updateUser(user);
+                        if(widget.user!.equals(user)){
+                          Navigator.of(context).pop(null);
+                          return;
+                        }
+                        bool? result;
+                        _useServer
+                            ? result = await HttpHelper().updateCustomer(user)
+                            : result = await DatabaseHelper().updateUser(user);
 
                         if(context.mounted) {
                           Utilities.showToast(
                               context: context,
-                              title:  S.of(context).success,
-                              description: S.of(context).update_success
+                              title: result == null || !result
+                                  ? S.of(context).fail
+                                  : S.of(context).success,
+                              description: result == null
+                                  ? S.of(context).update_failed
+                                  : !result
+                                    ? "User with same Data already existed!"
+                                    : S.of(context).update_success,
+                              isError: result == null || !result
                           );
                         }
-
                         if(context.mounted) navigatorKey.currentState?.pop(AddUserReturn(user: user, deleted: false));
                       } else {
                         final uuId = const Uuid().v4(); //v3 would allow hashing of name, birthday => Autodetect collisions, v4 is most used and random
-                        User? user;
-                        _useServer
-                            ? user = await HttpHelper().addCustomer(
-                                uuId: uuId,
-                                firstName: _firstNameController.text,
-                                lastName: _lastNameController.text,
-                                birthday: _selectedDate!,
-                                countryCode:  _selectedCountry.countryCode,
-                                notes: _miscellaneousController.text
-                              )
-                            : user = await DatabaseHelper().addUser(
-                                  uuId: uuId,
-                                  firstName: _firstNameController.text,
-                                  lastName: _lastNameController.text,
-                                  birthDay: _selectedDate!,
-                                  birthCountry: _selectedCountry.countryCode,
-                                  notes: _miscellaneousController.text
-                              );
-                        setState(() {
-                          uploading = false;
-                        });
+                        User userWithoutValidId = User(
+                            id: -1,
+                            uuId: uuId,
+                            firstName: _firstNameController.text.trim(),
+                            lastName: _lastNameController.text.trim(),
+                            birthDay: _selectedDate!,
+                            country: _selectedCountry.countryCode,
+                            lastVisit: null);
+
+                        int? id;
+                        if(_useServer){
+                          id = await HttpHelper().addCustomer(
+                              user: userWithoutValidId
+                          );
+                        } else {
+                          AddUpdateUserReturnType? result = await DatabaseHelper().addUser(
+                              user: userWithoutValidId
+                          );
+                          if(result != null && !result.existed){
+                            id = result.id;
+                          }
+                        }
+
+                        User? userWithId;
+                        if(id != null && id != -1){
+                          userWithId = userWithoutValidId.copyWith(newId: id);
+                        }
+
+                        setState(() => uploading = false);
+
                         if(context.mounted){
                           Utilities.showToast(
                               context: context,
-                              title: user != null ? S.of(context).success : S.of(context).fail,
-                              description:  user != null ? S.of(context).add_success : S.of(context).add_failed,
-                              isError: user == null,
+                              title: id == null || id == -1
+                                  ? S.of(context).fail
+                                  : S.of(context).success,
+                              description: id == null
+                                  ? S.of(context).add_failed
+                                  : id == -1
+                                    ? "User with same Data already existed!"
+                                    : S.of(context).add_success,
+                              isError: id == null || id == -1,
                           );
                         }
-
-                        if(context.mounted && user != null) navigatorKey.currentState?.pop(AddUserReturn(user: user, deleted: false));
+                        if((id == null || id == -1) && context.mounted) context.read<ConnectionProvider>().periodicCheckConnection();
+                        if(context.mounted && userWithId != null) navigatorKey.currentState?.pop(AddUserReturn(user: userWithId, deleted: false));
                         }
                       },
                     child: uploading ? SizedBox(

@@ -1,4 +1,3 @@
-import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -7,7 +6,7 @@ import 'package:strohhalm_app/app_settings.dart';
 import 'package:strohhalm_app/database_helper.dart';
 import 'package:strohhalm_app/http_helper.dart';
 import 'package:strohhalm_app/main.dart';
-import 'package:strohhalm_app/user.dart';
+import 'package:strohhalm_app/user_and_visit.dart';
 import 'package:strohhalm_app/utilities.dart';
 import 'package:styled_text/styled_text.dart';
 import 'create_qr_code.dart';
@@ -16,8 +15,12 @@ import 'generated/l10n.dart';
 
 class StatPage extends StatefulWidget {
   final User user;
+  //final VoidCallback onFail;
 
-  static Future<User?> showStatPageDialog(BuildContext context, User user) async{
+  static Future<User?> showStatPageDialog({
+  required BuildContext context,
+  required User user,
+  }) async{
     return await showDialog<User>(
         context: context,
         builder: (context){
@@ -32,13 +35,13 @@ class StatPage extends StatefulWidget {
 }
 
 class StatPageState extends State<StatPage>{
-  List<TookItem> _tookItems = [];
-  DateTime? _lastVisit;
+  List<Visit> _tookItems = [];
+  //DateTime? _lastVisit;
   bool uploading = false;
   bool _isMobile = false;
   bool _useServer = false;
 
-  bool get isMoreThan14Days => _lastVisit != null ?  DateTime.now().difference(_lastVisit!) > Duration(days: 13) : true;
+  bool get isMoreThan14Days => widget.user.lastVisit != null ?  DateTime.now().difference(widget.user.lastVisit!) > Duration(days: 13) : true;
 
   @override
   void initState() {
@@ -53,14 +56,10 @@ class StatPageState extends State<StatPage>{
         ? _tookItems = await HttpHelper().getALlVisitsFromUser(id: widget.user.id)
         : _tookItems = await DatabaseHelper().getVisits(widget.user.id);
     setState(() {
-      if(_tookItems.isNotEmpty) _lastVisit = _tookItems.first.tookTime;
+      //if(_tookItems.isNotEmpty) _lastVisit = _tookItems.first.tookTime;
+      //widget.user.lastVisit = widget.user.lastVisit;
     });
 
-    //if (_tookItems.any((item) => item.wasBedSheet)) {
-    //  lastBedSheetItem = _tookItems
-    //      .where((item) => item.wasBedSheet)
-    //      .reduce((a, b) => a.tookTime.isAfter(b.tookTime) ? a : b);
-    //}
   }
 
   List<Widget> getVisitTiles(){
@@ -68,7 +67,7 @@ class StatPageState extends State<StatPage>{
       Expanded(
         child: Container(
           decoration: BoxDecoration(
-            color: _lastVisit == null
+            color: widget.user.lastVisit == null
                 ? Colors.grey
                 : (isMoreThan14Days)
                 ? Colors.lightGreen
@@ -87,9 +86,9 @@ class StatPageState extends State<StatPage>{
                   children: [
                     Text(S.of(context).stat_page_lastTimeTookClothes),
                     StyledText(
-                      text: _lastVisit == null
+                      text: widget.user.lastVisit == null
                           ? S.of(context).customer_tile_lastVisit_never
-                          : "${DateFormat(_useServer ? "dd.MM.yyyy" : "dd.MM.yyyy HH:mm").format(_lastVisit!)} ${Utilities.isSameDay(DateTime.now(), _lastVisit!) && !_isMobile ? " (${S.of(context).today})" : ""}",
+                          : "${DateFormat(_useServer ? "dd.MM.yyyy" : "dd.MM.yyyy HH:mm").format(widget.user.lastVisit!)} ${Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!) && !_isMobile ? " (${S.of(context).today})" : ""}",
                       style: TextStyle(fontSize: 18),
 
                     ),
@@ -110,7 +109,6 @@ class StatPageState extends State<StatPage>{
                     setState(() {
                       if(_tookItems.isNotEmpty) _tookItems.removeAt(0);
                       DateTime? newVisitTime = newLastTime == null ? null : DateTime.parse(newLastTime);
-                      _lastVisit = newVisitTime;
                       widget.user.lastVisit = newVisitTime;
                     });
                   }
@@ -121,52 +119,14 @@ class StatPageState extends State<StatPage>{
             ],
           ),
         ),
-      ),
-      /*Expanded(
-        child: Container(
-          decoration: BoxDecoration(
-            color: lastBedSheetItem == null
-                ? Colors.grey
-                : (DateTime.now().difference(
-                DateTime.fromMillisecondsSinceEpoch(lastBedSheetItem!.tookTime)) >
-                Duration(days: 13))
-                ? Colors.lightGreen
-                : Colors.red,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: EdgeInsets.all(8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                lastBedSheetItem == null
-                    ? Icons.help_outline
-                    : (DateTime.now().difference(
-                    DateTime.fromMillisecondsSinceEpoch(
-                        lastBedSheetItem!.tookTime)) >
-                    Duration(days: 13))
-                    ? Icons.check_circle
-                    : Icons.block,
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Last Time took Bedsheets"),
-                    Text(lastBedSheetItem != null ? DateFormat("dd.MM.yy HH:mm").format(DateTime.fromMillisecondsSinceEpoch(lastBedSheetItem!.tookTime)) : "Never", style: TextStyle(fontSize: 18),),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),*/
+      )
     ];
   }
 
   bool editText = false;
   TextEditingController noteEditController = TextEditingController();
+  ScrollController noteScrollController = ScrollController();
+
   @override
   Widget build(BuildContext context) {
     final isMobile = MyApp().getDeviceType() == DeviceType.mobile;
@@ -242,19 +202,9 @@ class StatPageState extends State<StatPage>{
                                 children: [
                                   SizedBox(height: 10,),
                                   Text(S.of(context).stat_page_country),
-                                  Text(CountryLocalizations.of(context)?.countryName(countryCode: widget.user.country) ?? Country.tryParse(widget.user.country)!.name, style: TextStyle(color: Colors.grey)),
+                                  Text(Utilities.getLocalizedCountryNameFromCode(context, widget.user.country), style: TextStyle(color: Colors.grey)),
                                 ],
                               ),
-                              // Has Children
-                              //Column(
-                              //  crossAxisAlignment: CrossAxisAlignment.start,
-                              //  mainAxisAlignment: MainAxisAlignment.start,
-                              //  children: [
-                              //    SizedBox(height: 10,),
-                              //    Text(S.of(context).children),
-                              //    Text(widget.user.hasChild ? "Ja" : "Nein", style: TextStyle(color: Colors.grey)),
-                              //  ],
-                              //),
                               //overallVisits
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,28 +219,18 @@ class StatPageState extends State<StatPage>{
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(S.of(context).stat_page_miscellaneous),
-                                  TextButton.icon(
+                                  if(!editText)TextButton.icon(
                                       onPressed: ()async{
-                                        if(!editText){
                                           setState(() {
                                             noteEditController.text = widget.user.notes ?? "";
                                             editText = true;
                                           });
-                                        } else {
-                                          setState(() {
-                                            widget.user.notes = noteEditController.text;
-                                            editText = false;
-
-                                          });
-                                          _useServer
-                                              ? await HttpHelper().updateCustomer(user: widget.user)
-                                              : await DatabaseHelper().updateUser(widget.user);
-                                        }
                                       },
                                       icon: Icon(!editText ? Icons.edit : Icons.check_circle),
                                       label: Text(!editText ? "Edit" : S.of(context).confirm),
@@ -298,15 +238,96 @@ class StatPageState extends State<StatPage>{
                                 ],
                               ),
                               !editText
-                                  ? Text(widget.user.notes ?? "")
-                                  : TextField(
-                                      controller: noteEditController,
-                                      decoration: InputDecoration(
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
+                                  ? ConstrainedBox(
+                                      constraints : BoxConstraints(
+                                        maxHeight: MediaQuery.of(context).size.height*0.2,
+                                        minWidth: double.infinity,
+                                      ),
+                                      child: Scrollbar(
+                                        thumbVisibility: true,
+                                        controller: noteScrollController,
+                                        child: ShaderMask(
+                                            shaderCallback: (Rect bounds) {
+                                              return LinearGradient(
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                                colors: [
+                                                  Colors.transparent,
+                                                  Colors.black,
+                                                  Colors.black,
+                                                  Colors.transparent,
+                                                ],
+                                                stops: [0.0, 0.05, 0.95, 1.0],
+                                              ).createShader(bounds);
+                                            },
+                                            blendMode: BlendMode.dstIn, // Wichtig für den Maskeneffekt
+                                            child:SingleChildScrollView(
+                                          controller: noteScrollController,
+                                          child: Text(widget.user.notes ?? ""),
+                                        ))
                                       ),
                                     )
+                                  : TextField(
+                                    controller: noteEditController,
+                                    minLines: 1,
+                                    maxLines: 5,
+                                    decoration: InputDecoration(
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+
+                              ),
+                             if(editText)SizedBox(height: 2),
+                             if(editText) Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                spacing: 10,
+                                children: [
+                                  if(!_isMobile)Spacer(),
+                                  ElevatedButton.icon(
+                                    onPressed: () {
+                                      setState(() {
+                                        noteEditController.text = widget.user.notes ?? "";
+                                        editText = false;
+                                      });
+                                    },
+                                    icon: Icon(Icons.cancel),
+                                    label: Text(S.of(context).cancel),
+                                    style: ElevatedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      maximumSize: _isMobile ? Size(MediaQuery.of(context).size.width*0.27, 50) : null,
+                                    ),
+                                  ),
+                                  ElevatedButton.icon(
+                                    onPressed: () async {
+                                      setState(() {
+                                        widget.user.notes = noteEditController.text;
+                                        editText = false;
+                                      });
+                                      bool? result;
+                                      _useServer
+                                        ? result = await HttpHelper().updateCustomer(widget.user)
+                                        : result = await DatabaseHelper().updateUser(widget.user);
+
+                                      if(context.mounted){
+                                        Utilities.showToast(
+                                            context: context,
+                                            title: result != null ? S.of(context).success : S.of(context).fail,
+                                            description: result != null ? S.of(context).update_success : S.of(context).update_failed,
+                                            isError: result == null
+                                        );
+                                      }
+                                    },
+                                    icon: Icon(Icons.check),
+                                    label: Text(S.of(context).save),
+                                    style: ElevatedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      backgroundColor: Colors.green.withAlpha(120),
+                                      maximumSize: _isMobile ? Size(MediaQuery.of(context).size.width*0.27, 50) : null,
+                                    ),
+                                  ),
+                                ],
+                              )
                             ],
                           ),
                           TextButton.icon(
@@ -315,7 +336,7 @@ class StatPageState extends State<StatPage>{
                             label: Text(S.of(context).qr_code_print),
                             style: TextButton.styleFrom(
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                backgroundColor: Colors.lime.withAlpha(70),
+                                backgroundColor: Theme.of(context).buttonTheme.colorScheme?.primaryFixed.withAlpha(120),
                                 minimumSize: Size(double.infinity, 64)
                             ),
                           )
@@ -338,53 +359,32 @@ class StatPageState extends State<StatPage>{
                 Row(
                   spacing: 10,
                   children: [
-                    /*Expanded(
-                    flex: 1,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text("Bedsheet"),
-                        Checkbox(
-                            value: takesBedsheet,
-                            onChanged: (ev){
-                              setState(() {
-                                takesBedsheet = ev!;
-                              });
-                            })
-                      ],
-                    )),*/
                     Expanded(
                         flex: 2,
                         child: TextButton(
                             onPressed: ()async{
-                              //if(_tookItems.any((item) => Utilities.isSameDay(item.tookTime, DateTime.now())))
-                              if(_lastVisit != null && Utilities.isSameDay(_lastVisit!, DateTime.now())) {
-                                if(!context.mounted) return;
-                                Utilities.showToast(context: context, title:  S.of(context).fail, description: S.of(context).stat_page_alreadyGotToday, isError: true);
+                              if(widget.user.lastVisit != null && Utilities.isSameDay(widget.user.lastVisit!, DateTime.now())) {
+                                if(context.mounted) Utilities.showToast(context: context, title:  S.of(context).fail, description: S.of(context).stat_page_alreadyGotToday, isError: true);
                                 return;
                               }
                               setState(() {
                                 uploading = true;
                               });
-                              TookItem? newLastVisit;
+                              Visit? newLastVisit;
                               _useServer
                                   ? newLastVisit = await HttpHelper().addVisit(userId: widget.user.id)
-                                  : newLastVisit = await DatabaseHelper().addVisit(widget.user.id);
+                                  : newLastVisit = await DatabaseHelper().addVisit(widget.user);
                               setState(() {
                                 if(newLastVisit != null) {
-                                 _lastVisit = newLastVisit.tookTime;
                                   widget.user.lastVisit = newLastVisit.tookTime;
                                  _tookItems.insert(0, newLastVisit);
                                  }
                                 uploading = false;
                               });
-                              if(!context.mounted) return;
-                              Utilities.showToast(context: context, title:  S.of(context).success, description: S.of(context).stat_page_savedVisit);
+                              if(context.mounted) Utilities.showToast(context: context, title:  S.of(context).success, description: S.of(context).stat_page_savedVisit);
                             },
                             style: TextButton.styleFrom(
-                                backgroundColor: Colors.lime.withAlpha(70),
+                                backgroundColor: Theme.of(context).buttonTheme.colorScheme?.primaryFixed.withAlpha(120),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 minimumSize: Size(double.infinity, 75)
                             ),

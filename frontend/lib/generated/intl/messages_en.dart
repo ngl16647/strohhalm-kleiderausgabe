@@ -40,8 +40,14 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m6(count) =>
       "${Intl.plural(count, one: 'Visit', other: 'Visits')}";
 
-  static String m7(showYear) =>
+  static String m7(visitorCount, visitCount) =>
+      "${Intl.plural(visitorCount, one: '# Visitor', other: '# Visitors')}\nhave ${visitCount} ${Intl.plural(visitCount, one: 'Visit', other: 'Visits')}";
+
+  static String m8(showYear) =>
       "${Intl.select(showYear, {'true': 'Month', 'false': 'Day'})}";
+
+  static String m9(count) =>
+      "${Intl.plural(count, one: 'Visit', other: 'Visits')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -165,12 +171,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_statistic": MessageLookupByLibrary.simpleMessage("Statistics"),
     "main_page_theme": m3,
     "no": MessageLookupByLibrary.simpleMessage("No"),
+    "no_internet": MessageLookupByLibrary.simpleMessage(
+      "Keine Verbindung zum Internet",
+    ),
+    "no_server": MessageLookupByLibrary.simpleMessage(
+      "Keine Verbindung zum Server",
+    ),
     "number_fail": MessageLookupByLibrary.simpleMessage(
       "Invalid number!\nPlease enter a correct number",
     ),
     "print": MessageLookupByLibrary.simpleMessage("Print"),
     "qr_code_print": MessageLookupByLibrary.simpleMessage("Print QR Code"),
     "qr_code_share": MessageLookupByLibrary.simpleMessage("Share QR Code"),
+    "reconnected": MessageLookupByLibrary.simpleMessage(
+      "Verbindung wieder hergestellt!",
+    ),
+    "same_user_exists": MessageLookupByLibrary.simpleMessage(
+      "User with same Data already existed!",
+    ),
     "save": MessageLookupByLibrary.simpleMessage("Save"),
     "settings": MessageLookupByLibrary.simpleMessage("Settings"),
     "settings_banner_desc": MessageLookupByLibrary.simpleMessage(
@@ -227,13 +245,27 @@ class MessageLookup extends MessageLookupByLibrary {
       "Visit recorded!",
     ),
     "stat_page_visits": MessageLookupByLibrary.simpleMessage("Visits:"),
+    "statistic_page_noData": MessageLookupByLibrary.simpleMessage(
+      "Keine Daten oder Internetverbindung.\nSobald wieder Internet verfügbar ist werden die Daten automatisch geladen!",
+    ),
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Number of visits",
     ),
     "statistic_page_show_top_countries": m4,
     "statistic_page_switchYearDisplay": m5,
+    "statistic_page_visitDesc": MessageLookupByLibrary.simpleMessage(
+      "Besucher\nhaben",
+    ),
     "statistic_page_visits": m6,
-    "statistic_page_xAxis": m7,
+    "statistic_page_visitsPerPerson": MessageLookupByLibrary.simpleMessage(
+      "Besucher pro Besuch-Anzahl",
+    ),
+    "statistic_page_visitsPerPerson_Persons":
+        MessageLookupByLibrary.simpleMessage("Anzahl von Besuchern"),
+    "statistic_page_visitsPerPerson_Visits":
+        MessageLookupByLibrary.simpleMessage("Anzahl von Besuchern"),
+    "statistic_page_visitsPerVisitor": m7,
+    "statistic_page_xAxis": m8,
     "success": MessageLookupByLibrary.simpleMessage("Success"),
     "today": MessageLookupByLibrary.simpleMessage("Today"),
     "update": MessageLookupByLibrary.simpleMessage("Update"),
@@ -242,6 +274,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "uuId_fail_keyboard": MessageLookupByLibrary.simpleMessage(
       "Failed UuId Check!\nMake sure your Keyboard-Language (Left-Alt + Left-Shift) is the same as the Barcode-Scanner!",
     ),
+    "visit_plural": m9,
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
   };
 }

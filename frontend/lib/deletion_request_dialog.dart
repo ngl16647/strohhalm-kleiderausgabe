@@ -1,14 +1,16 @@
-import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:strohhalm_app/app_settings.dart';
 import 'package:strohhalm_app/dialog_helper.dart';
-import 'package:strohhalm_app/user.dart';
+import 'package:strohhalm_app/http_helper.dart';
+import 'package:strohhalm_app/user_and_visit.dart';
+import 'package:strohhalm_app/utilities.dart';
 import 'database_helper.dart';
 import 'generated/l10n.dart';
 
 class DeleteRequestReturn{
   final List<int> resetUsersId;
-  final List<int> deletedUsersId;
+  final Set<int> deletedUsersId;
 
   DeleteRequestReturn(
       this.resetUsersId,
@@ -19,8 +21,8 @@ class DeleteRequestReturn{
 class DeleteDialog extends StatefulWidget{
   final List<User> oldUserList;
 
-  static Future<DeleteRequestReturn> showDeleteDialog(BuildContext context, List<User> oldUserList) async{
-    return await showDialog(
+  static Future<DeleteRequestReturn?> showDeleteDialog(BuildContext context, List<User> oldUserList) async{
+    return await showDialog<DeleteRequestReturn>(
         context: context,
         builder: (context){
           return DeleteDialog(oldUserList: oldUserList);
@@ -39,17 +41,20 @@ class DeleteDialog extends StatefulWidget{
 
 class DeleteDialogState extends State<DeleteDialog>{
   List<User> oldUserList = [];
-  DeleteRequestReturn requestReturn = DeleteRequestReturn([],[]);
+  List<int> actuallyDeleted = [];
+  DeleteRequestReturn deletionReturnResult = DeleteRequestReturn([], {});
+  bool _useServer = false;
 
   @override
   void initState() {
+    _useServer = AppSettingsManager.instance.settings.useServer ?? false;
     oldUserList = widget.oldUserList;
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-      List<int> deletedIds = [];
+      //Set<int> deletedIds = {};
       return Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -59,7 +64,7 @@ class DeleteDialogState extends State<DeleteDialog>{
                   onPopInvokedWithResult: (popped, ev){
                     if(!popped){
                       //To update List when barrier-dismissing Dialog
-                      Navigator.of(context).pop(requestReturn);
+                      Navigator.of(context).pop(deletionReturnResult);
                     }
                   },
                   child:  Padding(
@@ -71,7 +76,7 @@ class DeleteDialogState extends State<DeleteDialog>{
                                 children: [
                                   SizedBox.shrink(),
                                   Text(
-                                    S.current.deletion_request_page_title,
+                                    "${S.current.deletion_request_page_title}: ${oldUserList.length}",
                                     style: Theme.of(context).textTheme.titleLarge,
                                   ),
                                   IconButton(
@@ -86,92 +91,146 @@ class DeleteDialogState extends State<DeleteDialog>{
                                   itemCount: oldUserList.length,
                                   itemBuilder: (context, index) {
                                     final u = oldUserList[index];
+                                    bool onDeleteList = actuallyDeleted.contains(u.id);
                                     return Container(
                                       margin: EdgeInsets.symmetric(vertical: 6),
                                       padding: EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.grey.shade100,
+                                        color: onDeleteList
+                                            ? Theme.of(context).colorScheme.surface.withAlpha(120)
+                                            : Theme.of(context).colorScheme.surface,
                                         borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: Colors.grey.shade300),
+                                        border: Border.all(color: Theme.of(context).colorScheme.outline.withAlpha(125)),
                                       ),
                                       child: Row(
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          Icon(Icons.person, color: Theme.of(context).primaryColor),
+                                          Opacity(
+                                              opacity: onDeleteList ? 0.5 : 1.0,
+                                              child:Icon(Icons.person, color: Theme.of(context).colorScheme.primary)),
                                           SizedBox(width: 12),
-                                          Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "${u.firstName} ${u.lastName}",
-                                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                                          Opacity(
+                                                opacity: onDeleteList ? 0.5 : 1.0,
+                                                child:Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    "${u.firstName} ${u.lastName}",
+                                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                                                  ),
+                                                  SizedBox(height: 2),
+                                                  Text(
+                                                    "${DateFormat("dd.MM.yyyy").format(u.birthDay)}   ${Utilities.getLocalizedCountryNameFromCode(context, u.country)}",
+                                                    style: Theme.of(context).textTheme.bodySmall,
+                                                  ),
+                                                  SizedBox(height: 4),
+                                                ],
                                               ),
-                                              SizedBox(height: 2),
-                                              Text(
-                                                "${DateFormat("dd.MM.yyyy").format(u.birthDay)}   ${CountryLocalizations.of(context)?.countryName(countryCode: u.country) ?? Country.tryParse(u.country)!.name}",
-                                                style: Theme.of(context).textTheme.bodySmall,
-                                              ),
-                                              SizedBox(height: 4),
-                                            ],
                                           ),
                                           Spacer(),
-                                          Text(
+                                          if(onDeleteList) Text("Will be Deleted!", style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.redAccent.shade400.withAlpha(200)),),
+                                          if(onDeleteList)SizedBox(width: 40,),
+                                          Opacity(
+                                          opacity: onDeleteList ? 0.5 : 1.0,
+                                          child:Text(
                                             "${S.of(context).deletion_request_page_lastVisit} ${DateFormat("dd.MM.yyyy").format(u.lastVisit!)}",
                                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                               fontWeight: FontWeight.bold,
                                             ),
+                                          )
                                           ),
                                           SizedBox(width: 10,),
-                                          IconButton(
-                                            tooltip: S.of(context).deletion_request_page_resetUser,
-                                            onPressed: () async {
-                                              await DatabaseHelper().updateUserLastVisit(u.id, null);
-                                              requestReturn.resetUsersId.add(u.id);
-                                              setState(() {
-                                                oldUserList.removeAt(index);
-                                              });
-                                            },
-                                            icon: Icon(Icons.autorenew),
-                                          ),
-                                          IconButton(
-                                            tooltip: S.of(context).deletion_request_page_delete,
-                                            onPressed: () async {
-                                              bool confirmation = await DialogHelper.dialogConfirmation(context, S.of(context).add_user_deleteMessage, true) ?? false;
-                                              if(confirmation){
-                                                await DatabaseHelper().deleteUser(u.id);
-                                                requestReturn.deletedUsersId.add(u.id);
+                                          Tooltip(
+                                            message: S.of(context).deletion_request_page_resetUser,
+                                            child: ElevatedButton.icon(
+                                              icon: const Icon(Icons.autorenew),
+                                              label: Text(onDeleteList ? "" : "Zurücksetzen"),
+                                              onPressed: onDeleteList ? null : () async {
+                                                _useServer
+                                                    ? await HttpHelper().addVisit(userId: u.id, visitTime: DateTime.now().subtract(Duration(days: 14)).toIso8601String())
+                                                    : await DatabaseHelper().updateUserLastVisit(u.id, null);
+                                                deletionReturnResult.resetUsersId.add(u.id);
                                                 setState(() {
                                                   oldUserList.removeAt(index);
                                                 });
-                                              }
-                                            },
-                                            icon: Icon(Icons.delete),
+                                              },
+                                            ),
                                           ),
+                                          Tooltip(
+                                            message: S.of(context).deletion_request_page_delete,
+                                            child: ElevatedButton.icon(
+                                              label: Text(onDeleteList ? "Wiederherstellen" : "Löschen"),
+                                              onPressed: () async {
+                                                if(actuallyDeleted.contains(u.id)){
+                                                  setState(()=>actuallyDeleted.remove(u.id));
+                                                } else {
+                                                  //bool confirmation = await DialogHelper.dialogConfirmation(context, S.of(context).add_user_deleteMessage, true) ?? false;
+                                                  //if(confirmation){
+                                                  //TODO: Direkt löschen?
+                                                  setState(()=> actuallyDeleted.add(u.id));
+                                                  //setState(() {
+                                                  //  oldUserList.removeAt(index);
+                                                  //});
+                                                  //}
+                                                }
+                                              },
+                                              icon: Icon(onDeleteList ? Icons.restore : Icons.delete),
+                                            ),
+                                          )
                                         ],
                                       ),
                                     );
                                   },
                                 ),
                               ),
-                              Align(
-                                alignment: AlignmentGeometry.bottomRight,
-                                child: ActionChip(
-                                  avatar: Icon(Icons.delete_sweep),
-                                  label: Text(S.of(context).deletion_request_page_deleteAll),
-                                  onPressed: () async {
-                                    bool confirmation = await  DialogHelper.dialogConfirmation(context, S.of(context).deletion_request_page_deleteAllDesc, true) ?? false;
-                                    if(confirmation){
-                                      for(User u in oldUserList){
-                                        await DatabaseHelper().deleteUser(u.id);
-                                        deletedIds.add(u.id);
-                                      }
-                                      setState(() {
-                                        oldUserList.clear();
-                                      });
-                                    }
-                                  },
-                                ),
-                              )
+                              Row(
+                                children: [
+                                  ActionChip(
+                                      avatar: Icon(Icons.delete_sweep),
+                                      label: Text(S.of(context).deletion_request_page_deleteAll),
+                                      onPressed: () async {
+                                        //bool confirmation = await  DialogHelper.dialogConfirmation(context, S.of(context).deletion_request_page_deleteAllDesc, true) ?? false;
+                                        //if(confirmation){
+                                          setState(() {
+                                            for(User u in oldUserList){
+                                              actuallyDeleted.add(u.id);
+                                            }
+                                          });
+                                        //}
+                                      },
+                                  ),
+                                  Spacer(),
+                                  ActionChip(
+                                    avatar: Icon(Icons.cancel),
+                                    label: Text(S.of(context).cancel),
+                                    onPressed: () async {
+                                        deletionReturnResult.deletedUsersId.clear();
+                                        Navigator.of(context).pop(deletionReturnResult);
+                                    },
+                                  ),
+                                  ActionChip(
+                                      avatar: Icon(Icons.download_done),
+                                      label: Text(S.of(context).confirm),
+                                      onPressed: () async {
+                                        if(actuallyDeleted.isEmpty && context.mounted) {
+                                          Navigator.of(context).pop(deletionReturnResult);
+                                          return;
+                                        }
+                                        bool confirmation = await  DialogHelper.dialogConfirmation(context, "Bist du sicher, dass du die markierten Besucher löschen willst?", true) ?? false;
+                                        if(confirmation){
+                                          for(int id in actuallyDeleted){
+                                            _useServer
+                                                ? await HttpHelper().deleteCustomer(id: id)
+                                                : await DatabaseHelper().deleteUser(id);
+                                            deletionReturnResult.deletedUsersId.add(id);
+                                          }
+
+                                          if(context.mounted)Navigator.of(context).pop(deletionReturnResult);
+                                        }
+                                      },
+                                    )
+                                ],
+                              ),
                             ],
                           ),
                         )
@@ -179,3 +238,99 @@ class DeleteDialogState extends State<DeleteDialog>{
             );
   }
 }
+
+/* Differenct Approach:
+ListView.builder(
+                                  itemCount: oldUserList.length,
+                                  itemBuilder: (context, index) {
+                                    final u = oldUserList[index];
+                                    bool onDeleteList = deletionReturnResult.deletedUsersId.contains(u.id);
+                                    return Container(
+                                      margin: EdgeInsets.symmetric(vertical: 6),
+                                      padding: EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: onDeleteList
+                                            ? Theme.of(context).colorScheme.surface.withAlpha(120)
+                                            : Theme.of(context).colorScheme.surface,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Theme.of(context).colorScheme.outline.withAlpha(125)),
+                                      ),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Opacity(
+                                              opacity: onDeleteList ? 0.5 : 1.0,
+                                              child:Icon(Icons.person, color: Theme.of(context).colorScheme.primary)),
+                                          SizedBox(width: 12),
+                                          Opacity(
+                                                opacity: onDeleteList ? 0.5 : 1.0,
+                                                child:Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    "${u.firstName} ${u.lastName}",
+                                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                                                  ),
+                                                  SizedBox(height: 2),
+                                                  Text(
+                                                    "${DateFormat("dd.MM.yyyy").format(u.birthDay)}   ${Utilities.getLocalizedCountryNameFromCode(context, u.country)}",
+                                                    style: Theme.of(context).textTheme.bodySmall,
+                                                  ),
+                                                  SizedBox(height: 4),
+                                                ],
+                                              ),
+                                          ),
+                                          Spacer(),
+                                          if(onDeleteList) Text("Will be Deleted!", style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.redAccent.shade400.withAlpha(200)),),
+                                          if(onDeleteList)SizedBox(width: 40,),
+                                          Opacity(
+                                          opacity: onDeleteList ? 0.5 : 1.0,
+                                          child:Text(
+                                            "${S.of(context).deletion_request_page_lastVisit} ${DateFormat("dd.MM.yyyy").format(u.lastVisit!)}",
+                                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          )
+                                          ),
+                                          SizedBox(width: 10,),
+                                          Tooltip(
+                                            message: S.of(context).deletion_request_page_resetUser,
+                                            child: ElevatedButton.icon(
+                                              icon: const Icon(Icons.autorenew),
+                                              label: Text(onDeleteList ? "" : "Zurücksetzen"),
+                                              onPressed: onDeleteList ? null : () async {
+                                                await DatabaseHelper().updateUserLastVisit(u.id, null);
+                                                deletionReturnResult.resetUsersId.add(u.id);
+                                                setState(() {
+                                                  oldUserList.removeAt(index);
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                          Tooltip(
+                                            message: S.of(context).deletion_request_page_delete,
+                                            child: ElevatedButton.icon(
+                                              label: Text(onDeleteList ? "Wiederherstellen" : "Löschen"),
+                                              onPressed: () async {
+                                                if(deletionReturnResult.deletedUsersId.contains(u.id)){
+                                                  setState(()=> deletionReturnResult.deletedUsersId.remove(u.id));
+                                                } else {
+                                                  //bool confirmation = await DialogHelper.dialogConfirmation(context, S.of(context).add_user_deleteMessage, true) ?? false;
+                                                  //if(confirmation){
+                                                  //TODO: Direkt löschen?
+                                                  setState(()=> deletionReturnResult.deletedUsersId.add(u.id));
+                                                  //setState(() {
+                                                  //  oldUserList.removeAt(index);
+                                                  //});
+                                                  //}
+                                                }
+                                              },
+                                              icon: Icon(onDeleteList ? Icons.restore : Icons.delete),
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+ */

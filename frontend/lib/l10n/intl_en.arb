@@ -110,7 +110,20 @@
   "update_failed": "Update failed",
   "update_success": "Update successful",
   "number_fail": "Invalid number!\nPlease enter a correct number",
-  "uuId_fail_keyboard": "Failed UuId Check!\nMake sure your Keyboard-Language (Left-Alt + Left-Shift) is the same as the Barcode-Scanner!"
+  "uuId_fail_keyboard": "Failed UuId Check!\nMake sure your Keyboard-Language (Left-Alt + Left-Shift) is the same as the Barcode-Scanner!",
+
+  "visit_plural": "{count, plural, =1{Visit} other{Visits}}",
+  "statistic_page_visitsPerVisitor": "{visitorCount, plural, =1{# Visitor} other{# Visitors}}\nhave {visitCount} {visitCount, plural, =1{Visit} other{Visits}}",
+  "statistic_page_visitDesc": "Besucher\nhaben",
+  "statistic_page_visitsPerPerson": "Besucher pro Besuch-Anzahl",
+  "statistic_page_visitsPerPerson_Persons": "Anzahl von Besuchern",
+  "statistic_page_visitsPerPerson_Visits": "Anzahl von Besuchern",
+  "statistic_page_noData": "Keine Daten oder Internetverbindung.\nSobald wieder Internet verfügbar ist werden die Daten automatisch geladen!",
 
 
+
+  "same_user_exists": "User with same Data already existed!",
+  "no_internet": "Keine Verbindung zum Internet",
+  "no_server": "Keine Verbindung zum Server",
+  "reconnected": "Verbindung wieder hergestellt!"
 }

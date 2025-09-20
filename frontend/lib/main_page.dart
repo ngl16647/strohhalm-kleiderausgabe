@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
 import 'package:strohhalm_app/add_user_dialog.dart';
 import 'package:strohhalm_app/banner_designer.dart';
 import 'package:strohhalm_app/barcode_scanner_hardware_listener.dart';
@@ -14,11 +15,12 @@ import 'package:strohhalm_app/http_helper.dart';
 import 'package:strohhalm_app/settings.dart';
 import 'package:strohhalm_app/stat_page.dart';
 import 'package:strohhalm_app/statistic_page.dart';
-import 'package:strohhalm_app/user.dart';
+import 'package:strohhalm_app/user_and_visit.dart';
 import 'package:strohhalm_app/utilities.dart';
 import 'package:window_manager/window_manager.dart';
 import 'app_settings.dart';
 import 'barcode_scanner_phone_camera.dart';
+import 'check_connection.dart';
 import 'generated/l10n.dart';
 import 'main.dart';
 
@@ -40,36 +42,54 @@ class MainPageState extends State<MainPage> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchWaitTimer;
   late BarcodeScannerListener socketListener;
+  //userLists
   List<User> _userList = [];
   List<User> oldUserList = [];
+  //UI-State-Variables
   Icon _fullScreenIcon = Icon(Icons.fullscreen);
+  Color _selectedColor = Color.fromRGBO(169, 171, 25, 1.0);
   bool _isListView = true;
   bool _isMobile = false;
-  bool _useServer = false;
   bool _blockScan = false;
-  Color _selectedColor = Color.fromRGBO(169, 171, 25, 1.0);
+  bool statLoading = false; //Loading indicator
+  bool _isAdmin = true;
+  //Banner-Variables
   bool _useBannerDesigner = true;
   File? _bannerImage;
   BannerImage? _bannerMap;
-  bool _isAdmin = false;
+
+  bool _useServer = false;
+
 
   @override
   void initState(){
     _isMobile = MyApp().getDeviceType() == DeviceType.mobile;
-    loadPage();
     listenForScanner();
-
+    loadPage();
+    var provider = context.read<ConnectionProvider>();
+    provider.addListener(() async {
+      if (_useServer && provider.status == ConnectionStatus.connected) {
+        oldUserList = await HttpHelper().searchCustomers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365))) ?? [];
+        oldUserList.removeWhere((item) => item.lastVisit == null); //Check since HttpRequest also returns Customers where lastVisit == null
+      }
+    });
     super.initState();
   }
 
   void loadPage()async{
     await loadSettings();
-    final oneYearAgo = DateTime.now().subtract(Duration(days: 365));
-    _useServer
-        ? oldUserList = await HttpHelper().searchCustomers(lastVisitBefore: oneYearAgo) ?? []
-        : oldUserList = await DatabaseHelper().getUsers(lastVisitBefore: oneYearAgo);
-    setState(() {});
+    if(_useServer) {
+      if(mounted){
+        oldUserList = await HttpHelper().searchCustomers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365))) ?? [];
+        oldUserList.removeWhere((item) => item.lastVisit == null); //Check since HttpRequest also returns Customers where lastVisit == null
+      }
+    } else {
+      if(mounted) context.read<ConnectionProvider>().cancelCheck();
+      if(mounted) context.read<ConnectionProvider>().setStatus(ConnectionStatus.connected);
+      oldUserList = await DatabaseHelper().getUsers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365)));
+    }
 
+    setState(() {});
   }
 
   Future<void> loadSettings() async {
@@ -77,23 +97,25 @@ class MainPageState extends State<MainPage> {
     var settings = AppSettingsManager.instance.settings;
     bool lastUseServer = _useServer;
     _useServer = settings.useServer ?? false;
-    if(_useServer != lastUseServer){ //TO not compromise either Database
-      _searchController.text = "";
-      _userList.clear();
-    }
-    _selectedColor = settings.selectedColor ?? Color.fromRGBO(169, 171, 25, 1.0);
-    _useBannerDesigner = settings.useBannerDesigner ?? true;
-    _bannerMap = settings.bannerDesignerImageContainer;
-    _bannerImage = settings.bannerSingleImage;
+    setState(() {
+      if(_useServer != lastUseServer){ //TO not compromise either Database
+        _searchController.text = "";
+        _userList.clear();
+        oldUserList.clear();
+      }
+      _selectedColor = settings.selectedColor ?? Color.fromRGBO(169, 171, 25, 1.0);
+      _useBannerDesigner = settings.useBannerDesigner ?? true;
+      _bannerMap = settings.bannerDesignerImageContainer;
+      _bannerImage = settings.bannerSingleImage;
 
-    String languageCode = settings.languageCode ?? "de";
+      String languageCode = settings.languageCode ?? "de";
 
-    changeLanguage(languageCode);
-    if(mounted){
-      MyApp.of(context).changeSeedColor(_selectedColor);
-      MyApp.of(context).changeTheme(settings.darkMode! ? ThemeMode.dark : ThemeMode.light);
-    }
-    setState(() {});
+      changeLanguage(languageCode);
+      if(mounted){
+        MyApp.of(context).changeSeedColor(_selectedColor);
+        MyApp.of(context).changeTheme(settings.darkMode! ? ThemeMode.dark : ThemeMode.light);
+      }
+    });
   }
 
   void listenForScanner(){
@@ -115,6 +137,10 @@ class MainPageState extends State<MainPage> {
   ///Starts search after no input since 0.6Seconds and search-length longer than 3. So HTTP-Request are more precise
   void searchChanged(String query) {
     if (_searchWaitTimer?.isActive ?? false) _searchWaitTimer!.cancel();
+    if(!_useServer){
+      searchUsers(query);
+      return;
+    }
     if(query.length <= 4){
       setState(() {
         _userList.clear();
@@ -143,7 +169,10 @@ class MainPageState extends State<MainPage> {
   ///Adds or edits a User (if you want to edit, you have to give it the existing User)
   Future<void> addOrEditUser([User? user]) async {
     _blockScan = true;
-    AddUserReturn? result = await AddUserDialog.showAddUpdateUserDialog(context, user);
+    AddUserReturn? result = await AddUserDialog.showAddUpdateUserDialog(
+       context: context,
+       user: user,
+    );
     if(result != null){
       User? alteredOrNewUser = result.user;
       bool delete = result.deleted;
@@ -176,7 +205,10 @@ class MainPageState extends State<MainPage> {
 
   Future<void> openStatPage(User user) async {
     _blockScan = true;
-    User? updatedUser = await StatPage.showStatPageDialog(context, user);
+    User? updatedUser = await StatPage.showStatPageDialog(
+        context: context,
+        user: user
+    );
     int i = _userList.indexOf(user);
     setState(() {
       _userList[i] = user.copyWith(lastVisit: updatedUser?.lastVisit, notes: updatedUser?.notes); //new Objekt so the ListView can update through ObjectKey(user)
@@ -192,7 +224,7 @@ class MainPageState extends State<MainPage> {
     User? user;
     _useServer
         ? user = await HttpHelper().getCustomerByUUID(uuIdString)
-        : user = await DatabaseHelper().getUsers(uuid: uuIdString).then((item) => item.first);
+        : user = await DatabaseHelper().getUsers(uuid: uuIdString).then((item) =>  item.firstOrNull);
     if(user != null){
       openUser(user);
     } else {
@@ -230,17 +262,17 @@ class MainPageState extends State<MainPage> {
 
   Widget _buildUserTile(User user, int index,bool isList) {
     return CustomerTile(
-      isListView: isList,
-      key: ObjectKey(user),
-      user: user,
-      click: () => openStatPage(user),
-      updatedVisit: (){
-        checkOldUserList(user);
-      },
-      update: () => addOrEditUser(user),
-    ).animate(delay: (index * 50).ms)
-        .fadeIn(duration: 300.ms)
-        .slideX(begin: -0.2, end: 0);
+        isListView: isList,
+        key: ObjectKey(user),
+        user: user,
+        click: () => openStatPage(user),
+        updatedVisit: (){
+          checkOldUserList(user);
+        },
+        update: () => addOrEditUser(user),
+      ).animate(delay: (index * 50).ms)
+          .fadeIn(duration: 300.ms)
+          .slideX(begin: -0.2, end: 0);
   }
 
   void checkOldUserList(User user) {
@@ -256,6 +288,7 @@ class MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    ScrollController scrollController = ScrollController();
     var languages = [
       LanguageOption(code: "de", label: S.of(context).language_de, onPressed: () => changeLanguage("de")),
       LanguageOption(code: "en", label: S.of(context).language_en, onPressed: () => changeLanguage("en")),
@@ -264,6 +297,7 @@ class MainPageState extends State<MainPage> {
     ];
     double width = MediaQuery.of(context).size.width;
 
+
     return Scaffold(
       body: SafeArea(child: Padding(
         padding: EdgeInsets.all(10),
@@ -271,7 +305,7 @@ class MainPageState extends State<MainPage> {
             mainAxisAlignment: MainAxisAlignment.start,
             spacing: 10,
             children: [
-              if(!_useBannerDesigner) Image.file(_bannerImage!),
+              if(!_useBannerDesigner && _bannerImage != null) Image.file(_bannerImage!),
               if(_useBannerDesigner && _bannerMap != null) BannerWidget(bannerImage: _bannerMap),
               Container(
                 width: double.infinity, // Ensure finite width
@@ -310,44 +344,48 @@ class MainPageState extends State<MainPage> {
                     ),
                     LanguageMenu(languages: languages),
                     if(_isAdmin)ActionChip(
-                        label: Text("Settings", ),
+                        label: Text("Settings"),
                         avatar: Icon(Icons.settings),
                         onPressed: () async {
+                          if(!mounted) return;
                           _blockScan = true;
-                          var result = !_isMobile
-                              ? await SettingsPage.showSettingsAsDialog(
-                                  context: context,
-                                  changeColor: (Color color){
-                                  setState(() {
-                                    _selectedColor = color;
-                                    //MyApp.of(context).changeSeedColor(color);
-                                  });
-                                },)
-                              : navigatorKey.currentState?.push(
-                              PageRouteBuilder(
-                                pageBuilder: (context, animation, secondaryAnimation) =>
-                                    SettingsPage(
-                                      changeColor: (Color color){
-                                        setState(() {
-                                          _selectedColor = color;
-                                          //MyApp.of(context).changeSeedColor(color);
-                                        });
-                                      },
-                                    ),
-                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                  const curve = Curves.easeInOut;
-                                  final tween = Tween<Offset>(
-                                    begin: const Offset(-1, 0), //x geht -1 bis 1
-                                    end: Offset.zero,
-                                  ).chain(CurveTween(curve: curve));
+                           bool? result;
+                           if(mounted){
+                             result = !_isMobile
+                                 ? await SettingsPage.showSettingsAsDialog(
+                                     context: context,
+                                     changeColor: (Color color){
+                                       setState(() {
+                                         _selectedColor = color;
+                                         //MyApp.of(context).changeSeedColor(color);
+                                       });
+                                     },)
+                                 : await Navigator.of(context).push(
+                                     PageRouteBuilder(
+                                       pageBuilder: (context, animation, secondaryAnimation) =>
+                                           SettingsPage(
+                                             changeColor: (Color color){
+                                               setState(() {
+                                                 _selectedColor = color;
+                                                 //MyApp.of(context).changeSeedColor(color);
+                                               });
+                                             },
+                                           ),
+                                       transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                         const curve = Curves.easeInOut;
+                                         final tween = Tween<Offset>(
+                                           begin: const Offset(-1, 0), //x geht -1 bis 1
+                                           end: Offset.zero,
+                                         ).chain(CurveTween(curve: curve));
 
-                                  return SlideTransition(
-                                    position: animation.drive(tween),
-                                    child: child,
-                                  );
-                                },
-                              )
-                          );
+                                         return SlideTransition(
+                                           position: animation.drive(tween),
+                                           child: child,
+                                         );
+                                       },
+                                     )
+                             );
+                           }
                            if(result != null){
                              loadPage();
                            }
@@ -357,7 +395,78 @@ class MainPageState extends State<MainPage> {
                            });
                            _blockScan = false;
                         },
-                    )
+                    ),
+                    ActionChip(
+                      avatar: Icon(_isAdmin ? Icons.logout : Icons.login),
+                      label: Text(_isAdmin ? "Logout" : "Admin",),
+                      onPressed: () async {
+                        if(_isAdmin){
+                          setState(() {
+                            _isAdmin = false;
+                          });
+                          return;
+                        }
+                        TextEditingController con = TextEditingController();
+                        bool? confirmed = await showDialog<bool?>(
+                          context: context,
+                          builder: (context) {
+                            bool error = false;
+                            bool obscure = true;
+                            return StatefulBuilder(
+                              builder: (context, setState) {
+                                return AlertDialog(
+                                  content: TextField(
+                                    controller: con,
+                                    obscureText: obscure,
+                                    obscuringCharacter: "*",
+                                    decoration: InputDecoration(
+                                      suffixIcon: IconButton(
+                                          onPressed: () async {
+                                            setState(() {
+                                              obscure = !obscure;
+                                            });
+                                          },
+                                          icon: Icon(obscure ? Icons.visibility : Icons.visibility_off)
+                                      ),
+                                      labelText: "Passwort",
+                                      errorText: error ? "Falsches Passwort" : null,
+                                    ),
+                                    onChanged: (value) {
+                                      if (error) {
+                                        setState(() {
+                                          error = false;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(false),
+                                      child: Text(S.of(context).cancel),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        if (con.text == "admin123") { //TODO: For testing: Other approach?
+                                          Navigator.of(context).pop(true);
+                                        } else {
+                                          setState(() {
+                                            error = true;
+                                          });
+                                        }
+                                      },
+                                      child: Text(S.of(context).confirm),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        );
+                        if(confirmed != null && confirmed){
+                          setState(() =>  _isAdmin = true);
+                        }
+                      }
+                    ),
                   ],
                 ),
               ),
@@ -408,10 +517,11 @@ class MainPageState extends State<MainPage> {
                               flex: _isMobile ? 6 : 9,
                                 child: TextField(
                                     controller: _searchController,
-                                    textAlignVertical: TextAlignVertical.center,
+                                    textAlignVertical: TextAlignVertical.bottom,
+                                    maxLines: 1,
                                     decoration: InputDecoration(
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.all(20),
+                                    isDense: false,
+                                    contentPadding: EdgeInsets.all(20), //No idea how to stretch the field vertically without content-padding
                                     suffixIcon: IconButton(
                                         onPressed: (){
                                           setState(() {
@@ -474,84 +584,104 @@ class MainPageState extends State<MainPage> {
                     ),
                   ),
                   TextButton.icon(
-                      onPressed: ()async{
+                      onPressed: () async{
                         _blockScan = true;
-                        StatisticPage.showStatisticDialog(context);
+                        if(_useServer){
+                          setState(() => statLoading = true);
+                          if(mounted) context.read<ConnectionProvider>().checkConnection();
+                          if(context.read<ConnectionProvider>().status != ConnectionStatus.connected){
+                            if(context.mounted) Utilities.showToast(context: context, title: S.of(context).fail, description: "no connection", isError: true);
+                            setState(() => statLoading = false);
+                            return;
+                          }
+                          setState(() => statLoading = false);
+                        }
+                        if(context.mounted) await StatisticPage.showStatisticDialog(context);
                         _blockScan = false;
                       },
                       label: Text(S.of(context).main_page_statistic),
-                      icon: Icon(Icons.bar_chart),
+                      icon: statLoading ? SizedBox(width: 10, height: 10, child: CircularProgressIndicator()) : Icon(Icons.bar_chart),
                   )
                 ],
               ),
               Expanded(
                 child: _userList.isEmpty
                     ? Center(
-                  child: Text(S.of(context).main_page_emptyUserListText, textAlign: TextAlign.center,),
-                )
+                        child: Text(S.of(context).main_page_emptyUserListText, textAlign: TextAlign.center,),
+                      )
                     : LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isList = constraints.maxWidth > 782 && _isListView;
-                    return isList
-                        ? ListView.builder(
-                          itemCount: _userList.length,
-                          itemBuilder: (context, index) {
-                            return _buildUserTile(_userList[index], index, isList);
-                            },
-                          )
-                        : GridView.builder(
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount:
-                              (MediaQuery.of(context).size.width / 220).toInt(),
-                              mainAxisSpacing: 10,
-                              crossAxisSpacing: 10,
-                              mainAxisExtent: 250,
-                            ),
-                            itemCount: _userList.length,
-                            itemBuilder: (context, index) {
-                              return _buildUserTile(_userList[index], index, isList);
-                            },
-                    );
-                  },
+                        builder: (context, constraints) {
+                          final isList = constraints.maxWidth > 782 && _isListView;
+                          return ShaderMask(
+                              shaderCallback: (Rect bounds) {
+                                return LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black,
+                                    Colors.black,
+                                    Colors.transparent,
+                                  ],
+                                  stops: [0.0, 0.02, 0.95, 1.0],
+                                ).createShader(bounds);
+                              },
+                              blendMode: BlendMode.dstIn, // Wichtig für den Maskeneffekt
+                              child: Scrollbar(
+                                thumbVisibility: !_isMobile,
+                                trackVisibility: !_isMobile,
+                                controller: scrollController,
+                                child: isList
+                                    ? ListView.builder(
+                                        padding: EdgeInsets.only(right: 15),
+                                        controller: scrollController,
+                                        itemCount: _userList.length,
+                                        itemBuilder: (context, index) {
+                                          return _buildUserTile(_userList[index], index, isList);
+                                        },
+                                      )
+                                    : GridView.builder(
+                                        padding: EdgeInsets.only(right: 15),
+                                        controller: scrollController,
+                                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount:
+                                        (MediaQuery.of(context).size.width / 220).toInt(),
+                                        mainAxisSpacing: 10,
+                                        crossAxisSpacing: 10,
+                                        mainAxisExtent: 250,
+                                      ),
+                                      itemCount: _userList.length,
+                                      itemBuilder: (context, index) {
+                                        return _buildUserTile(_userList[index], index, isList);
+                                      },
+                                    ),
+                              ),
+                          );
+                        },
                 ),
               ),
               Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _isAdmin = !_isAdmin;
-                        });
-                      },
-                      child: Text(
-                        "Admin",
-                        style: TextStyle(
-                          color: _isAdmin ? Colors.blue.shade800 : Colors.blue.shade400,
-                          decoration: TextDecoration.underline,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Spacer(),
-                  if(oldUserList.isNotEmpty) Stack(
+                  if(oldUserList.isNotEmpty && _isAdmin) Stack(
                     clipBehavior: Clip.none,
                     children: [
                       ActionChip(
                         onPressed: () async {
                           if(oldUserList.isEmpty) return;
-                          DeleteRequestReturn result = await DeleteDialog.showDeleteDialog(context, oldUserList);
+                          DeleteRequestReturn? result = await DeleteDialog.showDeleteDialog(context, oldUserList);
+                          if(result == null) return;
                           setState(() {
                             if(result.deletedUsersId.isNotEmpty){
                               for(int d in result.deletedUsersId){
                                 _userList.removeWhere((item) => item.id == d);
+                                oldUserList.removeWhere((item) => item.id == d);
                               }
                             }
                             if(result.resetUsersId.isNotEmpty){
                               for(int d in result.resetUsersId){
                                 _userList.firstWhere((item) => item.id == d).lastVisit = null;
+                                oldUserList.removeWhere((item) => item.id == d);
                               }
                             }
                           });
@@ -589,6 +719,25 @@ class MainPageState extends State<MainPage> {
                     ],
                   ),
                 ],
+              ),
+              if(context.watch<ConnectionProvider>().status != ConnectionStatus.connected) Container(
+                decoration: BoxDecoration(
+                  color: Colors.red.withAlpha(70),
+                  borderRadius: BorderRadius.circular(12)
+                ),
+                height: 40,
+                width: double.infinity,
+                child: Row(
+                  spacing: 20,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_rounded),
+                    Text(
+                        context.watch<ConnectionProvider>().status  == ConnectionStatus.noInternet
+                        ? "No Internet Connection"
+                        : "No Server Connection")
+                  ],
+                ),
               )
             ],
           ),
@@ -618,14 +767,19 @@ class LanguageOption {
 
 class BannerWidget extends StatelessWidget {
   final BannerImage? bannerImage;
-
-
-  const BannerWidget({super.key, required this.bannerImage});
+  const BannerWidget({
+    super.key,
+    required this.bannerImage
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (bannerImage == null) return const SizedBox.shrink();
-    double bannerHeight = MediaQuery.of(context).size.height * 0.11;
+    if (bannerImage == null) return SizedBox.shrink();
+    if(bannerImage!.isEmpty) return SizedBox.shrink();
+    bool isMobile = MyApp().getDeviceType() == DeviceType.mobile;
+    double bannerHeight =isMobile ? MediaQuery.of(context).size.height*0.06 : MediaQuery.of(context).size.height * 0.11;
+    double maxBannerWidth = isMobile ? MediaQuery.of(context).size.width*0.2 : MediaQuery.of(context).size.width*0.33;
+
     Color? selectedColor = AppSettingsManager.instance.settings.selectedColor;
 
     return Column(
@@ -633,7 +787,16 @@ class BannerWidget extends StatelessWidget {
         Row(
           children: [
             if (bannerImage!.leftImage != null)
-              Image.file(bannerImage!.leftImage!, height: bannerHeight),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: maxBannerWidth,
+                ),
+                child: Image.file(
+                  bannerImage!.leftImage!,
+                  height: bannerHeight,
+                  fit: BoxFit.contain, // optional, damit es sauber skaliert
+                ),
+              ),
             const SizedBox(width: 15),
             Expanded(
               child: Text(
@@ -645,8 +808,14 @@ class BannerWidget extends StatelessWidget {
                 ),
               ),
             ),
-            if (bannerImage!.rightImage != null )
-              Image.file(bannerImage!.rightImage!, height: bannerHeight),
+            if (bannerImage!.rightImage != null )ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: maxBannerWidth,
+              ),
+              child: Image.file(
+                  bannerImage!.rightImage!,
+                  height: bannerHeight),
+            ),
           ],
         ),
         const SizedBox(height: 3),
@@ -716,6 +885,8 @@ class LanguageMenu extends StatelessWidget {
     );
   }
 }
+
+
 
 //HID or COM-Serial
 // Pro HID:

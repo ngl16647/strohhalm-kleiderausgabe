@@ -125,7 +125,7 @@ class BarcodeScannerListener {
 
         _timer?.cancel();
         _timer = Timer(Duration(milliseconds: 50), () {
-          debugPrint("Buffer reseting!");
+          //debugPrint("Buffer reseting!");
           _keyEventBuffer = "";
         });
       }

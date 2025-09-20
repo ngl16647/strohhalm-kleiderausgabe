@@ -4,17 +4,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:strohhalm_app/main_page.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'check_connection.dart';
 import 'generated/l10n.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+late final ConnectionProvider connectionProvider;
 enum DeviceType { mobile, desktop, web }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  connectionProvider = ConnectionProvider();
+
 
   if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.windows ||
       defaultTargetPlatform == TargetPlatform.linux ||
@@ -37,7 +42,12 @@ void main() async {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider.value(
+      value: connectionProvider,
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -145,9 +155,9 @@ class MyAppState extends State<MyApp> {
           ),
       ),
       themeMode: themeMode,
-      home: MainPage(
+      home: ConnectionToastListener(child: MainPage(
         onLocaleChange: setLocale,
-      )
+      ))
     );
   }
 

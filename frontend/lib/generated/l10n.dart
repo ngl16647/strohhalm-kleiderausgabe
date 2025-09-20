@@ -944,6 +944,118 @@ class S {
       args: [],
     );
   }
+
+  /// `{count, plural, =1{Visit} other{Visits}}`
+  String visit_plural(num count) {
+    return Intl.plural(
+      count,
+      one: 'Visit',
+      other: 'Visits',
+      name: 'visit_plural',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{visitorCount, plural, =1{# Visitor} other{# Visitors}}\nhave {visitCount} {visitCount, plural, =1{Visit} other{Visits}}`
+  String statistic_page_visitsPerVisitor(num visitorCount, num visitCount) {
+    return Intl.message(
+      '${Intl.plural(visitorCount, one: '# Visitor', other: '# Visitors')}\nhave $visitCount ${Intl.plural(visitCount, one: 'Visit', other: 'Visits')}',
+      name: 'statistic_page_visitsPerVisitor',
+      desc: '',
+      args: [visitorCount, visitCount],
+    );
+  }
+
+  /// `Besucher\nhaben`
+  String get statistic_page_visitDesc {
+    return Intl.message(
+      'Besucher\nhaben',
+      name: 'statistic_page_visitDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Besucher pro Besuch-Anzahl`
+  String get statistic_page_visitsPerPerson {
+    return Intl.message(
+      'Besucher pro Besuch-Anzahl',
+      name: 'statistic_page_visitsPerPerson',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Anzahl von Besuchern`
+  String get statistic_page_visitsPerPerson_Persons {
+    return Intl.message(
+      'Anzahl von Besuchern',
+      name: 'statistic_page_visitsPerPerson_Persons',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Anzahl von Besuchern`
+  String get statistic_page_visitsPerPerson_Visits {
+    return Intl.message(
+      'Anzahl von Besuchern',
+      name: 'statistic_page_visitsPerPerson_Visits',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Keine Daten oder Internetverbindung.\nSobald wieder Internet verfügbar ist werden die Daten automatisch geladen!`
+  String get statistic_page_noData {
+    return Intl.message(
+      'Keine Daten oder Internetverbindung.\nSobald wieder Internet verfügbar ist werden die Daten automatisch geladen!',
+      name: 'statistic_page_noData',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `User with same Data already existed!`
+  String get same_user_exists {
+    return Intl.message(
+      'User with same Data already existed!',
+      name: 'same_user_exists',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Keine Verbindung zum Internet`
+  String get no_internet {
+    return Intl.message(
+      'Keine Verbindung zum Internet',
+      name: 'no_internet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Keine Verbindung zum Server`
+  String get no_server {
+    return Intl.message(
+      'Keine Verbindung zum Server',
+      name: 'no_server',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Verbindung wieder hergestellt!`
+  String get reconnected {
+    return Intl.message(
+      'Verbindung wieder hergestellt!',
+      name: 'reconnected',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

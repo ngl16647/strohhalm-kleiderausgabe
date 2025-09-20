@@ -1,12 +1,12 @@
 // ignore_for_file: avoid_print
 
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:strohhalm_app/user.dart';
+import 'package:strohhalm_app/main.dart';
+import 'package:strohhalm_app/user_and_visit.dart';
 import 'app_settings.dart';
-
-//TODO: When upload failed, put in queue?
 
 class HttpHelper {
   static const String defaultPort = "8080";
@@ -15,35 +15,55 @@ class HttpHelper {
 
   bool get useServer => AppSettingsManager.instance.settings.useServer!;
   String get baseUrl => AppSettingsManager.instance.settings.url!;
+  String? get key => AppSettingsManager.instance.authToken;
 
-  Future<User?> addCustomer({
-    required String uuId,
-    required String firstName,
-    required String lastName,
-    required DateTime birthday,
-    String? countryCode,
-    String? notes,
+  Future<bool> hasInternet() async {
+    try {
+      final result = await InternetAddress.lookup("example.com");
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        return true;
+      }
+    } on SocketException catch (_) {
+      print("not connected");
+    }
+    return false;
+  }
+
+  Future<bool> isServerOnline() async {
+    try {
+      final socket = await Socket.connect(baseUrl, int.parse(defaultPort), timeout: Duration(seconds: 5));
+      socket.destroy();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<int?> addCustomer({
+    required User user
   }) async {
     if(!useServer || baseUrl.isEmpty) return null;
-
     final uri = buildUri(
-      host: baseUrl,
+      //host: baseUrl,
         path: "/customers",
     );
 
     final body = jsonEncode({
-      "uuid": uuId,
-      "firstName": firstName,
-      "lastName": lastName,
-      "birthday": birthday.toIso8601String(),
-      if(countryCode != null) "country" : countryCode,
-      if (notes != null) "notes": notes,
+      "uuid": user.uuId,
+      "firstName":  user.firstName,
+      "lastName":  user.lastName,
+      "birthday":  user.birthDay.toIso8601String(),
+      if(user.country.isNotEmpty) "country" : user.country,
+      if (user.notes != null) "notes":  user.notes,
     });
 
     try {
       final response = await http.post(
         uri,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Authorization": "Bearer $key",
+          "Content-Type": "application/json",
+        },
         body: body,
       );
 
@@ -51,12 +71,14 @@ class HttpHelper {
         //TODO: Look for Entries where updated_on > lastSync => lastSync = DateTime.now();
         final data = jsonDecode(response.body);
         print("Added Customer $data");
-        return User.fromMap(data);
+        return data["id"];
+        //return User.fromMap(data);
       } else {
         print("Error: ${response.statusCode} ${response.body}");
         return null;
       }
     } catch (e) {
+      connectionProvider.periodicCheckConnection();
       print("Exception: $e");
       return null;
     }
@@ -68,13 +90,17 @@ class HttpHelper {
     if(!useServer || baseUrl.isEmpty) return false;
 
     final uri = buildUri(
-      host: baseUrl,
+      //host: baseUrl,
       path: "/customers/$id",
     );
 
     try {
       final response = await http.delete(
         uri,
+        headers: {
+          "Authorization": "Bearer $key",
+
+        },
       );
 
       if (response.statusCode == 200 || response.statusCode == 204) {
@@ -84,6 +110,7 @@ class HttpHelper {
         return false;
       }
     } catch (e) {
+      connectionProvider.periodicCheckConnection();
       print("Exception: $e");
       return false;
     }
@@ -108,7 +135,7 @@ class HttpHelper {
     if(!useServer || baseUrl.isEmpty) return null;
 
     final uri = buildUri(
-        host: baseUrl,
+        //host: baseUrl,
         path: "/customers",
         queryParams: {
           if(query != null && query.isNotEmpty) "query": query,
@@ -117,8 +144,12 @@ class HttpHelper {
     );
 
     try {
-      final response = await http.get(uri);
-
+      final response = await http.get(
+        uri,
+        headers: {
+          "Authorization": "Bearer $key",
+        },
+      );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print("Found Customer: $data");
@@ -133,6 +164,7 @@ class HttpHelper {
         return null;
       }
     } catch (e) {
+      connectionProvider.periodicCheckConnection();
       print("Exception: $e");
       return null;
     }
@@ -141,13 +173,17 @@ class HttpHelper {
   Future<User?> getCustomerByUUID(String uuid) async {
     if(!useServer || baseUrl.isEmpty) return null;
     final uri = buildUri(
-        host: baseUrl,
+        //host: baseUrl,
         path: "/customers/uuid/$uuid",
-
     );
 
     try {
-      final response = await http.get(uri);
+      final response = await http.get(
+        uri,
+        headers: {
+          "Authorization": "Bearer $key",
+        },
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -158,18 +194,17 @@ class HttpHelper {
         return null;
       }
     } catch (e) {
+      connectionProvider.periodicCheckConnection();
       print("Exception: $e");
       return null;
     }
   }
 
-  Future<dynamic> updateCustomer({
-    required User user,
-  }) async {
+  Future<bool?> updateCustomer(User user) async {
     if(!useServer || baseUrl.isEmpty) return null;
 
     final uri = buildUri(
-        host: baseUrl,
+        //host: baseUrl,
         path: "/customers/${user.id}");
 
     final body = jsonEncode({
@@ -184,23 +219,27 @@ class HttpHelper {
     try {
       final response = await http.put(
         uri,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Authorization": "Bearer $key",
+          "Content-Type": "application/json"
+        },
         body: body,
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        //TODO: Look for Entries where updated_on > lastSync => lastSync = DateTime.now();
-        return response.body;
+        //Look for Entries where updated_on > lastSync => lastSync = DateTime.now();
+        return true;
       } else {
         print("Error: ${response.statusCode} ${response.body}");
         return null;
       }
     } catch (e) {
+      connectionProvider.periodicCheckConnection();
       print("Exception: $e");
       return null;
     }
   }
 
-  Future<TookItem?> addVisit({
+  Future<Visit?> addVisit({
     required int userId,
     String? visitTime,
     String? notes,
@@ -208,7 +247,7 @@ class HttpHelper {
     if(!useServer || baseUrl.isEmpty) return null;
 
     final uri = buildUri(
-        host: baseUrl,
+        //host: baseUrl,
         path: "/customers/$userId/visits"
     );
 
@@ -221,7 +260,10 @@ class HttpHelper {
     try {
       final response = await http.post(
         uri,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Authorization": "Bearer $key",
+          "Content-Type": "application/json"
+        },
         body: body,
       );
 
@@ -229,31 +271,37 @@ class HttpHelper {
         //TODO: Look for Entries where updated_on > lastSync => lastSync = DateTime.now();
         final data = jsonDecode(response.body);
         print("Added Visit $data");
-        return TookItem.fromMap(data);
+        return Visit.fromMap(data);
       } else {
         print("Error: ${response.statusCode} ${response.body}");
         return null;
       }
     } catch (e) {
+      connectionProvider.periodicCheckConnection();
       print("Exception: $e");
       return null;
     }
   }
 
-  Future<List<TookItem>> getALlVisitsFromUser({required int id}) async {
+  Future<List<Visit>> getALlVisitsFromUser({required int id}) async {
     if(!useServer || baseUrl.isEmpty) return [];
 
     final uri = buildUri(
-      host: baseUrl,
+      //host: baseUrl,
       path: "/customers/$id/visits",
     );
 
-    final response = await http.get(uri);
+    final response = await http.get(
+        uri,
+      headers: {
+        "Authorization": "Bearer $key",
+      }
+    );
 
     if (response.statusCode == 200) {
       final List<dynamic>? result = jsonDecode(response.body);
       if(result == null) return [];
-      return result.map((mapRow) => TookItem.fromMap(mapRow)).toList();
+      return result.map((mapRow) => Visit.fromMap(mapRow)).toList();
     } else {
       print("Error: ${response.statusCode}");
     }
@@ -266,30 +314,34 @@ class HttpHelper {
     if(!useServer || baseUrl.isEmpty) return "-1";
 
     final uri = buildUri(
-      host: baseUrl,
+      //host: baseUrl,
       path: "/customers/$customerId/visits",
     );
 
     try {
       final response = await http.delete(
         uri,
+        headers: {
+          "Authorization": "Bearer $key",
+        }
       );
 
       if (response.statusCode == 200 || response.statusCode == 204) {
         print(jsonDecode(response.body));
         var result = jsonDecode(response.body);
-        return result == null ? null : TookItem.fromMap(result).tookTime.toIso8601String();
+        return result == null ? null : Visit.fromMap(result).tookTime.toIso8601String();
       } else {
         print("Error: ${response.statusCode} ${response.body}");
         return "-1";
       }
     } catch (e) {
+      connectionProvider.periodicCheckConnection();
       print("Exception: $e");
       return "-1";
     }
   }
 
-  Future<Map<String, int>> getAllVisitsInPeriod(int monthsBack, bool year) async {
+  Future<Map<String, int>?> getAllVisitsInPeriod(int monthsBack, bool year) async {
     final now = DateTime.now();
     final startDate = year
         ? DateTime(now.year - monthsBack, 1, 1)
@@ -304,7 +356,7 @@ class HttpHelper {
     List<dynamic> visitsByDate = [];
     Map<String, dynamic>? map = await _fetchVisitsInPeriod(begin: start, end: end);
     if(map != null){
-      visitsByDate = map["visitsByDate"];
+      visitsByDate = map["visitsByDate"] ?? [];
     }
 
     Map<String, int> dateMap = {};
@@ -331,14 +383,14 @@ class HttpHelper {
       dateMap[dateKey] = (dateMap[dateKey] ?? 0) + 1;
     }
 
-    return dateMap;
+    return map == null ? null : dateMap;
   }
 
   Future<dynamic> _fetchVisitsInPeriod({String? begin, String? end}) async {
     if(!useServer || baseUrl.isEmpty) return;
 
     final uri = buildUri(
-      host: baseUrl,
+      //host: baseUrl,
       path: "/stats/visits",
       queryParams: {
         if (begin != null) "begin": begin,
@@ -346,53 +398,140 @@ class HttpHelper {
       },
     );
 
-    final response = await http.get(uri);
+    try{
+      final response = await http.get(
+          uri,
+        headers: {
+          "Authorization": "Bearer $key",
+        }
+      );
 
-    if (response.statusCode == 200) {
-      if(jsonDecode(response.body) == null) return;
-      return(jsonDecode(response.body));
-    } else {
-      print("Error: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        if(jsonDecode(response.body) == null) return {};
+        return(jsonDecode(response.body));
+      } else {
+        print("Error: ${response.statusCode}");
+        return null;
+      }
+    } catch (ev){
+      connectionProvider.periodicCheckConnection();
+      print(ev);
+      return null;
     }
-    return;
   }
 
   Future<Map<String,dynamic>?> getStats() async {
     if(!useServer || baseUrl.isEmpty) return null;
 
     final uri = buildUri(
-      host: baseUrl,
+      //host: baseUrl,
       path: "/stats/customers",
     );
 
-    final response = await http.get(uri);
+    try{
+      final response = await http.get(
+          uri,
+        headers: {
+          "Authorization": "Bearer $key",
+        }
+      );
 
-    if (response.statusCode == 200) {
-      print(jsonDecode(response.body));
-      return jsonDecode(response.body);
-    } else {
-      print("Error: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        print(jsonDecode(response.body));
+        return jsonDecode(response.body);
+      } else {
+        print("Error: ${response.statusCode}");
+        return null;
+      }
+    } catch(ev){
+      connectionProvider.periodicCheckConnection();
+      return null;
     }
-    return null;
+  }
+
+
+
+  Future<void> uploadCsv(File csvFile) async {
+    // URL des Endpoints
+    final uri = Uri.parse('http://example.com/stats/import');
+
+    // Multipart Request erstellen
+    var request = http.MultipartRequest('POST', uri);
+
+    // Datei hinzufügen
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'file', // Name des Form-Feldes im Backend
+        csvFile.path,
+      ),
+    );
+
+    try {
+      // Request senden
+      var response = await request.send();
+
+      // Response auslesen
+      if (response.statusCode == 200) {
+        print('Upload erfolgreich!');
+        final respStr = await response.stream.bytesToString();
+        print(respStr);
+      } else {
+        print('Fehler beim Upload: ${response.statusCode}');
+        final respStr = await response.stream.bytesToString();
+        print(respStr);
+      }
+    } catch (e) {
+      print('Exception: $e');
+    }
+  }
+
+  Future<String?> getCsv() async {
+    if(baseUrl.isEmpty) return null;
+
+    print("What?");
+    final uri = buildUri(
+      //host: baseUrl,
+      path: "/stats/export",
+    );
+
+    try{
+      final response = await http.get(
+          uri,
+          headers: {
+            "Authorization": "Bearer $key",
+          }
+      );
+
+      if (response.statusCode == 200) {
+        print(response.body);
+
+        return response.body;
+      } else {
+        print("Error: ${response.statusCode}");
+        return null;
+      }
+    } catch(ev){
+      connectionProvider.periodicCheckConnection();
+      return null;
+    }
   }
 
   Uri buildUri({
-    required String host,
+    //required String host,
     required String path,
     Map<String, String>? queryParams,
   }) {
+    final parsed = Uri.tryParse(baseUrl); //
+
     return Uri(
-      scheme: defaultScheme,
-      host: host,
-      port: int.parse(defaultPort),
+      scheme: parsed?.scheme.isNotEmpty == true ? parsed!.scheme : defaultScheme,
+      host: parsed?.host.isNotEmpty == true ? parsed!.host : baseUrl,
+      port: parsed?.hasPort == true ? parsed!.port : int.parse(defaultPort),
       path: path,
       queryParameters: queryParams,
     );
   }
-
-
 }
-
 
 /*
  Future<dynamic> getNewCustomerAndVisits([String? query]) async {
@@ -401,5 +540,5 @@ class HttpHelper {
     // - Get Visits with updated_on afet lastSync
     // - Add Visits to local Database
   }
-   */
+*/
 
