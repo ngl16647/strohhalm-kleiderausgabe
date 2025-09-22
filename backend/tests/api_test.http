@@ -85,7 +85,9 @@ Content-Disposition: form-data; name="file"; filename="data.csv"
 Content-Type: text/csv
 
 id,Vorname,Nachname,Geburtstag,Land,Sonstiges,Besuche
-2,Pop,Bang,,Homeland,,2025-03-28,2025-07-28
 1,Poop,Bing,,,"morbidly obese, and stupid",2025-03-28
+2,Pop,Bang,2000-01-01,Homeland,,2025-03-28,2025-07-28
 3,Pop,Bang,,Homeland,,
+4,Pop,Bang,,Homeland,,
+5,Pop,Bang,,Homeland,,
 --boundary--

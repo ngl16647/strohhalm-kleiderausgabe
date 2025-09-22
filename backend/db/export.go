@@ -39,6 +39,7 @@ func ExportJson() ([]CustomerJsonRow, error) {
 			Id:        c.Id,
 			FirstName: c.FirstName,
 			LastName:  c.LastName,
+			Birthday:  c.Birthday,
 			Country:   c.Country,
 			Notes:     c.Notes,
 		}
