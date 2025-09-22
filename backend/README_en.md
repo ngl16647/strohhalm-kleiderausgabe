@@ -5,7 +5,7 @@
 To deploy the backend, first create a folder
 
 ```bash
-$ mkdir -p strohhalm-kleiderausgabe && cd strohhalm-kleiderausgabe
+mkdir -p strohhalm-kleiderausgabe && cd strohhalm-kleiderausgabe
 ```
 
 You then have 2 options to deploy the app.
@@ -38,8 +38,7 @@ The server generate an API key when started for the first time, something like `
 All data is stored in the file `data.db` and can be accessed internally using `sqlite3`. `sqlite3` can be installed with most package managers, for example:
 
 ```bash
-sudo apt update
-sudo apt install sqlite3
+sudo apt update && sudo apt install sqlite3
 ```
 
 After installing, you can start your SQL query by 

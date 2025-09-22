@@ -7,6 +7,8 @@ import (
 	"log"
 	"slices"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type CustomerJsonRow struct {
@@ -20,83 +22,128 @@ type CustomerJsonRow struct {
 }
 
 func ExportJson() ([]CustomerJsonRow, error) {
-	cs, err := AllCustomers()
+	rows, err := DB.Query(`
+        SELECT c.id, c.first_name, c.last_name, c.birthday, c.country, c.notes, v.visit_date
+        FROM customers c
+        LEFT JOIN visits v ON v.customer_id = c.id
+        ORDER BY c.id, v.visit_date
+    `)
 	if err != nil {
-		return []CustomerJsonRow{}, fmt.Errorf("export json: %w", err)
+		return nil, fmt.Errorf("export json: %w", err)
 	}
+	defer rows.Close()
 
-	vs, err := AllVisits()
-	if err != nil {
-		return []CustomerJsonRow{}, fmt.Errorf("export json: %w", err)
-	}
+	var result []CustomerJsonRow
+	var current *CustomerJsonRow
 
-	data := make([]CustomerJsonRow, len(cs))
-	customerIdMap := make(map[int64]int)
-	for index := range data {
-		c := cs[index]
-		customerIdMap[c.Id] = index
-		data[index] = CustomerJsonRow{
-			Id:        c.Id,
-			FirstName: c.FirstName,
-			LastName:  c.LastName,
-			Birthday:  c.Birthday,
-			Country:   c.Country,
-			Notes:     c.Notes,
+	for rows.Next() {
+		var (
+			id       int64
+			first    string
+			last     string
+			birthday string
+			country  string
+			notes    string
+			visit    *string
+		)
+
+		err := rows.Scan(&id, &first, &last, &birthday, &country, &notes, &visit)
+		if err != nil {
+			return nil, err
+		}
+
+		// If new customer, append to result
+		if current == nil || current.Id != id {
+			current = &CustomerJsonRow{
+				Id:        id,
+				FirstName: first,
+				LastName:  last,
+				Birthday:  birthday,
+				Country:   country,
+				Notes:     notes,
+				Visits:    []string{},
+			}
+			result = append(result, *current)
+			current = &result[len(result)-1]
+		}
+
+		// Add visit if not NULL
+		if visit != nil {
+			current.Visits = append(current.Visits, *visit)
 		}
 	}
-
-	// collect visits array
-	for _, v := range vs {
-		if v.CustomerId == nil {
-			continue
-		}
-		index := customerIdMap[*v.CustomerId]
-		data[index].Visits = append(data[index].Visits, v.VisitDate)
-	}
-
-	return data, nil
+	return result, nil
 }
 
-func ImportJson(data []CustomerJsonRow) {
+func ImportJson(data []CustomerJsonRow) error {
+	tx, err := DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	// -- prepare insert statements --
+	stmtCustomer, err := tx.Prepare(`
+        INSERT INTO customers (uuid, first_name, last_name, birthday, country, notes)
+        VALUES (?, ?, ?, ?, ?, ?)
+        RETURNING id
+    `)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	defer stmtCustomer.Close()
+
+	stmtVisit, err := tx.Prepare(`
+        INSERT INTO visits (customer_id, visit_date, notes)
+        VALUES (?, ?, ?)
+    `)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	defer stmtVisit.Close()
+
+	// -- importing --
 	for i := range data {
 		row := &data[i]
 
 		// import customer
-		customer, err := AddCustomer(Customer{
-			FirstName: row.FirstName,
-			LastName:  row.LastName,
-			Birthday:  row.Birthday,
-			Country:   row.Country,
-			Notes:     row.Notes,
-		})
+		var customerID int64
+		err = stmtCustomer.QueryRow(
+			uuid.NewString(),
+			row.FirstName,
+			row.LastName,
+			row.Birthday,
+			row.Country,
+			row.Notes,
+		).Scan(&customerID)
 		if err != nil {
-			log.Printf("WARNING: Unable to import customer: %s %s\n",
-				row.FirstName,
-				row.LastName,
-			)
+			log.Printf("WARNING: Unable to import customer %s %s: %s\n",
+				row.FirstName, row.LastName, err.Error())
 		}
 
 		// import that customer's visits
 		for _, visit := range row.Visits {
-			visitDate, err := time.Parse(DateFormat, visit)
-			if err != nil {
-				log.Printf("WARNING: Invalid visit date format of customer %s %s: %s\n",
-					row.FirstName,
-					row.LastName,
-					visit,
-				)
+			if visit == "" {
 				continue
 			}
-			_, err = AddVisit(customer.Id, &visitDate, "")
+			_, err := time.Parse(DateFormat, visit)
 			if err != nil {
-				log.Printf("WARNING: Unable to import visit of customer %s %s: %s\n",
-					row.FirstName,
-					row.LastName,
-					visit,
-				)
+				log.Printf("WARNING: Invalid visit date for %s %s: %s\n",
+					row.FirstName, row.LastName, visit)
+				continue
+			}
+
+			_, err = stmtVisit.Exec(customerID, visit, "")
+			if err != nil {
+				log.Printf("WARNING: Unable to import visit for %s %s: %s\n",
+					row.FirstName, row.LastName, err.Error())
 			}
 		}
+
+		log.Printf("import completed for customer: %s %s", row.FirstName, row.LastName)
 	}
+	return tx.Commit()
 }
 
 func ParseCSV(r io.Reader) ([]CustomerJsonRow, error) {
@@ -133,12 +180,12 @@ func ParseCSV(r io.Reader) ([]CustomerJsonRow, error) {
 		c := CustomerJsonRow{
 			FirstName: record[colIndex["Vorname"]],
 			LastName:  record[colIndex["Nachname"]],
-			Birthday:  record[colIndex["Geburtstag"]],
-			Country:   record[colIndex["Land"]],
-			Notes:     record[colIndex["Sonstiges"]],
+			Birthday:  record[colIndex["Geburtsdatum"]],
+			Country:   record[colIndex["Herkunftsland"]],
+			Notes:     record[colIndex["Notizen"]],
 		}
 
-		c.Visits = record[colIndex["Besuche"]:]
+		c.Visits = record[colIndex["Datum"]:]
 
 		cs = append(cs, c)
 	}
@@ -146,14 +193,14 @@ func ParseCSV(r io.Reader) ([]CustomerJsonRow, error) {
 }
 
 func checkHeader(header []string) error {
-	if header[len(header)-1] != "Besuche" {
-		return fmt.Errorf("last column is not Besuche: %w", ErrInvalidFormat)
+	if header[len(header)-1] != "Datum" {
+		return fmt.Errorf("last column is not \"Datum\": %w", ErrInvalidFormat)
 	}
 	if !slices.Contains(header, "Vorname") {
-		return fmt.Errorf("column Vorname not found: %w", ErrInvalidFormat)
+		return fmt.Errorf("column \"Vorname\" not found: %w", ErrInvalidFormat)
 	}
 	if !slices.Contains(header, "Nachname") {
-		return fmt.Errorf("column Nachname not found: %w", ErrInvalidFormat)
+		return fmt.Errorf("column \"Nachname\" not found: %w", ErrInvalidFormat)
 	}
 	return nil
 }

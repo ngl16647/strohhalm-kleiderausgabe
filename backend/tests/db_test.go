@@ -34,7 +34,7 @@ func TestAddAndSearchCustomer(t *testing.T) {
 	_, err = db.AddCustomer(db.Customer{FirstName: "Another", LastName: "Person", Birthday: TestDate})
 	FatalErr(t, err)
 
-	searchC, err := db.SearchCustomer(" cus")
+	searchC, err := db.SearchCustomerPaginated(" cus", db.Page{})
 	FatalErr(t, err)
 	t.Log(searchC)
 }
@@ -53,14 +53,14 @@ func TestAddVisit(t *testing.T) {
 		t.Fatal("New Visit ID is not 1")
 	}
 
-	cvs, err := db.AllVisitDetails()
+	cvs, err := db.AllVisitDetailsPaginated(db.Page{})
 	FatalErr(t, err)
 	log.Println(cvs)
 
 	t1, _ := time.Parse(db.DateFormat, "2025-08-27")
 	t2, _ := time.Parse(db.DateFormat, "2025-08-28")
 	t.Log(t1)
-	cvs, err = db.VisitDetailsBetween(t1, t2)
+	cvs, err = db.VisitDetailsBetweenPaginated(t1, t2, db.Page{})
 	FatalErr(t, err)
 	log.Println(cvs)
 

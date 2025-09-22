@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"bufio"
 	"fmt"
 	"net/http"
 	"strings"
@@ -61,26 +62,28 @@ func ExportHandler(w http.ResponseWriter, r *http.Request) {
 func ExportCsvHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/csv")
 	w.Header().Set("Content-Disposition", "attachment; filename=\"customers_visits.csv\"")
+	bw := bufio.NewWriter(w) // use buffer for optimization
+	defer bw.Flush()
 
 	data, err := db.ExportJson()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	w.Write([]byte("id,Vorname,Nachname,Geburtstag,Land,Sonstiges,Besuche\n"))
+	bw.Write([]byte("ID,Vorname,Nachname,Notizen,Geburtsdatum,Herkunftsland,Datum\n"))
 
 	for _, c := range data {
 		// use comma for separating visits to make the client happy
-		line := csvLine(
+		line := fmt.Sprintf(csvLine(
 			fmt.Sprint(c.Id),
 			c.FirstName,
 			c.LastName,
 			c.Birthday,
 			c.Country,
 			c.Notes,
-		) + "," + strings.Join(c.Visits, ",") + "\n"
+		), ",", strings.Join(c.Visits, ","), "\n")
 
-		_, err := w.Write([]byte(line))
+		_, err := bw.Write([]byte(line))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -107,7 +110,10 @@ func ImportCsvHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.ImportJson(cs)
+	if err := db.ImportJson(cs); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	ok(w)
 }
