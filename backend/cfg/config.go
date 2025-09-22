@@ -31,7 +31,9 @@ func defaultConfig() *Config {
 	cfg := &Config{}
 	cfg.Server.Host = "0.0.0.0"
 	cfg.Server.Port = 8080
-	cfg.Api.UseApiKey = false
+
+	cfg.Api.UseApiKey = true
+
 	cfg.Data = "data.db"
 	return cfg
 }
@@ -43,9 +45,7 @@ func InitConfig() {
 		rewriteConfigFile = true
 	} else {
 		// when config file exists, load it
-		if err := loadConfig(configPath, GlobalConfig); err != nil {
-			log.Fatal(err)
-		}
+		loadConfig(configPath, GlobalConfig)
 	}
 
 	// flags
@@ -83,30 +83,33 @@ func InitConfig() {
 	}
 
 	if rewriteConfigFile {
-		data, err := yaml.Marshal(&GlobalConfig)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if err := os.WriteFile(configPath, data, 0644); err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Println("Config file updated")
+		writeConfig(configPath, GlobalConfig)
 	}
+
 }
 
-func loadConfig(path string, cfg *Config) error {
+func loadConfig(path string, cfg *Config) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return fmt.Errorf("reading config file: %w", err)
+		log.Fatalf("reading config file: %s", err)
 	}
 
 	if err := yaml.Unmarshal(data, cfg); err != nil {
-		return fmt.Errorf("parsing config file: %w", err)
+		log.Fatalf("parsing config file: %s", err)
+	}
+}
+
+func writeConfig(path string, cfg *Config) {
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	return nil
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Config file updated")
 }
 
 func keyOfLength(length int) (string, error) {

@@ -67,16 +67,18 @@ func SearchCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	query := strings.TrimSpace(getParam(r, "query"))
 	beginStr := strings.TrimSpace(getParam(r, "last_visit_after"))
 	endStr := strings.TrimSpace(getParam(r, "last_visit_before"))
+	page, err := parsePageParam(r)
+	if err != nil {
+		http.Error(w, "invalid page params", http.StatusBadRequest)
+		return
+	}
 
-	var cs []db.Customer
+	var cs db.PageResult[db.Customer]
 	var queryErr error
 
-	if query == "" && beginStr == "" && endStr == "" {
-		// all results
-		cs, queryErr = db.AllCustomers()
-	} else if beginStr == "" && endStr == "" {
+	if beginStr == "" && endStr == "" {
 		// no date constraint
-		cs, queryErr = db.SearchCustomer(query)
+		cs, queryErr = db.SearchCustomerPaginated(query, page)
 	} else {
 		// have query and date requirement
 		begin, err := parseDateWithDefault(beginStr, db.MinDate)
@@ -91,7 +93,7 @@ func SearchCustomerHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		cs, queryErr = db.SearchCustomerWithinDates(query, begin, end)
+		cs, queryErr = db.SearchCustomerWithinDatesPaginated(query, begin, end, page)
 	}
 	if queryErr != nil {
 		http.Error(w, queryErr.Error(), http.StatusInternalServerError)

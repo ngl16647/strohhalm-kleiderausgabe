@@ -61,11 +61,34 @@ func UpdateCustomer(customerId int64, newC Customer) error {
 
 func AllCustomers() ([]Customer, error) {
 	cs := []Customer{}
-	err := DB.Select(&cs, "SELECT * FROM customers")
+	err := DB.Select(&cs, `SELECT * FROM customers`)
 	if err != nil {
 		return nil, fmt.Errorf("get all customers: %w", err)
 	}
 	return cs, nil
+}
+
+func AllCustomersPaginated(page Page) (PageResult[Customer], error) {
+	cs := []Customer{}
+	limit, offset := page.LimitOffset()
+
+	var total int64
+	err := DB.Get(&total, `SELECT COUNT(*) FROM customers`)
+	if err != nil {
+		return PageResult[Customer]{}, fmt.Errorf("get number of customers: %w", err)
+	}
+
+	err = DB.Select(&cs, `
+		SELECT * FROM customers
+			ORDER BY first_name
+			LIMIT $1 OFFSET $2`,
+		limit, offset,
+	)
+	if err != nil {
+		return PageResult[Customer]{}, fmt.Errorf("get all customers: %w", err)
+	}
+
+	return PageResultOf(cs, page, total), nil
 }
 
 func CustomerById(id int64) (Customer, error) {
@@ -92,35 +115,79 @@ func CustomerByUuid(uuid string) (Customer, error) {
 	return c, nil
 }
 
-func SearchCustomer(query string) ([]Customer, error) {
-	if strings.TrimSpace(query) == "" {
-		return AllCustomers()
+func SearchCustomerPaginated(query string, page Page) (PageResult[Customer], error) {
+	if query == "" {
+		return AllCustomersPaginated(page)
 	}
 
 	cs := []Customer{}
-	err := DB.Select(&cs,
-		`SELECT * FROM customers
+	limit, offset := page.LimitOffset()
+	pattern := "%" + strings.ToLower(query) + "%"
+
+	var total int64
+	err := DB.Get(&total, `
+		SELECT COUNT(*) FROM customers
 			WHERE LOWER(first_name || ' ' || last_name) LIKE $1`,
-		"%"+strings.ToLower(query)+"%",
+		pattern,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("search customer: %w", err)
+		return PageResult[Customer]{}, fmt.Errorf("get total searched customer: %w", err)
 	}
-	return cs, nil
+
+	err = DB.Select(&cs, `
+		SELECT * FROM customers
+			WHERE LOWER(first_name || ' ' || last_name) LIKE $1
+			ORDER BY first_name
+			LIMIT $2 OFFSET $3`,
+		pattern, limit, offset,
+	)
+	if err != nil {
+		return PageResult[Customer]{}, fmt.Errorf("search customer: %w", err)
+	}
+	return PageResultOf(cs, page, total), nil
 }
 
-func SearchCustomerWithinDates(query string, begin time.Time, end time.Time) ([]Customer, error) {
+func SearchCustomerWithinDatesPaginated(
+	query string,
+	begin time.Time,
+	end time.Time,
+	page Page,
+) (PageResult[Customer], error) {
 	cs := []Customer{}
-	err := DB.Select(&cs,
-		`SELECT * FROM customers
-			WHERE LOWER(first_name || ' ' || last_name) LIKE $1
-			AND last_visit BETWEEN $2 AND $3`,
-		"%"+strings.ToLower(query)+"%", begin.Format(DateFormat), end.Format(DateFormat),
+	limit, offset := page.LimitOffset()
+
+	var total int64
+	err := DB.Get(&total, `
+    	SELECT COUNT(*) FROM customers
+    		WHERE LOWER(first_name || ' ' || last_name) LIKE $1
+      		AND last_visit IS NOT NULL
+      		AND last_visit BETWEEN $2 AND $3`,
+		"%"+strings.ToLower(query)+"%",
+		begin,
+		end,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("search customer: %w", err)
+		return PageResult[Customer]{}, err
 	}
-	return cs, nil
+
+	err = DB.Select(&cs, `
+		SELECT * FROM customers
+			WHERE LOWER(first_name || ' ' || last_name) LIKE $1
+			AND last_visit IS NOT NULL
+			AND last_visit BETWEEN $2 AND $3
+		ORDER BY first_name
+		LIMIT $4 OFFSET $5`,
+		"%"+strings.ToLower(query)+"%",
+		begin.Format(DateFormat),
+		end.Format(DateFormat),
+		limit,
+		offset,
+	)
+	if err != nil {
+		return PageResult[Customer]{}, fmt.Errorf("search customer: %w", err)
+	}
+
+	return PageResultOf(cs, page, total), nil
 }
 
 func SetCustomerLastVisit(customerId int64, newVisit Visit) error {

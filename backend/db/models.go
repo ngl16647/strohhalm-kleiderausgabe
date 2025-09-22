@@ -32,6 +32,41 @@ type VisitDetail struct {
 	Notes             string  `db:"notes" json:"notes"`
 }
 
+// for pagination
+type Page struct {
+	Size int64 // size of page
+	Page int64 // page number
+}
+
+type PageResult[T any] struct {
+	Data  []T   `json:"data"` // this is already a pointer, copying PageResult is cheap
+	Size  int   `json:"dataSize"`
+	Page  int64 `json:"pageNumber"`
+	Total int64 `json:"totalPages"`
+}
+
+func (p Page) LimitOffset() (int64, int64) {
+	if p.Size <= 0 {
+		p.Size = 10 // default page size
+	}
+	if p.Page <= 0 {
+		p.Page = 1
+	}
+	limit := p.Size
+	offset := (p.Page - 1) * p.Size
+	return limit, offset
+}
+
+func PageResultOf[T any](data []T, page Page, total int64) PageResult[T] {
+	totalPages := (total + page.Size - 1) / page.Size
+	return PageResult[T]{
+		Data:  data,
+		Size:  len(data),
+		Page:  page.Page,
+		Total: totalPages,
+	}
+}
+
 const DateFormat = "2006-01-02"
 
 var (
@@ -70,5 +105,5 @@ const (
 var Indices = []string{
 	`PRAGMA foreign_keys = ON;`,
 	`CREATE INDEX IF NOT EXISTS idx_visits_visit_date ON visits(visit_date);`,
-	`CREATE INDEX IF NOT EXISTS idx_visits_customer_id ON visits(customer_id);`,
+	`CREATE INDEX IF NOT EXISTS idx_customers_first_name ON customers(first_name);`,
 }

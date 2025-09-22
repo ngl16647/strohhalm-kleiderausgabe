@@ -6,8 +6,8 @@ import (
 )
 
 func printAPIDocs() {
-	for _, route := range routes.Routes {
-		fmt.Printf("%s %s\n", route.Method, route.Path)
+	for i, route := range routes.Routes {
+		fmt.Printf("[%d] %s %s\n", i, route.Method, route.Path)
 		fmt.Println("    Description:", route.Doc)
 		if len(route.QueryParams) > 0 {
 			fmt.Println("    Parameters:")

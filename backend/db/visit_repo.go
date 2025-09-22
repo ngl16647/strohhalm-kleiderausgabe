@@ -47,11 +47,19 @@ func AddVisit(customerId int64, visitDate *time.Time, notes string) (Visit, erro
 	return newVisit, nil
 }
 
-func AllVisitDetails() ([]VisitDetail, error) {
+func AllVisitDetailsPaginated(page Page) (PageResult[VisitDetail], error) {
 	cvs := []VisitDetail{}
+	limit, offset := page.LimitOffset()
+
+	var total int64
+	err := DB.Get(&total, `SELECT COUNT(*) FROM visits`)
+	if err != nil {
+		return PageResult[VisitDetail]{}, fmt.Errorf("get number of visits: %w", err)
+	}
+
 	// LEFT JOIN to include visits with deleted customer
 	// sqlite does not have RIGHT JOIN
-	err := DB.Select(&cvs, `
+	err = DB.Select(&cvs, `
 		SELECT 
 			v.id AS id,
 			c.id AS customer_id,
@@ -62,11 +70,14 @@ func AllVisitDetails() ([]VisitDetail, error) {
 			v.notes AS notes
       	FROM visits v
         LEFT JOIN customers c ON c.id = v.customer_id
-        ORDER BY v.visit_date DESC`)
+        ORDER BY v.visit_date DESC
+		LIMIT $1 OFFSET $2`,
+		limit, offset,
+	)
 	if err != nil {
-		return cvs, fmt.Errorf("get visit details: %w", err)
+		return PageResult[VisitDetail]{}, fmt.Errorf("get visit details: %w", err)
 	}
-	return cvs, nil
+	return PageResultOf(cvs, page, total), nil
 }
 
 func AllVisits() ([]Visit, error) {
@@ -78,12 +89,28 @@ func AllVisits() ([]Visit, error) {
 	return vs, nil
 }
 
-func VisitDetailsBetween(begin time.Time, end time.Time) ([]VisitDetail, error) {
+func VisitDetailsBetweenPaginated(
+	begin time.Time,
+	end time.Time,
+	page Page,
+) (PageResult[VisitDetail], error) {
 	beginStr := begin.Format(DateFormat)
 	endStr := end.Format(DateFormat)
+	limit, offset := page.LimitOffset()
+
+	var total int64
+	err := DB.Get(&total, `
+		SELECT COUNT(*) FROM visits
+		WHERE visit_date BETWEEN $1 AND $2
+        ORDER BY visit_date DESC`,
+		beginStr, endStr,
+	)
+	if err != nil {
+		return PageResult[VisitDetail]{}, fmt.Errorf("get number of visits: %w", err)
+	}
 
 	cvs := []VisitDetail{}
-	err := DB.Select(&cvs, `
+	err = DB.Select(&cvs, `
 		SELECT 
 			v.id AS id,
 			c.id AS customer_id,
@@ -95,37 +122,42 @@ func VisitDetailsBetween(begin time.Time, end time.Time) ([]VisitDetail, error) 
       	FROM visits v
         LEFT JOIN customers c ON c.id = v.customer_id
 		WHERE v.visit_date BETWEEN $1 AND $2
-        ORDER BY v.visit_date DESC`,
-		beginStr, endStr,
+        ORDER BY v.visit_date DESC
+		LIMIT $3 OFFSET $4`,
+		beginStr, endStr, limit, offset,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("get customer visits between %s and %s: %w", beginStr, endStr, err)
+		return PageResult[VisitDetail]{}, fmt.Errorf("get customer visits between %s and %s: %w", beginStr, endStr, err)
 	}
 
-	return cvs, nil
+	return PageResultOf(cvs, page, total), nil
 }
 
-func VisitDetailsOfCustomer(customerId int64) ([]VisitDetail, error) {
-	cvs := []VisitDetail{}
-	err := DB.Select(&cvs, `
-		SELECT
-			v.id AS id,
-			c.id AS customer_id,
-			c.uuid AS customer_uuid,
-			c.first_name AS first_name,
-			c.last_name AS last_name,
-			v.visit_date AS visit_date,
-			v.notes AS notes
-		FROM visits v
-		LEFT JOIN customers c ON c.id = v.customer_id
-		WHERE v.customer_id = $1`,
+func VisitsOfCustomerPaginated(customerId int64, page Page) (PageResult[Visit], error) {
+	cvs := []Visit{}
+	limit, offset := page.LimitOffset()
+
+	var total int64
+	err := DB.Get(&total, `
+		SELECT COUNT(*) FROM visits
+		WHERE customer_id = $1`,
 		customerId,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("get visit details of customer: %w", err)
+		return PageResult[Visit]{}, fmt.Errorf("get number of visits: %w", err)
 	}
 
-	return cvs, nil
+	err = DB.Select(&cvs, `
+		SELECT * FROM visits v
+		WHERE customer_id = $1
+		LIMIT $2 OFFSET $3`,
+		customerId, limit, offset,
+	)
+	if err != nil {
+		return PageResult[Visit]{}, fmt.Errorf("get visit details of customer: %w", err)
+	}
+
+	return PageResultOf(cvs, page, total), nil
 }
 
 func VisitsOfCustomer(customerId int64, limit int) ([]Visit, error) {
@@ -209,6 +241,7 @@ func DeleteLastVisitOfCustomer(customerId int64) (*Visit, error) {
 	return lastVisit, err
 }
 
+// re-calculate the latest visit and return it
 func GetLatestVisitByCustomer(customerId int64) (*Visit, error) {
 	var visit Visit
 	if err := DB.Get(&visit, `

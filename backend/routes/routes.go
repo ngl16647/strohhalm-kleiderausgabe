@@ -27,7 +27,7 @@ var Routes = []Route{
 		Path:    "/customers",
 		Method:  POST,
 		Handler: AddCustomerHandler,
-		Doc: `Add new customer. Expects JSON body with "uuid" (optional), "firstName", "lastName", 
+		Doc: `Adds new customer. Expects JSON body with "uuid" (optional), "firstName", "lastName", 
 		 "birthday" (optional), "country" (optional) and "notes" (optional). Return new customer 
 		 struct.`,
 	},
@@ -35,26 +35,28 @@ var Routes = []Route{
 		Path:    "/customers",
 		Method:  GET,
 		Handler: SearchCustomerHandler,
-		Doc: `Search customer names by query parameter. Get all customers when no query 
-		 parameter is provided.`,
+		Doc: `Searches customer names by query parameter. Returns page result with data: "id", "uuid",
+		 "firstName", "lastName", "birthday", "country", "lastVisit" and "notes"`,
 		QueryParams: []QueryParam{
 			{Name: "query", Description: "Query string for searching", Required: false},
 			{Name: "last_visit_after", Description: "Customer must have last visit after this date", Required: false},
 			{Name: "last_visit_before", Description: "Customer must have last visit before this date", Required: false},
+			{Name: "page", Description: "Page number, default = 1", Required: false},
+			{Name: "size", Description: "Page size, default = 10", Required: false},
 		},
 	},
 	{
 		Path:    "/customers/{id}",
 		Method:  GET,
 		Handler: GetCustomerHandler,
-		Doc: `Get customer by ID. Response includes "id", "uuid", "firstName", "lastName", "birthday" 
+		Doc: `Gets customer by ID. Response includes "id", "uuid", "firstName", "lastName", "birthday" 
 		 "country", "lastVisit" and "notes".`,
 	},
 	{
 		Path:    "/customers/{id}",
 		Method:  PUT,
 		Handler: UpdateCustomerHandler,
-		Doc: `Update customer. Expects JSON body with "firstName", "lastName", "birthday", "country"
+		Doc: `Updates customer. Expects JSON body with "firstName", "lastName", "birthday", "country"
 		 and "notes". 
 		 IMPORTANT: Omitted fields will be recorded as empty values. "uuid" cannot be changed.`,
 	},
@@ -62,44 +64,50 @@ var Routes = []Route{
 		Path:    "/customers/{id}",
 		Method:  DELETE,
 		Handler: DeleteCustomerHandler,
-		Doc:     `Delete a customer, set customer information in corresponding visits to null.`,
+		Doc:     `Deletes a customer, set customer information in corresponding visits to null.`,
 	},
 	{
 		Path:    "/customers/uuid/{uuid}",
 		Method:  GET,
 		Handler: GetCustomerByUuidHandler,
-		Doc:     `Get customer by UUID.`,
+		Doc:     `Gets customer by UUID.`,
 	},
 	{
 		Path:    "/customers/{id}/visits",
 		Method:  POST,
 		Handler: RecordVisitDetailHandler,
-		Doc: `Record a visit. Optionally accepts JSON body with "visitDate" (format: YYYY-MM-DD) and
+		Doc: `Records a visit. Optionally accepts JSON body with "visitDate" (format: YYYY-MM-DD) and
 		 "notes". Record the visit with today's date if visitDate is not provided. Returns visit id.`,
 	},
 	{
 		Path:    "/customers/{id}/visits",
 		Method:  GET,
 		Handler: VisitsOfCustomerHandler,
-		Doc: `Get all visits of a customer. Returns a list consists of data: "id", "customerId", 
-		 "customerUuid", "customerFirstName", "customerLastName", "visitDate" and "notes".`,
+		Doc: `Gets all visits of a customer. Returns page result with data: "visitId", "customerId"
+		 and "visitDate".`,
+		QueryParams: []QueryParam{
+			{Name: "page", Description: "Page number, default = 1", Required: false},
+			{Name: "size", Description: "Page size, default = 10", Required: false},
+		},
 	},
 	{
 		Path:    "/customers/{id}/visits",
 		Method:  DELETE,
 		Handler: DeleteLastVisitOfCustomerHandler,
-		Doc:     `Delete the last visit of a customer. Return the new latest visit of that customer.`,
+		Doc:     `Deletes the last visit of a customer. Returns the new latest visit of that customer.`,
 	},
 	{
 		Path:    "/visits",
 		Method:  GET,
 		Handler: VisitDetailsHandler,
-		Doc: `Get visit details. Returns a list consists of data "visitId", "customerId",
-		 "customerUuid", "customerFirstName", "customerLastName", "visitDate" and "notes". Optionally
-		  filtered by date range.`,
+		Doc: `Gets visit details. Returns a list consists of data "visitId", "customerId", "customerUuid",
+		 "customerFirstName", "customerLastName", "visitDate" and "notes". Optionally filtered by date
+		 range.`,
 		QueryParams: []QueryParam{
 			{Name: "begin", Description: "Start date in YYYY-MM-DD format", Required: false},
 			{Name: "end", Description: "End date in YYYY-MM-DD format", Required: false},
+			{Name: "page", Description: "Page number, default = 1", Required: false},
+			{Name: "size", Description: "Page size, default = 10", Required: false},
 		},
 	},
 	{
@@ -145,7 +153,8 @@ var Routes = []Route{
 		Handler: ImportCsvHandler,
 		Doc: `Import CSV file. All customers are treated as different persons and will be recorded 
 		 regardless of current data in database, which means the "id" column is effectively meaningless.
-		 Import does NOT stop when error occors. Test data can be found in "backend/tests/test_data.csv"
+		 Import does NOT stop when error occors. Test data can be found in "backend/tests/test_data.csv".
+		 
 		 IMPORTANT: This is a highly dangerous endpoint. Either use it on a completely empty backend,
 		 or backup your current data before import.`,
 	},
