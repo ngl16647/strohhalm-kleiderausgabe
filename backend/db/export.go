@@ -188,14 +188,10 @@ func ParseCSV(r io.Reader) ([]CustomerJsonRow, error) {
 	}
 
 	// check if headers are valid
-	if err := checkHeader(header); err != nil {
-		return nil, fmt.Errorf("missing header: %w", err)
-	}
-
 	// map header and column
-	colIndex := make(map[string]int)
-	for i, col := range header {
-		colIndex[col] = i
+	colIndex, err := mapHeader(header)
+	if err != nil {
+		return nil, err
 	}
 
 	var cs []CustomerJsonRow
@@ -223,15 +219,22 @@ func ParseCSV(r io.Reader) ([]CustomerJsonRow, error) {
 	return cs, nil
 }
 
-func checkHeader(header []string) error {
+func mapHeader(header []string) (map[string]int, error) {
 	if header[len(header)-1] != "Datum" {
-		return fmt.Errorf("last column is not \"Datum\": %w", ErrInvalidFormat)
+		return nil, fmt.Errorf("last column is not \"Datum\": %w", ErrInvalidFormat)
 	}
 	if !slices.Contains(header, "Vorname") {
-		return fmt.Errorf("column \"Vorname\" not found: %w", ErrInvalidFormat)
+		return nil, fmt.Errorf("column \"Vorname\" not found: %w", ErrInvalidFormat)
 	}
 	if !slices.Contains(header, "Nachname") {
-		return fmt.Errorf("column \"Nachname\" not found: %w", ErrInvalidFormat)
+		return nil, fmt.Errorf("column \"Nachname\" not found: %w", ErrInvalidFormat)
 	}
-	return nil
+	colIndex := make(map[string]int)
+	for i, col := range header {
+		if _, exists := colIndex[col]; exists {
+			return nil, fmt.Errorf("duplicated column header: %w", ErrInvalidFormat)
+		}
+		colIndex[col] = i
+	}
+	return colIndex, nil
 }
