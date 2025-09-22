@@ -74,14 +74,14 @@ func ExportCsvHandler(w http.ResponseWriter, r *http.Request) {
 
 	for _, c := range data {
 		// use comma for separating visits to make the client happy
-		line := fmt.Sprintf(csvLine(
+		line := csvLine(
 			fmt.Sprint(c.Id),
 			c.FirstName,
 			c.LastName,
 			c.Birthday,
 			c.Country,
 			c.Notes,
-		), ",", strings.Join(c.Visits, ","), "\n")
+		) + "," + strings.Join(c.Visits, ",") + "\n"
 
 		_, err := bw.Write([]byte(line))
 		if err != nil {
