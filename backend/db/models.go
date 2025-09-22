@@ -39,10 +39,11 @@ type Page struct {
 }
 
 type PageResult[T any] struct {
-	Data  []T   `json:"data"` // this is already a pointer, copying PageResult is cheap
-	Size  int   `json:"dataSize"`
-	Page  int64 `json:"pageNumber"`
-	Total int64 `json:"totalPages"`
+	Data     []T   `json:"data"` // this is already a pointer, copying PageResult is cheap
+	DataSize int   `json:"dataSize"`
+	PageSize int64 `json:"pageSize"`
+	Page     int64 `json:"pageNumber"`
+	Total    int64 `json:"totalPages"`
 }
 
 func (p Page) LimitOffset() (int64, int64) {
@@ -60,10 +61,11 @@ func (p Page) LimitOffset() (int64, int64) {
 func PageResultOf[T any](data []T, page Page, total int64) PageResult[T] {
 	totalPages := (total + page.Size - 1) / page.Size
 	return PageResult[T]{
-		Data:  data,
-		Size:  len(data),
-		Page:  page.Page,
-		Total: totalPages,
+		Data:     data,
+		DataSize: len(data),
+		Page:     page.Page,
+		PageSize: page.Size,
+		Total:    totalPages,
 	}
 }
 

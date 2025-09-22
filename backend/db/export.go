@@ -93,9 +93,21 @@ func ImportJson(data []CustomerJsonRow) error {
 	}
 	defer stmtCustomer.Close()
 
+	stmtSetLastVisit, err := tx.Prepare(`
+		UPDATE customers
+		SET last_visit_id = ?, last_visit = ?
+		WHERE id = ?
+	`)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	defer stmtSetLastVisit.Close()
+
 	stmtVisit, err := tx.Prepare(`
         INSERT INTO visits (customer_id, visit_date, notes)
         VALUES (?, ?, ?)
+		RETURNING id
     `)
 	if err != nil {
 		tx.Rollback()
@@ -123,10 +135,13 @@ func ImportJson(data []CustomerJsonRow) error {
 		}
 
 		// import that customer's visits
+		var lastVisit string = ""
+		var lastVisitId int64 = 0
 		for _, visit := range row.Visits {
 			if visit == "" {
 				continue
 			}
+
 			_, err := time.Parse(DateFormat, visit)
 			if err != nil {
 				log.Printf("WARNING: Invalid visit date for %s %s: %s\n",
@@ -134,10 +149,26 @@ func ImportJson(data []CustomerJsonRow) error {
 				continue
 			}
 
-			_, err = stmtVisit.Exec(customerID, visit, "")
+			// insert visit
+			var visitId int64
+			err = stmtVisit.QueryRow(customerID, visit, "").Scan(&visitId)
 			if err != nil {
 				log.Printf("WARNING: Unable to import visit for %s %s: %s\n",
 					row.FirstName, row.LastName, err.Error())
+			}
+
+			if visit > lastVisit {
+				lastVisit = visit
+				lastVisitId = visitId
+			}
+		}
+
+		// update last visit
+		if lastVisit != "" {
+			_, err = stmtSetLastVisit.Exec(lastVisitId, lastVisit, customerID)
+			if err != nil {
+				log.Printf("WARNING: Unable to update last visit for %s %s",
+					row.FirstName, row.LastName)
 			}
 		}
 
