@@ -4,4 +4,8 @@ server:
 api:
     use_api_key: true
     api_key: ""
+tls:
+    use_tls: true
+    cert_file: cert.pem
+    key_file: key.pem
 data: data.db

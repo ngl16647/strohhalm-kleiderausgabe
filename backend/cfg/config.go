@@ -22,6 +22,11 @@ type Config struct {
 		UseApiKey bool   `yaml:"use_api_key"`
 		ApiKey    string `yaml:"api_key"`
 	}
+	Tls struct {
+		UseTls   bool   `yaml:"use_tls"`
+		CertFile string `yaml:"cert_file"`
+		KeyFile  string `yaml:"key_file"`
+	}
 	Data string
 }
 
@@ -34,17 +39,20 @@ func defaultConfig() *Config {
 
 	cfg.Api.UseApiKey = true
 
+	cfg.Tls.UseTls = false
+	cfg.Tls.CertFile = "cert.pem"
+	cfg.Tls.KeyFile = "key.pem"
+
 	cfg.Data = "data.db"
 	return cfg
 }
 
 func InitConfig() {
 	var rewriteConfigFile = false
-	// check if config file exists
+	// load existing config file
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		rewriteConfigFile = true
 	} else {
-		// when config file exists, load it
 		loadConfig(configPath, GlobalConfig)
 	}
 
@@ -54,13 +62,10 @@ func InitConfig() {
 
 	noKey := flag.Bool("no-key", false, "Turn off API key verification")
 	newKey := flag.Bool("new-key", false, "Generate new API key")
+	useTls := flag.Bool("tls", false, "Use TLS")
 	docsFlag := flag.Bool("docs", false, "Print API documentation")
 
 	flag.Parse()
-
-	if *noKey {
-		GlobalConfig.Api.UseApiKey = false
-	}
 
 	// print docs if --docs flag is on
 	if *docsFlag {
@@ -68,7 +73,8 @@ func InitConfig() {
 		os.Exit(0) // do not run the server
 	}
 
-	if GlobalConfig.Api.UseApiKey {
+	// generate new API key
+	if !*noKey {
 		if GlobalConfig.Api.ApiKey == "" || *newKey {
 			var err error
 			GlobalConfig.Api.ApiKey, err = keyOfLength(16)
@@ -78,12 +84,19 @@ func InitConfig() {
 			fmt.Println("API key: ", GlobalConfig.Api.ApiKey)
 			rewriteConfigFile = true
 		}
-	} else {
-		log.Println("WARNING: Server running without API key verification")
 	}
 
+	// update config file when not exists or new API key is generated
 	if rewriteConfigFile {
 		writeConfig(configPath, GlobalConfig)
+	}
+
+	// adjust global config object for startup
+	if *noKey {
+		GlobalConfig.Api.UseApiKey = false
+	}
+	if *useTls {
+		GlobalConfig.Tls.UseTls = *useTls
 	}
 
 }

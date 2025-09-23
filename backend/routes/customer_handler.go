@@ -41,6 +41,10 @@ func GetCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	c, err := db.CustomerById(id)
 	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			http.Error(w, "customer not found", http.StatusNotFound)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
