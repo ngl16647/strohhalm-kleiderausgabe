@@ -5,27 +5,62 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var DB *sqlx.DB
+var db *sqlx.DB
 
-func initPanic(err error, message string) {
-	if err != nil {
-		panic(message + ": " + err.Error())
+func InitDatabase(path string) {
+
+	db = sqlx.MustOpen("sqlite3", path)
+
+	db.MustExec(CustomerInitStr)
+
+	db.MustExec(VisitsInitStr)
+
+	for _, index := range Indices {
+		sqlx.MustExec(db, index)
 	}
 }
 
-func InitDatabase(path string) {
-	var err error
+// Wrap operations inside a single transaction.
+// When you have multiple database operations inside a same functionality,
+// use withTx to ensure atomicity
+func withTx[T any](fn func(*sqlx.Tx) (T, error)) (T, error) {
+	var nullData T
 
-	DB, err = sqlx.Open("sqlite3", path)
-	initPanic(err, "Failed to open database")
-
-	_, err = DB.Exec(CustomerInitStr)
-	initPanic(err, "Failed to create table `customers`")
-
-	_, err = DB.Exec(VisitsInitStr)
-	initPanic(err, "Failed to create table `visits`")
-
-	for _, index := range Indices {
-		sqlx.MustExec(DB, index)
+	tx, err := db.Beginx()
+	if err != nil {
+		return nullData, ErrNoDbConnection
 	}
+	defer tx.Rollback() // when errors occur, rollback database
+
+	result, err := fn(tx)
+	if err != nil {
+		return nullData, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nullData, err
+	}
+
+	return result, nil
+}
+
+// Wrap operations inside a single transaction.
+// When you have multiple database operations inside a same functionality,
+// use withTx to ensure atomicity
+func withTxExec(fn func(*sqlx.Tx) error) error {
+	tx, err := db.Beginx()
+	if err != nil {
+		return ErrNoDbConnection
+	}
+	defer tx.Rollback()
+
+	if err := fn(tx); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
 }

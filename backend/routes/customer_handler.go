@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 	"strohhalm-backend/db"
@@ -52,8 +53,8 @@ func GetCustomerByUuidHandler(w http.ResponseWriter, r *http.Request) {
 
 	c, err := db.CustomerByUuid(id)
 	if err != nil {
-		if strings.Contains(err.Error(), "sql: no rows in result set") {
-			http.Error(w, "customer not foudnd", http.StatusNotFound)
+		if errors.Is(err, db.ErrNotFound) {
+			http.Error(w, "customer not found", http.StatusNotFound)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)

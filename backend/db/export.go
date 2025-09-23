@@ -22,7 +22,7 @@ type CustomerJsonRow struct {
 }
 
 func ExportJson() ([]CustomerJsonRow, error) {
-	rows, err := DB.Query(`
+	rows, err := db.Query(`
         SELECT c.id, c.first_name, c.last_name, c.birthday, c.country, c.notes, v.visit_date
         FROM customers c
         LEFT JOIN visits v ON v.customer_id = c.id
@@ -76,10 +76,11 @@ func ExportJson() ([]CustomerJsonRow, error) {
 }
 
 func ImportJson(data []CustomerJsonRow) error {
-	tx, err := DB.Begin()
+	tx, err := db.Beginx()
 	if err != nil {
-		return err
+		return ErrNoDbConnection
 	}
+	defer tx.Rollback()
 
 	// -- prepare insert statements --
 	stmtCustomer, err := tx.Prepare(`
@@ -88,7 +89,6 @@ func ImportJson(data []CustomerJsonRow) error {
         RETURNING id
     `)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	defer stmtCustomer.Close()
@@ -99,7 +99,6 @@ func ImportJson(data []CustomerJsonRow) error {
 		WHERE id = ?
 	`)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	defer stmtSetLastVisit.Close()
@@ -110,7 +109,6 @@ func ImportJson(data []CustomerJsonRow) error {
 		RETURNING id
     `)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
 	defer stmtVisit.Close()

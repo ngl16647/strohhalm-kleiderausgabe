@@ -2,6 +2,7 @@ package routes
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -145,6 +146,10 @@ func DeleteLastVisitOfCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	lastVisit, err := db.DeleteLastVisitOfCustomer(customerId)
 	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			http.Error(w, "customer not found", http.StatusNotFound)
+			return
+		}
 		http.Error(w, "deletion failed", http.StatusInternalServerError)
 		return
 	}
