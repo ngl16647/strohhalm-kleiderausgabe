@@ -130,6 +130,21 @@ class MyAppState extends State<MyApp> {
           textColor: Colors.black87,
           iconColor: Colors.black54,
         ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: seedColor.withAlpha(75), // passt zum Farbschema
+            foregroundColor: Colors.white, // Text/Icon Farbe
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: seedColor,
+          ),
+        ),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(

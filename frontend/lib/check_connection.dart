@@ -108,7 +108,7 @@ class _ConnectionToastListenerState extends State<ConnectionToastListener> {
               Utilities.showToast(
                 context: context,
                 title: S.of(context).fail,
-                description: "Keine Internetverbindung",
+                description: S.of(context).no_internet,
                 isError: true,
               );
               break;
@@ -116,7 +116,7 @@ class _ConnectionToastListenerState extends State<ConnectionToastListener> {
               Utilities.showToast(
                 context: context,
                 title:  S.of(context).fail,
-                description: "Server nicht erreichbar",
+                description: S.of(context).no_server,
                 isError: true,
               );
               break;
@@ -124,7 +124,7 @@ class _ConnectionToastListenerState extends State<ConnectionToastListener> {
               Utilities.showToast(
                 context: context,
                 title: S.of(context).success,
-                description: "Wieder verbunden",
+                description: S.of(context).reconnected,
               );
               break;
           }

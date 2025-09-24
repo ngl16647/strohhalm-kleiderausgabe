@@ -94,10 +94,7 @@ class CustomerTileState extends State<CustomerTile>{
                   _uploading = true;
                 });
 
-                Visit? newLastVisit;
-                _useServer
-                    ? newLastVisit = await HttpHelper().addVisit(userId: widget.user.id)
-                    : newLastVisit = await DatabaseHelper().addVisit(widget.user);
+                Visit? newLastVisit = await Utilities.addVisit(widget.user, context, true);
                 setState(() {
                   if(newLastVisit != null){
                     widget.user.lastVisit = newLastVisit.tookTime;
@@ -105,7 +102,6 @@ class CustomerTileState extends State<CustomerTile>{
                   _uploading = false;
                 });
                 if(!mounted) return;
-                Utilities.showToast(context: context, title:  S.of(context).success, description: S.of(context).stat_page_savedVisit, isError: false);
                 widget.updatedVisit();
               },
               style: TextButton.styleFrom(
@@ -133,9 +129,11 @@ class CustomerTileState extends State<CustomerTile>{
           spacing: 10,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(width: 10),
-            Text(widget.user.id.toString()),
-            SizedBox(width: 10),
+            SizedBox(),
+            SizedBox(
+              width: 32,
+              child:  Text(widget.user.id.toString(),textAlign: TextAlign.start,),
+            ),
             Expanded(
               flex: 2,
               child: Column(
@@ -143,19 +141,30 @@ class CustomerTileState extends State<CustomerTile>{
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text("${widget.user.firstName} ${widget.user.lastName}", style: TextStyle(fontWeight: FontWeight.bold)),
+                  Tooltip(
+                    message: "${widget.user.firstName} ${widget.user.lastName}",
+                    child: Text("${widget.user.firstName} ${widget.user.lastName}", style: TextStyle(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis, maxLines: 2,),
+                  ),
                   Row(
+                    spacing: 0,
                     children: [
-                      Text(
+                      Flexible(
+                        child: Text(
                           DateFormat("dd.MM.yyyy").format(widget.user.birthDay),
                           style: TextStyle(color: Theme.of(context).textTheme.headlineSmall!.color?.withAlpha(170))
+                        ),
                       ),
                       SizedBox(width: 10),
-                       Text(
-                         Utilities.getLocalizedCountryNameFromCode(context, widget.user.country),
-                        style: TextStyle(color: Theme.of(context).textTheme.headlineSmall!.color?.withAlpha(170)),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      Expanded(
+                        child: Tooltip(
+                          message: Utilities.getLocalizedCountryNameFromCode(context, widget.user.country),
+                          child: Text(
+                            Utilities.getLocalizedCountryNameFromCode(context, widget.user.country),
+                            style: TextStyle(color: Theme.of(context).textTheme.headlineSmall!.color?.withAlpha(170)),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
+                      )
                     ],
                   ),
                 ],
@@ -199,7 +208,7 @@ class CustomerTileState extends State<CustomerTile>{
               children: [
                 IconButton(
                   onPressed: () {
-                    CreateQRCode().printQrCode(context, widget.user);
+                    CreateQRCode.printQrCode(context, widget.user);
                     //CreateQRCode().showQrCode(context, user);
                   },
                   icon: Icon(Icons.print),
@@ -279,7 +288,7 @@ class CustomerTileState extends State<CustomerTile>{
             children: [
               IconButton(
                 onPressed: () {
-                  CreateQRCode().printQrCode(context, widget.user);
+                  CreateQRCode.printQrCode(context, widget.user);
                 },
                 icon: Icon(Icons.print),
               ),
@@ -301,6 +310,7 @@ class CustomerTileState extends State<CustomerTile>{
     return Padding(
       padding: EdgeInsets.symmetric(vertical: _mouseIsOver ? 1 : 3, horizontal: 3),
       child: InkWell(
+        borderRadius:  BorderRadius.circular(12),
         onTap: (){
           //openStatPage(user);
           widget.click();

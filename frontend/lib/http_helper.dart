@@ -12,14 +12,15 @@ class HttpHelper {
   static const String defaultPort = "8080";
   static const String defaultScheme = "http";
 
-
   bool get useServer => AppSettingsManager.instance.settings.useServer!;
   String get baseUrl => AppSettingsManager.instance.settings.url!;
   String? get key => AppSettingsManager.instance.authToken;
 
+
+
   Future<bool> hasInternet() async {
     try {
-      final result = await InternetAddress.lookup("example.com");
+      final result = await InternetAddress.lookup("example.com").timeout(Duration(seconds: 3));
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
         return true;
       }
@@ -31,7 +32,7 @@ class HttpHelper {
 
   Future<bool> isServerOnline() async {
     try {
-      final socket = await Socket.connect(baseUrl, int.parse(defaultPort), timeout: Duration(seconds: 5));
+      final socket = await Socket.connect(baseUrl, int.parse(defaultPort), timeout: Duration(seconds: 3));
       socket.destroy();
       return true;
     } catch (_) {
@@ -44,7 +45,6 @@ class HttpHelper {
   }) async {
     if(!useServer || baseUrl.isEmpty) return null;
     final uri = buildUri(
-      //host: baseUrl,
         path: "/customers",
     );
 
@@ -68,11 +68,9 @@ class HttpHelper {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        //TODO: Look for Entries where updated_on > lastSync => lastSync = DateTime.now();
         final data = jsonDecode(response.body);
         print("Added Customer $data");
         return data["id"];
-        //return User.fromMap(data);
       } else {
         print("Error: ${response.statusCode} ${response.body}");
         return null;
@@ -90,7 +88,6 @@ class HttpHelper {
     if(!useServer || baseUrl.isEmpty) return false;
 
     final uri = buildUri(
-      //host: baseUrl,
       path: "/customers/$id",
     );
 
@@ -116,30 +113,20 @@ class HttpHelper {
     }
   }
 
-  //TODO: Search pagination
-  //Idea: http Request adds LIMIT and OFFSET to search like:
-  // LIMIT 50 OFFSET 0 => then loadMore-Button requests LIMIT 50 OFFSET 50 => then loadMore-Button request LIMIT 50 OFFSET 100, etc
-  // for full control in frontend return would maybe be good like this:
-  //{
-  //   "totalFound": 215,
-  //   "customers": [
-  //     {customer1},
-  //     {customer2},
-  //     ...
-  //   ]
-  // }
-  // => then add new results to existing userList => if(userList.length == totalFound) hide loadMore-Button TODO: reduce animationtime the longer the list
   Future<List<User>?> searchCustomers({
     String? query,
+    int? page,
+    int? size,
     DateTime? lastVisitBefore}) async {
     if(!useServer || baseUrl.isEmpty) return null;
 
     final uri = buildUri(
-        //host: baseUrl,
         path: "/customers",
         queryParams: {
           if(query != null && query.isNotEmpty) "query": query,
-          if(lastVisitBefore != null) "last_visit_before" : DateFormat("yyyy-MM-dd").format(lastVisitBefore)
+          if(lastVisitBefore != null) "last_visit_before" : DateFormat("yyyy-MM-dd").format(lastVisitBefore),
+          if(page != null) "page": page.toString(),
+          if(size != null) "size" : size.toString(),
         }
     );
 
@@ -154,7 +141,7 @@ class HttpHelper {
         final data = jsonDecode(response.body);
         print("Found Customer: $data");
         List<User> userList = [];
-        for(var item in data){
+        for(var item in data["data"]){
           User user = User.fromMap(item);
           userList.add(user);
         }
@@ -173,7 +160,6 @@ class HttpHelper {
   Future<User?> getCustomerByUUID(String uuid) async {
     if(!useServer || baseUrl.isEmpty) return null;
     final uri = buildUri(
-        //host: baseUrl,
         path: "/customers/uuid/$uuid",
     );
 
@@ -204,8 +190,8 @@ class HttpHelper {
     if(!useServer || baseUrl.isEmpty) return null;
 
     final uri = buildUri(
-        //host: baseUrl,
-        path: "/customers/${user.id}");
+        path: "/customers/${user.id}"
+    );
 
     final body = jsonEncode({
       "uuid": user.uuId,
@@ -226,7 +212,6 @@ class HttpHelper {
         body: body,
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        //Look for Entries where updated_on > lastSync => lastSync = DateTime.now();
         return true;
       } else {
         print("Error: ${response.statusCode} ${response.body}");
@@ -247,7 +232,6 @@ class HttpHelper {
     if(!useServer || baseUrl.isEmpty) return null;
 
     final uri = buildUri(
-        //host: baseUrl,
         path: "/customers/$userId/visits"
     );
 
@@ -268,7 +252,6 @@ class HttpHelper {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        //TODO: Look for Entries where updated_on > lastSync => lastSync = DateTime.now();
         final data = jsonDecode(response.body);
         print("Added Visit $data");
         return Visit.fromMap(data);
@@ -287,7 +270,6 @@ class HttpHelper {
     if(!useServer || baseUrl.isEmpty) return [];
 
     final uri = buildUri(
-      //host: baseUrl,
       path: "/customers/$id/visits",
     );
 
@@ -299,7 +281,8 @@ class HttpHelper {
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic>? result = jsonDecode(response.body);
+      print(jsonDecode(response.body));
+      final List<dynamic>? result = jsonDecode(response.body)["data"];
       if(result == null) return [];
       return result.map((mapRow) => Visit.fromMap(mapRow)).toList();
     } else {
@@ -314,7 +297,6 @@ class HttpHelper {
     if(!useServer || baseUrl.isEmpty) return "-1";
 
     final uri = buildUri(
-      //host: baseUrl,
       path: "/customers/$customerId/visits",
     );
 
@@ -375,12 +357,12 @@ class HttpHelper {
       }
     }
 
-    //Ordne alle Einträge den passenden keys zu NEW
+    //Match all entries to the existing keys
     for (var item in visitsByDate) {
       DateTime date = DateFormat("yyyy-MM-dd").parse(item["date"] as String);
       String dateKey = DateFormat(year ? "MM.yyyy" : "dd.MM.yyyy").format(date);
       dateMap.putIfAbsent(dateKey, () => 0);
-      dateMap[dateKey] = (dateMap[dateKey] ?? 0) + 1;
+      dateMap[dateKey] = (dateMap[dateKey] ?? 0) + (item["count"] as int);
     }
 
     return map == null ? null : dateMap;
@@ -390,7 +372,6 @@ class HttpHelper {
     if(!useServer || baseUrl.isEmpty) return;
 
     final uri = buildUri(
-      //host: baseUrl,
       path: "/stats/visits",
       queryParams: {
         if (begin != null) "begin": begin,
@@ -408,6 +389,7 @@ class HttpHelper {
 
       if (response.statusCode == 200) {
         if(jsonDecode(response.body) == null) return {};
+        print("SERVER_RESPONSE:\n${jsonDecode(response.body)}");
         return(jsonDecode(response.body));
       } else {
         print("Error: ${response.statusCode}");
@@ -468,7 +450,7 @@ class HttpHelper {
     // Datei hinzufügen
     request.files.add(
       await http.MultipartFile.fromPath(
-        'file', // Name des Form-Feldes im Backend
+        "file", // Name des Form-Feldes im Backend
         csvFile.path,
       ),
     );
@@ -477,27 +459,24 @@ class HttpHelper {
 
       var response = await request.send();
 
-
       if (response.statusCode == 200) {
-        print('Upload erfolgreich!');
+        print("Upload erfolgreich!");
         final respStr = await response.stream.bytesToString();
         print(respStr);
       } else {
-        print('Fehler beim Upload: ${response.statusCode}');
+        print("Fehler beim Upload: ${response.statusCode}");
         final respStr = await response.stream.bytesToString();
         print(respStr);
       }
     } catch (e) {
-      print('Exception: $e');
+      print("Exception: $e");
     }
   }
 
   Future<String?> getCsv() async {
     if(baseUrl.isEmpty) return null;
 
-    print("What?");
     final uri = buildUri(
-      //host: baseUrl,
       path: "/stats/export",
     );
 
@@ -524,7 +503,6 @@ class HttpHelper {
   }
 
   Uri buildUri({
-    //required String host,
     required String path,
     Map<String, String>? queryParams,
   }) {
@@ -539,13 +517,4 @@ class HttpHelper {
     );
   }
 }
-
-/*
- Future<dynamic> getNewCustomerAndVisits([String? query]) async {
-    // - Get Customer with updated_on after lastSync
-    // - Add to local Database
-    // - Get Visits with updated_on afet lastSync
-    // - Add Visits to local Database
-  }
-*/
 

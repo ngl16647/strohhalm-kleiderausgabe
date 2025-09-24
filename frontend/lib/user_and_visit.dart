@@ -49,6 +49,17 @@ class User{
   }
 
   factory User.fromMap(Map<String, dynamic> map){
+    DateTime? tryParseIso(String s){
+      try {
+        return DateTime.parse(s);
+      } catch (_) {}
+
+      try {
+        return DateFormat("yyyy-MM-dd").parse(s);
+      } catch (_) {}
+      return null;
+    }
+
     return User(
       id: map["id"],
       uuId: map["uuid"],
@@ -58,7 +69,7 @@ class User{
       country: map["country"] ?? "DE",
       notes: map["notes"] ?? "",
       //visits: list ?? [],
-      lastVisit: map["lastVisit"] != null && (map["lastVisit"] as String).isNotEmpty ? DateFormat("yyyy-MM-dd").parse(map["lastVisit"]) : null
+      lastVisit: map["lastVisit"] != null && (map["lastVisit"] as String).isNotEmpty ? tryParseIso(map["lastVisit"]) : null
     );
   }
 
@@ -80,7 +91,7 @@ class User{
 
 class Visit{
   final int id;
-  final int? userId; //TODO: While testing, was being changed to null if user deleted, now gets set to -1
+  final int? userId; //gets set to -id if user is deleted
   final DateTime tookTime;
 
   const Visit({

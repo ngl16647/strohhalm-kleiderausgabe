@@ -123,6 +123,18 @@ class StatPageState extends State<StatPage>{
     ];
   }
 
+  Widget buildInfo({required Text title, required Text value}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        SizedBox(height: 5),
+        title,
+        value
+      ],
+    );
+  }
+
   bool editText = false;
   TextEditingController noteEditController = TextEditingController();
   ScrollController noteScrollController = ScrollController();
@@ -156,86 +168,82 @@ class StatPageState extends State<StatPage>{
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          GridView.count(
-                            crossAxisCount: (MediaQuery.of(context).size.width / 165).toInt(),
-                            crossAxisSpacing: 20,
-                            mainAxisSpacing: 20,
-                            childAspectRatio: isMobile ? 1.5 : 1,
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            spacing: 20,
                             children: [
-                              // Icon
                               Container(
-                                  height: 40,
-                                  width: 40,
+                                  height: 90,
+                                  width: 90,
                                   padding: EdgeInsets.all(1),
                                   decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: BorderRadius.circular(12),
                                       border: Border.fromBorderSide(BorderSide(width: 1, color: Colors.black87))
                                   ),
                                   child:Center(
-                                    child: QrImageView(
-                                      backgroundColor: Colors.white,
-                                      version: QrVersions.auto,
-                                      data: widget.user.uuId,
-                                      //Icon(Icons.account_circle, size: 22),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: QrImageView(
+                                        backgroundColor: Colors.white,
+                                        version: QrVersions.auto,
+                                        data: widget.user.uuId,
+                                        //Icon(Icons.account_circle, size: 22),
+                                      ),
                                     ),
                                   )
                               ),
-                              // Name + Birthday
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 10,),
-                                  Text("${widget.user.firstName} ${widget.user.lastName}"),
-                                  Text(
-                                    DateFormat("dd.MM.yyyy").format(widget.user.birthDay),
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                              // Birth Country
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 10,),
-                                  Text(S.of(context).stat_page_country),
-                                  Text(Utilities.getLocalizedCountryNameFromCode(context, widget.user.country), style: TextStyle(color: Colors.grey)),
-                                ],
-                              ),
-                              //overallVisits
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 10,),
-                                  Text(S.of(context).stat_page_visits),
-                                  Text(_tookItems.length.toString(), style: TextStyle(color: Colors.grey)),
-                                ],
-                              ),
+                              Expanded(
+                                child: Wrap(
+                                  spacing: 20,
+                                  runSpacing: 15,
+                                  children: [
+                                    buildInfo(
+                                        title: Text("${widget.user.firstName} ${widget.user.lastName}", softWrap: true,),
+                                        value: Text(DateFormat("dd.MM.yyyy").format(widget.user.birthDay), style: TextStyle(color: Colors.grey), softWrap: false, overflow: TextOverflow.visible,)
+                                    ),
+                                    // Birth Country
+                                    ConstrainedBox(
+                                        constraints: BoxConstraints(maxWidth: 150),
+                                        child: buildInfo(
+                                            title: Text(S.of(context).stat_page_country),
+                                            value: Text(Utilities.getLocalizedCountryNameFromCode(context, widget.user.country), style: TextStyle(color: Colors.grey))
+                                        )
+                                    ),
+                                    //overallVisits
+                                    buildInfo(
+                                            title: Text(S.of(context).stat_page_visits),
+                                            value: Text(_tookItems.length.toString(), style: TextStyle(color: Colors.grey),)
+                                    ),
+                                  ],
+                                ),
+                              )
                             ],
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(S.of(context).stat_page_miscellaneous),
-                                  if(!editText)TextButton.icon(
-                                      onPressed: ()async{
-                                          setState(() {
-                                            noteEditController.text = widget.user.notes ?? "";
-                                            editText = true;
-                                          });
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: 30,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(S.of(context).stat_page_miscellaneous),
+                                    if(!editText)TextButton.icon(
+                                      onPressed: (){
+                                        setState(() {
+                                          noteEditController.text = widget.user.notes ?? "";
+                                          editText = true;
+                                        });
                                       },
                                       icon: Icon(!editText ? Icons.edit : Icons.check_circle),
-                                      label: Text(!editText ? "Edit" : S.of(context).confirm),
-                                  ),
-                                ],
+                                      label: Text(!editText ? S.of(context).edit : S.of(context).confirm),
+                                    ),
+                                  ],
+                                ),
                               ),
                               !editText
                                   ? ConstrainedBox(
@@ -243,7 +251,15 @@ class StatPageState extends State<StatPage>{
                                         maxHeight: MediaQuery.of(context).size.height*0.2,
                                         minWidth: double.infinity,
                                       ),
-                                      child: Scrollbar(
+                                      child: Container(
+                                          width: double.infinity,
+
+                                          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                                          decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.fromBorderSide(BorderSide(width: 1, color: Colors.black45))
+                                          ),
+                                          child:Scrollbar(
                                         thumbVisibility: true,
                                         controller: noteScrollController,
                                         child: ShaderMask(
@@ -263,7 +279,16 @@ class StatPageState extends State<StatPage>{
                                             blendMode: BlendMode.dstIn, // Wichtig für den Maskeneffekt
                                             child:SingleChildScrollView(
                                           controller: noteScrollController,
-                                          child: Text(widget.user.notes ?? ""),
+                                          child: GestureDetector(
+                                            onTap: (){
+                                              setState(() {
+                                                noteEditController.text = widget.user.notes ?? "";
+                                                editText = true;
+                                              });
+                                            },
+                                            child:  Text(widget.user.notes ?? "", style: TextStyle(height: 1.4, fontSize: 17),),
+                                            )
+                                          ),
                                         ))
                                       ),
                                     )
@@ -279,7 +304,7 @@ class StatPageState extends State<StatPage>{
 
                               ),
                              if(editText)SizedBox(height: 2),
-                             if(editText) Row(
+                             editText ? Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 spacing: 10,
                                 children: [
@@ -327,11 +352,11 @@ class StatPageState extends State<StatPage>{
                                     ),
                                   ),
                                 ],
-                              )
+                              ) : SizedBox(height: 25,)
                             ],
                           ),
                           TextButton.icon(
-                            onPressed: () => CreateQRCode().printQrCode(context, widget.user), //CreateQRCode().showQrCode(context, widget.user),
+                            onPressed: () => CreateQRCode.printQrCode(context, widget.user), //CreateQRCode().showQrCode(context, widget.user),
                             icon: Icon(Icons.qr_code),
                             label: Text(S.of(context).qr_code_print),
                             style: TextButton.styleFrom(
@@ -370,10 +395,7 @@ class StatPageState extends State<StatPage>{
                               setState(() {
                                 uploading = true;
                               });
-                              Visit? newLastVisit;
-                              _useServer
-                                  ? newLastVisit = await HttpHelper().addVisit(userId: widget.user.id)
-                                  : newLastVisit = await DatabaseHelper().addVisit(widget.user);
+                              Visit? newLastVisit = await Utilities.addVisit(widget.user, context, true);
                               setState(() {
                                 if(newLastVisit != null) {
                                   widget.user.lastVisit = newLastVisit.tookTime;
@@ -381,7 +403,6 @@ class StatPageState extends State<StatPage>{
                                  }
                                 uploading = false;
                               });
-                              if(context.mounted) Utilities.showToast(context: context, title:  S.of(context).success, description: S.of(context).stat_page_savedVisit);
                             },
                             style: TextButton.styleFrom(
                                 backgroundColor: Theme.of(context).buttonTheme.colorScheme?.primaryFixed.withAlpha(120),

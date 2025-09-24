@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:styled_text/styled_text.dart';
 import 'generated/l10n.dart';
 
 class DialogHelper{
@@ -7,7 +8,14 @@ class DialogHelper{
         context: context,
         builder: (context){
           return AlertDialog(
-            content: Text(message),
+            content: StyledText(
+              textAlign: TextAlign.center,
+               text:  message,
+              tags: {
+                "bold": StyledTextTag(style: TextStyle(fontWeight: FontWeight.bold)),
+                "bigger": StyledTextTag(style: TextStyle(fontSize: 17)),
+              },
+            ),
             actions: [
               if(hasChoice)TextButton(
                   onPressed: (){

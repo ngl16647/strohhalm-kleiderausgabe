@@ -17,7 +17,7 @@ class CreateQRCode{
 
   CreateQRCode();
 
-  Future<wg.MemoryImage> fileToGrayScaleImage(File file) async {
+  static Future<wg.MemoryImage> fileToGrayScaleImage(File file) async {
     final imageData = await file.readAsBytes();
 
     img.Image image = img.decodeImage(imageData.buffer.asUint8List())!;
@@ -26,7 +26,7 @@ class CreateQRCode{
     return wg.MemoryImage(bwBytes);
   }
 
-  Future<Uint8List> buildPdf(User user, PdfPageFormat format) async {
+  static Future<Uint8List> buildPdf(User user, PdfPageFormat format) async {
     final doc = wg.Document();
     var settings = AppSettingsManager.instance.settings;
 
@@ -136,7 +136,7 @@ class CreateQRCode{
     return doc.save();
   }
 
-  Future<void> printQrCode(BuildContext context, User user) async {
+  static Future<void> printQrCode(BuildContext context, User user) async {
     bool isMobile = MyApp().getDeviceType() == DeviceType.mobile;
     PdfPageFormat pdfPageFormat = PdfPageFormat(85 * PdfPageFormat.mm, 54 * PdfPageFormat.mm);
     //Map<String, PdfPageFormat> formatMap = {};
@@ -144,46 +144,55 @@ class CreateQRCode{
     if(context.mounted) {
       showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        content: StatefulBuilder(builder: (context, setState){
-          return SizedBox(
-              width: MediaQuery.of(context).size.width* (isMobile ? 0.9 : 0.6),
-              height: MediaQuery.of(context).size.width * (isMobile ? 0.8 : 0.4),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Expanded(
-                    flex: isMobile ? 1 : 7,
-                    child: PdfPreview(
-                      build: (format) async => buildPdf(user, pdfPageFormat),
-                      allowPrinting: false,
-                      allowSharing: false,
-                      canChangeOrientation: false,
-                      canChangePageFormat: false,
-                      //pageFormats: formatMap,
-                    ),
-                  ),
-                  Expanded(
-                      flex: 1,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 10),
-                        child: MyApp().getDeviceType() == DeviceType.mobile
-                            ? Column(
+      builder: (context) => Dialog(
+        constraints: BoxConstraints(
+          minWidth: MediaQuery.of(context).size.width* (isMobile ? 0.9 : 0.6),
+          minHeight: MediaQuery.of(context).size.width * (isMobile ? 0.8 : 0.6),
+          maxHeight: MediaQuery.of(context).size.width * 0.8
+        ),
+        child: StatefulBuilder(builder: (context, setState){
+          return Padding(
+            padding: EdgeInsets.all(15),
+              child: LayoutBuilder(
+                builder: (context, constrains){
+                  bool useRow = constrains.maxWidth < 1000;
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Expanded(
+                        flex: isMobile || useRow ? 3 : 6,
+                        child: PdfPreview(
+                          build: (format) async => buildPdf(user, pdfPageFormat),
+                          allowPrinting: false,
+                          allowSharing: false,
+                          canChangeOrientation: false,
+                          canChangePageFormat: false,
+                          //pageFormats: formatMap,
+                        ),
+                      ),
+                      Expanded(
+                          flex: 1,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: MyApp().getDeviceType() == DeviceType.mobile || useRow
+                                ? Column(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: printControls(context, setState, user, pdfPageFormat)
 
-                              )
-                            : Row(
+                            )
+                                : Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: printControls(context, setState, user, pdfPageFormat)
                               ,
                             ),
-                      )
-                  ),
-                ],
+                          )
+                      ),
+                    ],
+                  );
+                },
               )
           );
         }),
@@ -192,7 +201,7 @@ class CreateQRCode{
     }
   }
 
-  List<Widget> printControls(BuildContext context, setState, User user, PdfPageFormat pdfPageFormat){
+  static List<Widget> printControls(BuildContext context, setState, User user, PdfPageFormat pdfPageFormat){
     TextEditingController heightController = TextEditingController(text: "54");
     TextEditingController widthController = TextEditingController(text: "85");
 
@@ -201,14 +210,13 @@ class CreateQRCode{
         flex: 2,
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          //crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
                 child: TextField(
                   controller: widthController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: "Breite",
+                    labelText: S.of(context).print_width,
                     suffixText: "mm",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(6),
@@ -223,7 +231,7 @@ class CreateQRCode{
               controller: heightController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: "Höhe",
+                labelText: S.of(context).print_height,
                 suffixText: "mm",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
@@ -233,7 +241,8 @@ class CreateQRCode{
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
               ],
             )),
-            IconButton(
+            SizedBox(width: 10,),
+            ElevatedButton.icon(
               onPressed: () {
                 final w = double.tryParse(widthController.text);
                 final h = double.tryParse(heightController.text);
@@ -247,34 +256,59 @@ class CreateQRCode{
                 }
               },
               icon:  Icon(Icons.refresh),
+              label: Text("Anwenden"),
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size(50, double.infinity),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+              ),
             ),
           ],
         ),
       ),
+      Divider(),
+      VerticalDivider(),
       Expanded(
         flex: 2,
-        child:  ElevatedButton.icon(
-          icon: Icon(Icons.print),
-          label: Text(S.of(context).print),
-          onPressed: () async {
-            await Printing.layoutPdf(
-                onLayout: (format) async => buildPdf(user, pdfPageFormat),
-                usePrinterSettings: true
-            );
-          },
+        child: Row(
+          spacing: 5,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: 2,
+              child:  ElevatedButton.icon(
+                icon: Icon(Icons.print),
+                label: Text(S.of(context).print),
+                onPressed: () async {
+                  await Printing.layoutPdf(
+                      onLayout: (format) async => buildPdf(user, pdfPageFormat),
+                      usePrinterSettings: true
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppSettingsManager.instance.settings.selectedColor?.withAlpha(140),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.share),
+                label: Text(S.of(context).qr_code_share, textAlign: TextAlign.center,),
+                onPressed: () async {
+                  await Printing.sharePdf(
+                    bytes: await buildPdf(user, pdfPageFormat),
+                    filename: "${user.id}_${user.uuId}.pdf",
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+                ),
+              ),
+            )
+          ],
         ),
-      ),
-      Expanded(
-        child: ElevatedButton.icon(
-          icon: Icon(Icons.share),
-          label: Text(S.of(context).qr_code_share, textAlign: TextAlign.center,),
-          onPressed: () async {
-            await Printing.sharePdf(
-              bytes: await buildPdf(user, pdfPageFormat),
-              filename: "${user.id}_${user.uuId}.pdf",
-            );
-          },
-        ),)
+      )
     ];
   }
 }

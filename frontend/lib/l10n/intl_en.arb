@@ -39,17 +39,17 @@
   "customer_tile_lastVisit_today": "Visited <bold>today</bold>",
   "customer_tile_lastVisit_onDate": "Last visited on <bold>{dateString}</bold>",
   "customer_tile_deleteLastEntry": "Delete entry",
-  "customer_tile_addNewEntry": "{visitMoreThan14Days, select, true{Add new visit} false{Add Visit anyway}}",
+  "customer_tile_addNewEntry": "{visitMoreThan14Days, select, true{Add new visit} false{Add Visit anyway} other{ }}",
 
   "main_page_languages": "Languages",
   "main_page_searchUsers": "Search persons",
   "main_page_add": "Add",
-  "main_page_isListView": "{isListView, select, true{Show as tiles?} false{Show as list?}}",
+  "main_page_isListView": "{isListView, select, true{Show as tiles?} false{Show as list?} other{ }}",
   "main_page_statistic": "Statistics",
   "main_page_emptyUserListText": "Search by name or scan a code to display persons",
   "main_page_noUserWithUUID": "No matching person found!",
   "main_page_scanQrCode": "Scan QR Code",
-  "main_page_theme": "{isDarkMode, select, true{Light Theme} false{Dark Theme}}",
+  "main_page_theme": "{isDarkMode, select, true{Light Theme} false{Dark Theme} other{ }}",
   "main_page_fullScreen": "Fullscreen",
 
   "stat_page_country": "Country of origin:",
@@ -62,10 +62,10 @@
   "stat_page_removeLastVisitConfirmation": "Are you sure you want to delete the last visit?",
   "stat_page_lastTimeTookClothes": "Last time clothes borrowed:",
 
-  "statistic_page_xAxis": "{showYear, select, true{Month} false{Day}}",
+  "statistic_page_xAxis": "{showYear, select, true{Month} false{Day} other{ }}",
   "statistic_page_numberOfVisits": "Number of visits",
   "statistic_page_visits": "{count, plural, one{Visit} other{Visits}}",
-  "statistic_page_switchYearDisplay": "{showYear, select, true{To month view} false{To year view}}",
+  "statistic_page_switchYearDisplay": "{showYear, select, true{To month view} false{To year view} other{ }}",
   "statistic_page_show_top_countries": "Show top {cutOffNumber} countries of {overAllNumberOfCountries}",
 
   "settings": "Settings",
@@ -81,6 +81,25 @@
   "settings_server_switch": "Use server?",
   "settings_server_urlHint": "Server URL / IP",
   "settings_server_tokenHint": "Password",
+
+  "settings_saveServerSettings": "Save server settings to check for connection",
+  "settings_downloadFromServer": "Download from server",
+  "settings_noConnection": "No connection!",
+  "settings_exportCsvFile": "Export CSV file",
+  "settings_exportCsvDescription": "Export a CSV file (which can be imported in e.g. Excel)\nIf the database on the server is empty, a CSV file can be uploaded.",
+  "settings_exportCsvLocal": "Export CSV locally\n(Server compatible)",
+  "settings_exportLessDetailsToolTip": "Exports a CSV with:\nid\nFirst name\nLast name\nCountry as code\nNotes\nVisits",
+  "settings_exportToolTip": "Exports a CSV with:\nid\nFirst name\nLast name\nCountry as full name\nNotes\nNumber of visits\nVisits with timestamp",
+  "settings_exportDetailedCsvLocal": "Export detailed CSV locally\n(Server incompatible)",
+
+  "settings_downloadCSVFromServer": "Download a CSV file (Excel)",
+  "settings_exportCsvFromServer": "Export CSV from server",
+  "settings_uploadCsvToServer": "Upload CSV to server",
+  "settings_exportCsvDialogTitle": "Export data as CSV",
+  "settings_importCsvToolTip": "Import a compatible CSV-File (CSV with less Details!)",
+  "settings_importCsv": "Import a compatible CSV-File",
+  "settings_switchWarningMessage": "<bigger><bold>Warning!</bold></bigger>\n\nThe server database and the local database are separate.\nIt is possible to add the server database to the local one – but <bold>not</bold> the other way around!\n\n<bigger>No data will be lost when switching.</bigger>\n\nDo you want to switch?",
+
 
   "banner_designer_wrongAspectRatio": "The image's aspect ratio is too small!\nIt should be at least 6:1",
   "banner_designer_pick": "Select",
@@ -113,17 +132,35 @@
   "uuId_fail_keyboard": "Failed UuId Check!\nMake sure your Keyboard-Language (Left-Alt + Left-Shift) is the same as the Barcode-Scanner!",
 
   "visit_plural": "{count, plural, =1{Visit} other{Visits}}",
-  "statistic_page_visitsPerVisitor": "{visitorCount, plural, =1{# Visitor} other{# Visitors}}\nhave {visitCount} {visitCount, plural, =1{Visit} other{Visits}}",
-  "statistic_page_visitDesc": "Besucher\nhaben",
-  "statistic_page_visitsPerPerson": "Besucher pro Besuch-Anzahl",
-  "statistic_page_visitsPerPerson_Persons": "Anzahl von Besuchern",
-  "statistic_page_visitsPerPerson_Visits": "Anzahl von Besuchern",
-  "statistic_page_noData": "Keine Daten oder Internetverbindung.\nSobald wieder Internet verfügbar ist werden die Daten automatisch geladen!",
-
-
+  "statistic_page_visitsPerVisitor": "{visitorCount, plural, =1{{visitorCount} Visitor} other{{visitorCount} Visitors}}\nhave {visitCount} {visitCount, plural, =1{Visit} other{Visits}}",
+  "statistic_page_visitsPerPerson": "Visitors per Visit-Number",
+  "statistic_page_visitsPerPerson_Persons": "Number of Visitors",
+  "statistic_page_visitsPerPerson_Visits": "Number of Visits",
+  "statistic_page_noData": "No data or internet connection.\nData will automatically load once internet is available!",
 
   "same_user_exists": "User with same Data already existed!",
-  "no_internet": "Keine Verbindung zum Internet",
-  "no_server": "Keine Verbindung zum Server",
-  "reconnected": "Verbindung wieder hergestellt!"
+  "no_internet": "No Connection to Internet",
+  "no_server": "No Connection to Server",
+  "reconnected": "Reconnected!",
+
+  "print_width": "Width",
+  "print_height": "Height",
+  "deletionRequest_restore": "Restore",
+  "deletionRequest_buttonTitle": "Deletion\nRequests",
+  "csv_conversion_failed": "Failed to convert to CSV",
+  "admin_login": "{isAdmin, select, true{Admin} false{Logout} other{ }}",
+  "password": "Password",
+  "password_false": "Incorrect Password",
+  "dark_mode": "Dark Mode",
+  "edit": "Edit",
+
+  "statistic_page_visitsPerPeriod": "Visits per Month/Year",
+  "no_data": "No data available",
+  "country_Name_worldWideReplacement": "Not specified",
+
+  "load_more": "{isLoading, select, true{loading...} false{Load more...} other{Everything loaded!}}",
+  "closesIn": "Closes in {countDown} seconds",
+  "visit_added_success": "Visit added successfully!",
+  "visit_added_error": "{isBefore14Days, select, true{Error while adding\nVisitor was here in the last 14 days} false{Error while adding\nNo connection to Server} other{ }}"
+
 }

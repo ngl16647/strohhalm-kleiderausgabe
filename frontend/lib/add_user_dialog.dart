@@ -254,7 +254,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                               description: result == null
                                   ? S.of(context).update_failed
                                   : !result
-                                    ? "User with same Data already existed!"
+                                    ? S.of(context).same_user_exists
                                     : S.of(context).update_success,
                               isError: result == null || !result
                           );
@@ -301,7 +301,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                               description: id == null
                                   ? S.of(context).add_failed
                                   : id == -1
-                                    ? "User with same Data already existed!"
+                                    ? S.of(context).same_user_exists
                                     : S.of(context).add_success,
                               isError: id == null || id == -1,
                           );

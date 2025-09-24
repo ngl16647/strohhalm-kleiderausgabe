@@ -42,11 +42,6 @@ class BannerImage{
     final appDir = await getApplicationDocumentsDirectory();
     final bannerDir = join(appDir.path, "bannerImages");
 
-    //String? leftPath = bannerMap["imageLeft"] != null && bannerMap["imageLeft"]!.isNotEmpty ? join(bannerDir, bannerMap["imageLeft"]) : null;
-    //String? rightPath =  bannerMap["imageRight"] != null && bannerMap["imageRight"]!.isNotEmpty ? join(bannerDir, bannerMap["imageRight"]) : null;
-    //bool leftExists = leftPath != null ? await File(leftPath).exists() : false;
-    //bool rightExists = rightPath != null ? await File(rightPath).exists() : false;
-
     Future<File?> joinAndCheckFile(String? fileName) async {
       if (fileName == null || fileName.isEmpty) return null;
       final path = join(bannerDir, fileName);
@@ -192,66 +187,72 @@ class BannerDesignerState extends State<BannerDesigner>{
                   ),
                 ),
                 Expanded(
-                  child: GridView.count(
-                    crossAxisCount:_isMobile ? 1 : 2,
-                    childAspectRatio: 2,
-                    children: [
-                      for(int i= 0; i < files.length; i++)...{
-                        Padding(
-                          padding: EdgeInsets.all(15),
-                          child: Material(
-                            elevation: 5,
-                            borderRadius: BorderRadius.circular(6),
-                            color: Theme.of(context).listTileTheme.tileColor,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                SizedBox(),
-                                Padding(
-                                    padding: EdgeInsets.all(5),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: SizedBox(
-                                        height: 75,
-                                        child:  Image.file(files.elementAt(i), fit: BoxFit.fitHeight,),
-                                      ),
-                                    )
-                                ),
-                                aspectRatio == null || _bannerWholeImage == null || files[i].path != _bannerWholeImage!.path ? Row(
+                  child: LayoutBuilder(
+                    builder: (context, constrains){
+                      bool oneRow = constrains.maxWidth < 450;
+                      return GridView.count(
+                        crossAxisCount:_isMobile || oneRow ? 1 : 2,
+                        childAspectRatio: 2,
+                        children: [
+                          for(int i= 0; i < files.length; i++)...{
+                            Padding(
+                              padding: EdgeInsets.all(5),
+                              child: Material(
+                                elevation: 5,
+                                borderRadius: BorderRadius.circular(6),
+                                color: Theme.of(context).listTileTheme.tileColor,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Expanded(
-                                        flex: 3,
-                                        child: TextButton.icon(
-                                          onPressed: (){
-                                            Navigator.of(context).pop(files.elementAt(i));
-                                          },
-                                          label: Text(S.of(context).banner_designer_pick),
-                                          icon: Icon(Icons.hdr_auto_select),
-                                          style: TextButton.styleFrom(
-                                              minimumSize: Size(double.infinity, 32)
+                                    SizedBox(),
+                                    Expanded(child:  Padding(
+                                        padding: EdgeInsets.all(5),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: ConstrainedBox(
+                                            constraints: BoxConstraints(maxHeight: 150),
+                                            child:  Image.file(files.elementAt(i), fit: BoxFit.contain,),
                                           ),
-                                        )),
-                                    IconButton(
-                                      onPressed: (){
-                                        files[i].delete();
-                                        setState(() {
-                                          files.removeAt(i);
-                                        });
-                                      },
-                                      icon: Icon(Icons.delete),
-                                    ),
+                                        )
+                                    ),),
+                                    aspectRatio == null || _bannerWholeImage == null || files[i].path != _bannerWholeImage!.path ? Row(
+                                      children: [
+                                        Expanded(
+                                            flex: 3,
+                                            child: TextButton.icon(
+                                              onPressed: (){
+                                                Navigator.of(context).pop(files.elementAt(i));
+                                              },
+                                              label: Text(S.of(context).banner_designer_pick),
+                                              icon: Icon(Icons.hdr_auto_select),
+                                              style: TextButton.styleFrom(
+                                                  minimumSize: Size(double.infinity, 32)
+                                              ),
+                                            )),
+                                        IconButton(
+                                          onPressed: (){
+                                            files[i].delete();
+                                            setState(() {
+                                              files.removeAt(i);
+                                            });
+                                          },
+                                          icon: Icon(Icons.delete),
+                                        ),
+                                      ],
+                                    ) : Padding(
+                                      padding: EdgeInsets.all(4),
+                                      child: Text(S.of(context).banner_designer_picked),
+                                    )
                                   ],
-                                ) : Padding(
-                                  padding: EdgeInsets.all(4),
-                                  child: Text(S.of(context).banner_designer_picked),
-                                )
-                              ],
-                            ),
-                          ),
-                        )
-                      }
-                    ],
-                  ),),
+                                ),
+                              ),
+                            )
+                          }
+                        ],
+                      );
+                    },
+                  )
+                ),
                 TextButton(
                   onPressed: Navigator.of(context).pop,
                   style: TextButton.styleFrom(
@@ -552,7 +553,6 @@ class _CustomTabsState extends State<CustomTabs> {
       },
       child: Row(
         children: [
-          //if(selectedIndex < index && !isSelected) SizedBox(width: 10,),
           Expanded(
               child: Material(
                 elevation: 10,
@@ -569,7 +569,7 @@ class _CustomTabsState extends State<CustomTabs> {
                     spacing: 10,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if(isSelected) Icon(Icons.check),
+                      if(isSelected && widget.tabs.length > 1) Icon(Icons.check),
                       Text(
                         title,
                         style: TextStyle(
@@ -581,7 +581,6 @@ class _CustomTabsState extends State<CustomTabs> {
                 ),
               )
           ),
-          //if(selectedIndex >= index && !isSelected) SizedBox(width: 10,),
         ],
       ),
     );
@@ -601,27 +600,29 @@ class _CustomTabsState extends State<CustomTabs> {
           ],
         ),
         //Tab-Body
-        Expanded(child: ConstrainedBox(
-          constraints: BoxConstraints(
-              minHeight: 160
-          ),
-          child:Material(
-            elevation: 10,
-            color: Theme.of(context).listTileTheme.tileColor ?? Colors.blueGrey,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(
-                  bottom: Radius.circular(12)
+        Expanded(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                  minHeight: 160
               ),
-            ),
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: widget.tabs[selectedIndex].child
-                  .animate(key: ValueKey(selectedIndex))
-                  .fade(duration: 300.ms)
-                  .slide(begin: Offset(0, 0.2)),
-            ),
-
-          ),))
+              child:Material(
+                elevation: 10,
+                color: Theme.of(context).listTileTheme.tileColor ?? Colors.blueGrey,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(
+                      bottom: Radius.circular(12)
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: widget.tabs.isNotEmpty ? widget.tabs[selectedIndex].child
+                      .animate(key: ValueKey(selectedIndex))
+                      .fade(duration: 300.ms)
+                      .slide(begin: Offset(0, 0.2)) : SizedBox.expand(),
+                ),
+              ),
+            )
+        )
       ],
     );
   }

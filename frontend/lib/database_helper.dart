@@ -49,15 +49,15 @@ class DatabaseHelper {
     final db = await database;
 
     final result = await db.rawQuery('''
-    SELECT visit_count AS visits, COUNT(*) AS customers
-    FROM (
-      SELECT customerId, COUNT(*) AS visit_count
-      FROM visits
-      GROUP BY customerId
-    )
-    GROUP BY visit_count
-    ORDER BY visit_count;
-  ''');
+      SELECT visit_count AS visits, COUNT(*) AS customers
+      FROM (
+        SELECT customerId, COUNT(*) AS visit_count
+        FROM visits
+        GROUP BY customerId
+      )
+      GROUP BY visit_count
+      ORDER BY visit_count;
+    ''');
 
     return result;
   }
@@ -553,33 +553,4 @@ class AddUpdateUserReturnType{
     final db = await database;
     int result = Sqflite.firstIntValue(await db.rawQuery("SELECT COUNT(*) as count FROM visits")) ?? 0;
     return result;
-  }
-
-  /*final maps = await db.rawQuery('''
-
-        SELECT u.*,
-               v.id as visitId,
-               v.userId,
-               v.visitDate
-        FROM users u
-        LEFT JOIN visits v ON u.id = v.userId
-        ${conditions.isNotEmpty ? "WHERE ${conditions.join(" AND ")}" : ""}
-        ORDER BY u.id, v.visitDate DESC
-        ''',
-        whereArgs);
-
-    Map<int, User> usersMap = {};
-
-    for (final row in maps) {
-      final userId = row["id"] as int;
-
-      if (!usersMap.containsKey(userId)) {
-        usersMap[userId] = User.fromMap(row, []);
-      }
-
-      if (row["visitId"] != null) {
-        usersMap[userId]!.visits.add(TookItem.fromMap(row));
-      }
-    }
-    return usersMap.values.toList();*/
-  */
+  }*/

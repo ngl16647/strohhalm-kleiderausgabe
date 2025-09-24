@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:strohhalm_app/main.dart';
 import 'app_settings.dart';
 import 'banner_designer.dart';
 import 'check_connection.dart';
+import 'database_helper.dart';
 import 'generated/l10n.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -52,8 +54,11 @@ class _SettingsPageState extends State<SettingsPage> {
 
   bool? isOnline;
   bool serverSettingsAreSetAndSame = false;
-  //bool localDbIsEmpty = false;
+  bool localDbIsEmpty = false;
   bool onlineDbIsEmpty = false;
+  bool onlineIsLoading = false;
+
+  double uploadProgress = 0;
 
   @override
   void initState() {
@@ -72,11 +77,11 @@ class _SettingsPageState extends State<SettingsPage> {
     _useServer = settings.useServer ?? false;
     if(_useServer){
       checkServerSettings();
-      //TODO: Check If either database is empty
-      var customers = await HttpHelper().searchCustomers(query: ""); //Also checks if connection exists
+      var customers = await HttpHelper().searchCustomers(query: "", size: 1); //Also checks if connection exists
       onlineDbIsEmpty = customers == null || customers.isEmpty;
-      //var customersLocal = await DatabaseHelper().countAllUsers();
-      //localDbIsEmpty = customersLocal == 0;
+    }else{
+      var customersLocal = await DatabaseHelper().countAllUsers();
+      localDbIsEmpty = customersLocal == 0;
     }
      var useBannerDesigner = settings.useBannerDesigner ?? true;
      var bannerWholeImage = settings.bannerSingleImage;
@@ -257,7 +262,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             padding: EdgeInsets.all(5),
                             child: Row(
                               children: [
-                                Text("Dark-Mode"),
+                                Text(S.of(context).dark_mode),
                                 Spacer(),
                                 Switch(
                                     value: _darkMode,
@@ -323,9 +328,15 @@ class _SettingsPageState extends State<SettingsPage> {
                         switchDescription:  S.of(context).settings_server_switch,
                         switchBool: _useServer,
                         switchChanged: (ev) async {
-                            bool? confirmation = await DialogHelper.dialogConfirmation(context, "Server und Lokal sind zwei getrennte Datenbanken!\nBist du sicher, dass du umschalten willst?", true);
+                            bool? confirmation = await DialogHelper.dialogConfirmation(context, S.of(context).settings_switchWarningMessage, true);
                             if(confirmation != null && confirmation){
                               setState(() => _useServer = ev);
+                              if(!_useServer){
+                                var customersLocal = await DatabaseHelper().countAllUsers();
+                                setState(() {
+                                  localDbIsEmpty = customersLocal == 0;
+                                });
+                              }
                             }
                         },
                       ),
@@ -364,38 +375,32 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                             ),
                             SizedBox(height: 10,),
-                            Column(
+                            /*Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 if(!serverSettingsAreSetAndSame)ElevatedButton(
                                   onPressed: () async {
-                                    var manager = AppSettingsManager.instance;
-                                    manager.setServerUrl(_serverController.text);
-                                    await manager.setToken(_tokenController.text);
-                                    manager.setUseServer(_useServer);
-
-                                    checkServerSettings();
-                                    var customers = await HttpHelper().searchCustomers(query: ""); //Also checks if connection exists
-                                    onlineDbIsEmpty = customers == null || customers.isEmpty;
+                                    saveSettingsForServerRequests();
                                   },
-                                  child: Text("Save Server-Settings before downloading", textAlign: TextAlign.center,),
+                                  child: Text(S.of(context).settings_saveServerSettings, textAlign: TextAlign.center,),
                                 ),
-                                if(serverSettingsAreSetAndSame && context.watch<ConnectionProvider>().status == ConnectionStatus.connected) ElevatedButton(
+                                if(!onlineIsLoading && serverSettingsAreSetAndSame && context.watch<ConnectionProvider>().status == ConnectionStatus.connected) ElevatedButton(
                                     onPressed: ()async{
-                                      await DataBaseExportFunctions.importCSVFromServer(context);
+                                      await DataBaseExportFunctions.importCSV(context);
                                     },
-                                    child: Text("Download from Server")
+                                    child: Text(S.of(context).settings_downloadFromServer)
                                 ),
-                                if(context.watch<ConnectionProvider>().status != ConnectionStatus.connected) Text("No Connection!", textAlign: TextAlign.center,)
+                                if(onlineIsLoading) Center(child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator())),
+                                if(context.watch<ConnectionProvider>().status != ConnectionStatus.connected && serverSettingsAreSetAndSame) Text(S.of(context).settings_noConnection, textAlign: TextAlign.center,)
                               ],
-                            )
+                            )*/
                           ],
                         ),
                       ),
                       Divider(height: 16),
                       createTitleWidget(
-                          title : "Export CSV-Datei",
-                          toolTipDescription :  "Exportiere eine CSV-Datei (welche in z.B. Excel importiert werden kann)\nLokale und Server Datenbank sind NICHT kompatibel!",
+                          title : S.of(context).settings_exportCsvFile,
+                          toolTipDescription : S.of(context).settings_exportCsvDescription,
                           context :context),
                       SizedBox(height: 8),
                       Container(
@@ -403,50 +408,180 @@ class _SettingsPageState extends State<SettingsPage> {
                             color: Theme.of(context).listTileTheme.tileColor,
                             borderRadius: BorderRadius.circular(12),
                           ),
+                          constraints: BoxConstraints(maxHeight: 150),
                           child: Padding(
                             padding: EdgeInsets.all(5),
-                            child: Row(
-                              children: [
-                                if(!_useServer)ElevatedButton(
-                                    onPressed: () => DataBaseExportFunctions.saveCsv(context, false),
-                                    child: Text("Export CSV local")),
-                                if(serverSettingsAreSetAndSame &&  _useServer && context.watch<ConnectionProvider>().status == ConnectionStatus.connected)...{
-                                  ElevatedButton(
-                                      onPressed: () => DataBaseExportFunctions.saveCsv(context, true),
-                                      child: Text("Export CSV from Server")),
-                                  Spacer(),
-                                  if(onlineDbIsEmpty)ElevatedButton(
-                                    onPressed: ()async{
-                                      FilePickerResult? result = await FilePicker.platform.pickFiles(
-                                        dialogTitle: "Daten als CSV exportieren",
-                                        allowedExtensions: ["csv"],
-                                      );
+                            child: !_useServer
+                                ? ///Local options
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SizedBox(
+                                        height: 50,
+                                        child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                                          children: [
+                                            if(!localDbIsEmpty)Expanded(child: Tooltip(
+                                              message: S.of(context).settings_exportLessDetailsToolTip,
+                                              child: ElevatedButton(
+                                                  onPressed: () => DataBaseExportFunctions.saveCsv(context: context,
+                                                      useServer: false,
+                                                      detailedCSV: false),
+                                                  child: Text(S.of(context).settings_exportCsvLocal)),
+                                            ),),
+                                            //if(!localDbIsEmpty)Spacer(),
+                                            SizedBox(width: 15,),
+                                            if(!localDbIsEmpty)Expanded(child: Tooltip(
+                                                message: S.of(context).settings_exportToolTip,
+                                                child: ElevatedButton(
+                                                    onPressed: () => DataBaseExportFunctions.saveCsv(
+                                                        context: context,
+                                                        useServer: false,
+                                                        detailedCSV: true),
+                                                    child: Text(S.of(context).settings_exportDetailedCsvLocal))),),
+                                            if(localDbIsEmpty)Expanded(child: Tooltip(
+                                                message: S.of(context).settings_importCsvToolTip,
+                                                child: ElevatedButton(
+                                                    onPressed: () async {
+                                                      FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                                        dialogTitle: S.of(context).settings_exportCsvDialogTitle,
+                                                        allowedExtensions: ["csv"],
+                                                      );
 
-                                      if (result != null && result.files.single.path != null) {
-                                        File csvFile = File(result.files.single.path!);
-                                        await HttpHelper().uploadCsv(csvFile);
-                                      }
-                                    },
-                                    child: Text("Upload CSV to server"),
+                                                      if (result != null && result.files.single.path != null) {
+                                                        File csvFile = File(result.files.single.path!);
+
+                                                        if(context.mounted) {
+                                                          DataBaseExportFunctions().importCSV(
+                                                              context,
+                                                              csvFile,
+                                                                  (progress) async {
+                                                                setState(() {
+                                                                  uploadProgress = progress;
+                                                                });
+                                                                if(uploadProgress == 100){
+                                                                  var customersLocal = await DatabaseHelper().countAllUsers();
+                                                                  setState(() => localDbIsEmpty = customersLocal == 0);
+                                                                }
+                                                              });
+                                                        }
+                                                      }
+                                                    },
+                                                    child: Text(S.of(context).settings_importCsv, overflow: TextOverflow.ellipsis,)))),
+                                          ],
+                                        ),
+                                      ),
+                                      if(uploadProgress != 0) Padding(
+                                        padding: EdgeInsets.all(5),
+                                        child: SizedBox(
+                                          height: 25,
+                                          width: double.infinity,
+                                          child: Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              LinearProgressIndicator(
+                                                value: uploadProgress/100, // 0.0 bis 1.0
+                                                borderRadius: BorderRadius.circular(12),
+                                                color: Colors.teal,
+                                                backgroundColor: Colors.grey[300],
+                                                minHeight: 20,
+                                              ),
+                                              Text(
+                                                "${(uploadProgress).toStringAsFixed(0)}%", // Prozentzahl
+                                                style: TextStyle(
+                                                  color: Colors.black45,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        ),
+                                      )
+                                    ],
                                   )
-                                } else if(_useServer && !serverSettingsAreSetAndSame) ...{
-                                  Expanded(child: ElevatedButton(
-                                    onPressed: () async {
-                                      var manager = AppSettingsManager.instance;
-                                      manager.setServerUrl(_serverController.text);
-                                      await manager.setToken(_tokenController.text);
-                                      manager.setUseServer(_useServer);
+                                : ///Server options
+                                  Row(
+                                    children: [
+                                      ///Everything loaded and connected
+                                      if (!onlineIsLoading
+                                          && serverSettingsAreSetAndSame
+                                          && _useServer
+                                          && context.watch<ConnectionProvider>().status == ConnectionStatus.connected) ...[
+                                        if(!onlineDbIsEmpty)ElevatedButton(
+                                          onPressed: () => DataBaseExportFunctions.saveCsv(
+                                            context: context,
+                                            useServer: true,
+                                          ),
+                                          child: onlineIsLoading
+                                              ? SizedBox(
+                                                height: 20,
+                                                width: 20,
+                                                child: CircularProgressIndicator(),
+                                              )
+                                              : Text(S.of(context).settings_exportCsvFromServer),
+                                        ),
+                                        Spacer(),
+                                        if (onlineDbIsEmpty)
+                                          ElevatedButton(
+                                            onPressed: () async {
+                                              final result = await FilePicker.platform.pickFiles(
+                                                dialogTitle: S.of(context).settings_exportCsvDialogTitle,
+                                                allowedExtensions: ["csv"],
+                                              );
 
-                                      checkServerSettings();
-                                      var customers = await HttpHelper().searchCustomers(query: ""); //Also checks if connection exists
-                                      onlineDbIsEmpty = customers == null || customers.isEmpty;
-                                  },
-                                    child: Text("Save Server-Settings before\nyou can upload a CSV", textAlign: TextAlign.center,),
-                                  )),
-                                },
-                                if(_useServer && context.watch<ConnectionProvider>().status != ConnectionStatus.connected) Expanded(child: Text("No Connection!", textAlign: TextAlign.center,))
-                              ],
-                            ),
+                                              if (result != null && result.files.single.path != null) {
+                                                final csvFile = File(result.files.single.path!);
+                                                String csvString = await csvFile.readAsString();
+                                                String converted = DataBaseExportFunctions().convertToRight(csvString);
+                                                final convertedFile = File("${csvFile.parent.path}/converted.csv");
+                                                await convertedFile.writeAsString(converted, encoding: utf8);
+
+                                                await HttpHelper().uploadCsv(convertedFile);
+
+                                                convertedFile.delete();
+                                              }
+                                            },
+                                            child: Text(S.of(context).settings_uploadCsvToServer),
+                                          ),
+                                      ]
+
+                                      ///Settings not saved
+                                      else if (_useServer && !serverSettingsAreSetAndSame) ...[
+                                        Expanded(
+                                          child: ElevatedButton(
+                                            onPressed: saveSettingsForServerRequests,
+                                            child: Text(
+                                              S.of(context).settings_saveServerSettings,
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+
+                                      //Is loading
+                                      if (onlineIsLoading)
+                                        const Expanded(
+                                          child: Center(
+                                            child: SizedBox(
+                                              height: 20,
+                                              width: 20,
+                                              child: CircularProgressIndicator(),
+                                            ),
+                                          ),
+                                        ),
+
+                                      //No connection
+                                      if (_useServer &&
+                                          serverSettingsAreSetAndSame &&
+                                          context.watch<ConnectionProvider>().status != ConnectionStatus.connected)
+                                        Expanded(
+                                          child: Text(
+                                            S.of(context).settings_noConnection,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                           )
                       ),
                     ],
@@ -458,12 +593,30 @@ class _SettingsPageState extends State<SettingsPage> {
             icon:  Icon(Icons.save),
             label:  Text(S.of(context).save),
             style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity,   42)
+                minimumSize: Size(double.infinity, 42)
             ),
           )
         ],
       ),
     );
+  }
+
+  Future<void> saveSettingsForServerRequests() async {
+    setState(() => onlineIsLoading = true);
+    var manager = AppSettingsManager.instance;
+    manager.setServerUrl(_serverController.text);
+    await manager.setToken(_tokenController.text);
+    manager.setUseServer(_useServer);
+
+    checkServerSettings();
+    if(mounted) {
+      ConnectionStatus status = await context.read<ConnectionProvider>().checkConnection();
+      if(status == ConnectionStatus.connected){
+        var customers = await HttpHelper().searchCustomers(query: "", size: 1); //Also checks if connection exists
+        onlineDbIsEmpty = customers == null || customers.isEmpty;
+      }
+    }
+    setState(() => onlineIsLoading = false);
   }
 
   void checkServerSettings() {

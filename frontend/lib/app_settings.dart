@@ -40,7 +40,6 @@ class AppSettings{
         "\nbannerImage: ${bannerSingleImage?.path}, "
         "\nselectedColor: $selectedColor, "
         "\nurl: $url, "
-        //"\ntoken: $token, "
         "\nisSocket: $isSocket, "
         "\ndarkMode: $darkMode, "
         "\nuseServer: $useServer, "
