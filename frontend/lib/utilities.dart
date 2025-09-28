@@ -76,7 +76,6 @@ class Utilities{
             "bold": StyledTextTag(style: TextStyle(fontWeight: FontWeight.bold)),
           },
         ),
-
       );
     }
   }

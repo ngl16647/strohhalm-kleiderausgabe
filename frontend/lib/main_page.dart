@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import 'package:strohhalm_app/add_user_dialog.dart';
 import 'package:strohhalm_app/auto_close_dialog.dart';
@@ -27,7 +28,6 @@ import 'main.dart';
 
 /*
 TODO:
-- Test CSV upload with test data
  */
 
 class MainPage extends StatefulWidget {
@@ -43,39 +43,32 @@ class MainPageState extends State<MainPage> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchWaitTimer;
   late BarcodeScannerListener socketListener;
-  //userLists
-  List<User> _userList = [];
-  List<User> oldUserList = [];
-  //UI-State-Variables
+  ///userLists
+  List<User> _userList = [];          //SearchResults
+  List<User> oldUserList = [];        //Users older than a year
+  ///UI-State-Variables
   Icon _fullScreenIcon = Icon(Icons.fullscreen, size: 20,);
-  Color _selectedColor = Color.fromRGBO(169, 171, 25, 1.0);
+  Color _selectedColor = Color.fromRGBO(169, 171, 25, 1.0); //AccentColor defaults to lime
   bool _isListView = true;
   bool _isMobile = false;
-  bool _blockScan = false;
-  bool statLoading = false; //Loading indicator
-  bool _isAdmin = true;
-  //Banner-Variables
-  bool _useBannerDesigner = true;
-  File? _bannerImage;
-  BannerImage? _bannerMap;
+  bool _blockScan = false;            //blocks additional scans when a Dialog is open
+  bool _isAdmin = false;
+  ///Banner-Variables
+  bool _useBannerDesigner = true;     //use a self-composed banner or just one image
+  File? _bannerImage;                 //the one image
+  BannerImage? _bannerMap;            //the Objekt with the self-composed elements
 
-  bool _useServer = false;
-  static const int pageSize = 10;
-  int page = 1;
-  bool isLoadingMore = false;
+  ///Server-Variables
+  bool _useServer = false;            //offline or online-Mode
+  static const int pageSize = 10;     //length of first results when searching online
+  int _page = 1;                      //offset for online-search
+  final bool _isLoadingMore = false;
 
   @override
   void initState(){
     _isMobile = MyApp().getDeviceType() == DeviceType.mobile;
     listenForScanner();
     loadPage();
-    //var provider = context.read<ConnectionProvider>();
-    //provider.addListener(() async {
-    //  if (_useServer && provider.status == ConnectionStatus.connected) {
-    //    oldUserList = await HttpHelper().searchCustomers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365))) ?? [];
-    //    oldUserList.removeWhere((item) => item.lastVisit == null); //Check since HttpRequest also returns Customers where lastVisit == null
-    //  }
-    //});
     super.initState();
   }
 
@@ -88,10 +81,14 @@ class MainPageState extends State<MainPage> {
     var settings = AppSettingsManager.instance.settings;
     bool lastUseServer = _useServer;
     _useServer = settings.useServer ?? false;
-    if(_useServer != lastUseServer){ //TO not compromise either Database
+    if(_useServer != lastUseServer){ //To not compromise either Database
       _searchController.text = "";
       _userList.clear();
       oldUserList.clear();
+      if(mounted) context.read<ConnectionProvider>().periodicCheckConnection();
+    }
+    if(!_useServer && mounted){
+      context.read<ConnectionProvider>().setStatus(ConnectionStatus.connected); //If not using server status should always be connected
     }
     setState(() {
       _selectedColor = settings.selectedColor ?? Color.fromRGBO(169, 171, 25, 1.0);
@@ -115,13 +112,13 @@ class MainPageState extends State<MainPage> {
   Future<void> checkForOldUsers() async {
   if(_useServer) {
     if(mounted){
-    oldUserList = await HttpHelper().searchCustomers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365)), size: 10) ?? []; //If this fails automatically starts check for connection so no need to add a extra check before
+    oldUserList = await HttpHelper().searchCustomers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365)), size: 9999) ?? []; //If this fails automatically starts check for connection so no need to add a extra check before
     oldUserList.removeWhere((item) => item.lastVisit == null); //Check since HttpRequest also returns Customers where lastVisit == null
     }
   } else {
     if(mounted) context.read<ConnectionProvider>().cancelCheck();
     if(mounted) context.read<ConnectionProvider>().setStatus(ConnectionStatus.connected);
-    oldUserList = await DatabaseHelper().getUsers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365)));
+    oldUserList = await DatabaseHelper().getUsers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365)), size: 9999);
   }
   setState(() {
     oldUserList;
@@ -134,7 +131,10 @@ class MainPageState extends State<MainPage> {
     }
 
     void uuIdFail(){
-      DialogHelper.dialogConfirmation(context, S.of(context).uuId_fail_keyboard, false);
+      DialogHelper.dialogConfirmation(
+          context: context,
+          message: S.of(context).uuId_fail_keyboard,
+          hasChoice: false);
     }
     socketListener = BarcodeScannerListener(
         context: context,
@@ -144,20 +144,20 @@ class MainPageState extends State<MainPage> {
     if(!_isMobile) socketListener.listenForScan();
   }
 
-  ///Starts search after no input since 0.6Seconds and search-length longer than 3. So HTTP-Request are more precise
+  ///Starts search after no input since 0.6 Seconds and search-length longer than 3. So HTTP-Request are more precise
   void searchChanged(String query) {
     if (_searchWaitTimer?.isActive ?? false) _searchWaitTimer!.cancel();
     if(!_useServer){
       searchUsers(query);
       return;
     }
-    if(query.length <= 4){
+    if(query.length <= 3){
       setState(() {
         _userList.clear();
       });
     }
     _searchWaitTimer = Timer(Duration(milliseconds: 600), () {
-      if(query.length > 4 || query == "*"){
+      if(query.length > 3 || query == "*"){
         searchUsers(query);
       }
     });
@@ -165,27 +165,29 @@ class MainPageState extends State<MainPage> {
 
   ///Gets Users with the firstName/Lastname LIKE the searchTerm. "*" gets all
   Future<void> searchUsers(String searchTerm) async {
-      page = 1;
+      _page = 1;
       _userList.clear();
       if(searchTerm.trim().isNotEmpty) { //WhiteSpaces get removed so a SPACE doesn't just retrieve All
         _useServer
             ? _userList = (await HttpHelper().searchCustomers(query: searchTerm == "*" ? "" : searchTerm, size: pageSize)) ?? []
-            : _userList = await DatabaseHelper().getUsers(search: searchTerm == "*" ? " " : searchTerm);
+            : _userList = await DatabaseHelper().getUsers(search: searchTerm == "*" ? " " : searchTerm, size: pageSize);
       }
 
     setState(() {
-      if(_userList.length < pageSize) page = 0;
+      if(_userList.length < pageSize) _page = 0;
       _userList;
     });
   }
 
   Future<void> loadMore() async {
-    page++;
+    _page++;
     String searchTerm = _searchController.text;
-    List<User> additionalUsers = (await HttpHelper().searchCustomers(query: searchTerm == "*" ? "" : searchTerm, size: pageSize, page: page)) ?? [];
+    List<User> additionalUsers = _useServer
+        ? (await HttpHelper().searchCustomers(query: searchTerm == "*" ? "" : searchTerm, size: pageSize, page: _page)) ?? []
+        : await DatabaseHelper().getUsers(search: searchTerm == "*" ? " " : searchTerm, size: pageSize, page: _page);
 
     setState(() {
-      if(additionalUsers.length < pageSize) page = 0;
+      if(additionalUsers.length < pageSize) _page = 0;
       _userList.addAll(additionalUsers);
     });
   }
@@ -244,6 +246,7 @@ class MainPageState extends State<MainPage> {
   }
 
   void showUserInSearchBar(User user){
+    _page = 1;
     _userList.clear();
     setState(() {
       _userList.add(user);
@@ -303,7 +306,10 @@ class MainPageState extends State<MainPage> {
       _blockScan = false;
     } else {
       if(mounted) {
-        DialogHelper.dialogConfirmation(context, "${S.of(context).main_page_noUserWithUUID}:\n$uuIdString", false);
+        DialogHelper.dialogConfirmation(
+            context: context,
+            message: "${S.of(context).main_page_noUserWithUUID}:\n$uuIdString",
+            hasChoice: false);
       }
     }
 
@@ -313,10 +319,11 @@ class MainPageState extends State<MainPage> {
   Future<void> changeLanguage(String localeId) async {
     widget.onLocaleChange(Locale(localeId));
     AppSettingsManager.instance.setLanguage(localeId);
+
     // Warte auf rebuild
     WidgetsBinding.instance.addPostFrameCallback((duration) async {
       if (!mounted) return;
-      if(!_isMobile) await windowManager.setTitle(S.of(context).application_name);
+      if(!_isMobile) await windowManager.setTitle(S.of(context).window_title);
       setState(() {});
     });
   }
@@ -343,14 +350,13 @@ class MainPageState extends State<MainPage> {
   }
 
   Widget _buildLoadMoreTile(){
-    if(!_useServer) return SizedBox.shrink();
-    if(page == 0) return Center(child: Padding(padding: EdgeInsets.all(15),child: Text( S.of(context).load_more(""),),),);
+    if(_page == 0) return Center(child: Padding(padding: EdgeInsets.all(15),child: Text( S.of(context).load_more(""),),),);
     return Padding(
       padding: EdgeInsets.only(top: 10, bottom: 10),
       child: Center(
         child: ElevatedButton.icon(
-          onPressed: isLoadingMore ? null : loadMore,
-          icon: isLoadingMore
+          onPressed: _isLoadingMore ? null : loadMore,
+          icon: _isLoadingMore
               ? SizedBox(
                   width: 20,
                   height: 20,
@@ -361,7 +367,7 @@ class MainPageState extends State<MainPage> {
                 )
               : Icon(Icons.autorenew),
           label: Text(
-            S.of(context).load_more(isLoadingMore),
+            S.of(context).load_more(_isLoadingMore),
             style: TextStyle(fontSize: 16),
           ),
           style: ElevatedButton.styleFrom(
@@ -405,12 +411,14 @@ class MainPageState extends State<MainPage> {
           fit: StackFit.passthrough,
           children: [
             ActionChip(
-              label: showOnlyIcons || !_isAdmin ? Row(
+              label: showOnlyIcons
+                  ? SizedBox.shrink()
+                  : Row(
                 children: [
                   Text(S.of(context).main_page_languages),
                   SizedBox(width: 10,)
                 ],
-              ): SizedBox.shrink(),
+              ),
               //backgroundColor: Color.fromRGBO(169, 171, 25, 0.3),
               avatar: Icon(Icons.language),
               onPressed: () {
@@ -434,6 +442,8 @@ class MainPageState extends State<MainPage> {
     );
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     ScrollController scrollController = ScrollController();
@@ -444,9 +454,10 @@ class MainPageState extends State<MainPage> {
       //Here one can add new Languages if necessary (code = Country-Code from http://www.lingoes.net/en/translator/langcode.htm)
     ];
     double width = MediaQuery.of(context).size.width;
-    bool showOnlyIcons = width > 690;
+    bool showOnlyIcons = width < (_isAdmin ? 860 : 700) || _isMobile;
 
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor.withAlpha(255),
       body: SafeArea(
           child: Padding(
             padding: EdgeInsets.all(10),
@@ -464,28 +475,51 @@ class MainPageState extends State<MainPage> {
                       children: [
                         if (!_isMobile)
                           ActionChip(
-                            avatar: showOnlyIcons || !_isAdmin ? _fullScreenIcon : null,
-                            label: showOnlyIcons || !_isAdmin
-                                ? Text(S.of(context).main_page_fullScreen)
-                                : _fullScreenIcon,
+                            avatar: showOnlyIcons ? null : _fullScreenIcon,
+                            label: showOnlyIcons
+                                ? _fullScreenIcon
+                                : Text(S.of(context).main_page_fullScreen),
                             onPressed: () async {
                               bool isFullScreen = await windowManager.isFullScreen();
                               windowManager.setFullScreen(!isFullScreen);
                               setState(() {
                                 _fullScreenIcon = !isFullScreen
-                                    ? Icon(Icons.close_fullscreen)
-                                    : Icon(Icons.aspect_ratio);
+                                    ? Icon(Icons.close_fullscreen, size: 17)
+                                    : Icon(Icons.aspect_ratio, size: 17);
                               });
                             },
                           ),
+                        Tooltip(
+                          message: S.of(context).server_display_toolTip,
+                          child: Container(
+                            height: 32,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                color: context.watch<ConnectionProvider>().status == ConnectionStatus.connected ? Colors.lightBlue.withAlpha(100) : Colors.red.withAlpha(100)
+                            ),
+                            padding: EdgeInsets.all(4),
+                            child: Row(
+                              spacing: 5,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Icon(_useServer
+                                    ?  context.watch<ConnectionProvider>().status == ConnectionStatus.connected ? Icons.cloud : Icons.cloud_off
+                                    : Symbols.hard_drive_rounded, size: 20,),
+                                if(!showOnlyIcons)Text(_useServer
+                                    ? context.watch<ConnectionProvider>().status == ConnectionStatus.connected ? S.of(context).online_Database : S.of(context).settings_noConnection
+                                    : S.of(context).offline_Database),
+                              ],
+                            ),
+                          ),
+                        ),
                         Spacer(),
-                        if(!_isMobile)ActionChip(
-                          avatar: showOnlyIcons || !_isAdmin
-                              ? Icon(!(Theme.of(context).brightness == Brightness.dark) ? Icons.dark_mode : Icons.light_mode)
-                              :  null,
-                          label: showOnlyIcons || !_isAdmin
-                              ? Text(S.of(context).main_page_theme((Theme.of(context).brightness == Brightness.dark)))
-                              : Icon(!(Theme.of(context).brightness == Brightness.dark) ? Icons.dark_mode : Icons.light_mode, size: 17,),
+                        ActionChip(
+                          avatar: showOnlyIcons
+                              ?  null
+                              :  Icon(!(Theme.of(context).brightness == Brightness.dark) ? Icons.dark_mode : Icons.light_mode),
+                          label: showOnlyIcons
+                              ? Icon(!(Theme.of(context).brightness == Brightness.dark) ? Icons.dark_mode : Icons.light_mode, size: 17,)
+                              : Text(S.of(context).main_page_theme((Theme.of(context).brightness == Brightness.dark))),
                           onPressed: () async {
                             if(context.mounted){
                               bool themeBool = Theme.of(context).brightness == Brightness.dark;
@@ -497,8 +531,8 @@ class MainPageState extends State<MainPage> {
                         ),
                         buildLanguageDropDown(languages, showOnlyIcons),
                         if(_isAdmin)ActionChip(
-                            label: showOnlyIcons || !_isAdmin ? Text(S.of(context).settings) : Icon(Icons.settings, size: 17),
-                            avatar: showOnlyIcons || !_isAdmin ? Icon(Icons.settings) : null,
+                            label: showOnlyIcons ?  Icon(Icons.settings, size: 17) : Text(S.of(context).settings),
+                            avatar: showOnlyIcons ? null :Icon(Icons.settings),
                             onPressed: () async {
                               if(!mounted) return;
                               _blockScan = true;
@@ -547,8 +581,8 @@ class MainPageState extends State<MainPage> {
                             },
                         ),
                         ActionChip(
-                          avatar: showOnlyIcons || !_isAdmin ? Icon(_isAdmin ? Icons.logout : Icons.login) : null,
-                          label: showOnlyIcons || !_isAdmin ? Text(S.of(context).admin_login(!_isAdmin)) : Icon(_isAdmin ? Icons.logout : Icons.login, size: 17,),
+                          avatar: showOnlyIcons ? null : Icon(_isAdmin ? Icons.logout : Icons.login),
+                          label: showOnlyIcons ? Icon(_isAdmin ? Icons.logout : Icons.login, size: 17,) :Text(S.of(context).admin_login(!_isAdmin)) ,
                           onPressed: () async {
                             if(_isAdmin){
                               checkForOldUsers();
@@ -667,28 +701,28 @@ class MainPageState extends State<MainPage> {
                                 Expanded(
                                   flex: _isMobile ? 6 : 9,
                                     child: TextField(
+                                        mouseCursor: SystemMouseCursors.text,
                                         controller: _searchController,
                                         textAlignVertical: TextAlignVertical.bottom,
                                         maxLines: 1,
                                         decoration: InputDecoration(
-                                        isDense: false,
-                                        contentPadding: EdgeInsets.all(20), //No idea how to stretch the field vertically without content-padding
-                                        suffixIcon: IconButton(
-                                            onPressed: (){
-                                              setState(() {
-                                                _searchController.text = "";
-                                                _userList.clear();
-                                              });
-                                            },
-                                            icon: Icon(Icons.close),
-                                            style: IconButton.styleFrom(
-                                                backgroundColor: Colors.transparent
-                                            ),
+                                          contentPadding: EdgeInsets.symmetric(vertical: 20, horizontal: 10), //No idea how to stretch the field vertically without content-padding
+                                          suffixIcon: IconButton(
+                                              onPressed: (){
+                                                setState(() {
+                                                  _searchController.text = "";
+                                                  _userList.clear();
+                                                });
+                                              },
+                                              icon: Icon(Icons.close),
+                                              style: IconButton.styleFrom(
+                                                  backgroundColor: Colors.transparent
+                                              ),
                                           ),
-                                          hintText:S.of(context).main_page_searchUsers,
+                                          hintText:S.of(context).main_page_searchUsers(_useServer),
                                           border: OutlineInputBorder(
                                               borderRadius: BorderRadius.only(topLeft: Radius.circular(12), bottomLeft: Radius.circular(12))
-                                          ),
+                                          )
                                         ),
                                         onChanged: searchChanged,
                                         onTapOutside: (ev){
@@ -737,21 +771,11 @@ class MainPageState extends State<MainPage> {
                       TextButton.icon(
                           onPressed: () async{
                             _blockScan = true;
-                            //if(_useServer){
-                            //  setState(() => statLoading = true);
-                            //  //if(mounted) context.read<ConnectionProvider>().checkConnection();
-                            //  //if(context.read<ConnectionProvider>().status != ConnectionStatus.connected){
-                            //  //  if(context.mounted) Utilities.showToast(context: context, title: S.of(context).fail, description: "no connection", isError: true);
-                            //  //  setState(() => statLoading = false);
-                            //  //  return;
-                            //  //}
-                            //  setState(() => statLoading = false);
-                            //}
                             if(context.mounted) await StatisticPage.showStatisticDialog(context);
                             _blockScan = false;
                           },
-                          label: Text(S.of(context).main_page_statistic),
-                          icon: statLoading ? SizedBox(width: 10, height: 10, child: CircularProgressIndicator()) : Icon(Icons.bar_chart),
+                          label: Text(S.of(context).main_page_statistic(_useServer)),
+                          icon: Icon(Icons.bar_chart), //_statLoading ? SizedBox(width: 10, height: 10, child: CircularProgressIndicator()) : Icon(Icons.bar_chart),
                       )
                     ],
                   ),
@@ -818,7 +842,8 @@ class MainPageState extends State<MainPage> {
                     ),
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: _isMobile ? MainAxisAlignment.start : MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       if(oldUserList.isNotEmpty && _isAdmin) Stack(
                         clipBehavior: Clip.none,
@@ -850,17 +875,10 @@ class MainPageState extends State<MainPage> {
                             top: -6,
                             child: Container(
                               height: 20,
-                              width: 20,
+                              constraints: BoxConstraints(minWidth: 20),
                               decoration: BoxDecoration(
                                 color: Colors.red,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 2,
-                                    offset: Offset(0, 1),
-                                  ),
-                                ],
+                                borderRadius: BorderRadius.circular(10)
                               ),
                               alignment: Alignment.center,
                               child: Text(
@@ -871,7 +889,7 @@ class MainPageState extends State<MainPage> {
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
-                              ),/*Icon(Icons.priority_high, size: 12,)*/
+                              ),
                             ),
                           ),
                         ],
@@ -907,7 +925,7 @@ class MainPageState extends State<MainPage> {
                 final result = await BarcodeScannerSmartPhoneCamera.showBarcodeScannerDialog(context);
                 if (result != null) openUserFromUuId(result);
               },
-              icon: const Icon(Icons.qr_code_scanner),
+              icon: Icon(Icons.qr_code_scanner),
               label: Text(S.of(context).main_page_scanQrCode),
             )
           : SizedBox.shrink(),
@@ -955,7 +973,7 @@ class BannerWidget extends StatelessWidget {
                   fit: BoxFit.contain, // optional, damit es sauber skaliert
                 ),
               ),
-            const SizedBox(width: 15),
+            SizedBox(width: 15),
             Expanded(
               child: Text(
                 bannerImage!.title ?? "",
@@ -976,7 +994,7 @@ class BannerWidget extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 3),
+        SizedBox(height: 3),
         Container(
           height: 6,
           width: double.infinity,

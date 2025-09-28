@@ -14,6 +14,8 @@
   "save": "Save",
   "success": "Success",
   "fail": "Failure",
+  "apply": "Apply",
+
 
   "application_name": "Strohhalm Clothing Distribution",
   "language_de": "German",
@@ -42,10 +44,10 @@
   "customer_tile_addNewEntry": "{visitMoreThan14Days, select, true{Add new visit} false{Add Visit anyway} other{ }}",
 
   "main_page_languages": "Languages",
-  "main_page_searchUsers": "Search persons",
+  "main_page_searchUsers": "{useServer, select, true{Search persons (server)} false{Search persons (lokal)} other{ }}",
   "main_page_add": "Add",
   "main_page_isListView": "{isListView, select, true{Show as tiles?} false{Show as list?} other{ }}",
-  "main_page_statistic": "Statistics",
+  "main_page_statistic": "{useServer, select, true{Statistics (server)} false{Statistics (lokal)} other{ }}",
   "main_page_emptyUserListText": "Search by name or scan a code to display persons",
   "main_page_noUserWithUUID": "No matching person found!",
   "main_page_scanQrCode": "Scan QR Code",
@@ -95,6 +97,7 @@
   "settings_downloadCSVFromServer": "Download a CSV file (Excel)",
   "settings_exportCsvFromServer": "Export CSV from server",
   "settings_uploadCsvToServer": "Upload CSV to server",
+  "settings_uploadCsvToServerToolTip": "Importiere a exported CSV-File to the Server. Online possible if server-Database is empty!",
   "settings_exportCsvDialogTitle": "Export data as CSV",
   "settings_importCsvToolTip": "Import a compatible CSV-File (CSV with less Details!)",
   "settings_importCsv": "Import a compatible CSV-File",
@@ -161,6 +164,13 @@
   "load_more": "{isLoading, select, true{loading...} false{Load more...} other{Everything loaded!}}",
   "closesIn": "Closes in {countDown} seconds",
   "visit_added_success": "Visit added successfully!",
-  "visit_added_error": "{isBefore14Days, select, true{Error while adding\nVisitor was here in the last 14 days} false{Error while adding\nNo connection to Server} other{ }}"
+  "visit_added_error": "{isBefore14Days, select, true{Error while adding\nVisitor was here in the last 14 days} false{Error while adding\nNo connection to Server} other{ }}",
+  "online_Database": "online Database",
+  "offline_Database": "offline Database",
+  "countryErrorMessage": "We couldn’t detect your country automatically.\nPlease select a country from the following list.\n\nIf you don’t want to provide details, choose <bold>Worldwide</bold>.",
+  "countryErrorButton": "Open List",
 
+  "window_title": "Visitor Check-In",
+  "reset": "Reset",
+  "server_display_toolTip": "Shows you if the local or online-Database is used"
 }

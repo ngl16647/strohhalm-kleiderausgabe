@@ -14,6 +14,10 @@ import 'package:strohhalm_app/utilities.dart';
 import 'generated/l10n.dart';
 
 class CreateQRCode{
+  TextEditingController heightController = TextEditingController(text: "54");
+  TextEditingController widthController = TextEditingController(text: "85");
+  PdfPageFormat pdfPageFormat = PdfPageFormat(85 * PdfPageFormat.mm, 54 * PdfPageFormat.mm);
+
 
   CreateQRCode();
 
@@ -136,9 +140,8 @@ class CreateQRCode{
     return doc.save();
   }
 
-  static Future<void> printQrCode(BuildContext context, User user) async {
+  Future<void> printQrCode(BuildContext context, User user) async {
     bool isMobile = MyApp().getDeviceType() == DeviceType.mobile;
-    PdfPageFormat pdfPageFormat = PdfPageFormat(85 * PdfPageFormat.mm, 54 * PdfPageFormat.mm);
     //Map<String, PdfPageFormat> formatMap = {};
 
     if(context.mounted) {
@@ -179,13 +182,13 @@ class CreateQRCode{
                                 ? Column(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: printControls(context, setState, user, pdfPageFormat)
+                                children: printControls(context, setState, user)
 
                             )
                                 : Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: printControls(context, setState, user, pdfPageFormat)
+                              children: printControls(context, setState, user)
                               ,
                             ),
                           )
@@ -201,9 +204,8 @@ class CreateQRCode{
     }
   }
 
-  static List<Widget> printControls(BuildContext context, setState, User user, PdfPageFormat pdfPageFormat){
-    TextEditingController heightController = TextEditingController(text: "54");
-    TextEditingController widthController = TextEditingController(text: "85");
+  List<Widget> printControls(BuildContext context, setState, User user){
+
 
     return [
       Expanded(
@@ -249,14 +251,13 @@ class CreateQRCode{
                 if (w != null && h != null) {
                   setState(() {
                     pdfPageFormat = PdfPageFormat(w * PdfPageFormat.mm, h * PdfPageFormat.mm);
-                    //formatMap["$w x $h"] = PdfPageFormat(w * PdfPageFormat.mm, h * PdfPageFormat.mm);
                   });
                 } else {
                   Utilities.showToast(context: context, title:  S.of(context).fail, description: S.of(context).number_fail, isError: true);
                 }
               },
               icon:  Icon(Icons.refresh),
-              label: Text("Anwenden"),
+              label: Text(S.of(context).apply),
               style: ElevatedButton.styleFrom(
                 minimumSize: Size(50, double.infinity),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
@@ -294,7 +295,7 @@ class CreateQRCode{
               flex: 1,
               child: ElevatedButton.icon(
                 icon: Icon(Icons.share),
-                label: Text(S.of(context).qr_code_share, textAlign: TextAlign.center,),
+                label: Text(S.of(context).qr_code_share, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis,),
                 onPressed: () async {
                   await Printing.sharePdf(
                     bytes: await buildPdf(user, pdfPageFormat),

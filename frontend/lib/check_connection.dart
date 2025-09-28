@@ -135,6 +135,6 @@ class _ConnectionToastListenerState extends State<ConnectionToastListener> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.child;
+    return widget.child; //let child through
   }
 }

@@ -29,19 +29,23 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m5(isListView) =>
       "${Intl.select(isListView, {'true': 'Показывать как плитки?', 'false': 'Показывать как список?'})}";
 
-  static String m6(isDarkMode) =>
+  static String m6(useServer) => "Поиск пользователей";
+
+  static String m7(useServer) => "Статистика";
+
+  static String m8(isDarkMode) =>
       "${Intl.select(isDarkMode, {'true': 'Светлая тема', 'false': 'Тёмная тема'})}";
 
-  static String m7(cutOffNumber, overAllNumberOfCountries) =>
+  static String m9(cutOffNumber, overAllNumberOfCountries) =>
       "Показать топ ${cutOffNumber} стран из ${overAllNumberOfCountries}";
 
-  static String m8(showYear) =>
+  static String m10(showYear) =>
       "${Intl.select(showYear, {'true': 'к просмотру по месяцам', 'false': 'к просмотру по годам'})}";
 
-  static String m9(count) =>
+  static String m11(count) =>
       "${Intl.plural(count, one: 'Посещение', other: 'Посещения')}";
 
-  static String m11(showYear) =>
+  static String m13(showYear) =>
       "${Intl.select(showYear, {'true': 'Месяц', 'false': 'День'})}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -144,11 +148,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_scanQrCode": MessageLookupByLibrary.simpleMessage(
       "Сканировать QR-код",
     ),
-    "main_page_searchUsers": MessageLookupByLibrary.simpleMessage(
-      "Поиск пользователей",
-    ),
-    "main_page_statistic": MessageLookupByLibrary.simpleMessage("Статистика"),
-    "main_page_theme": m6,
+    "main_page_searchUsers": m6,
+    "main_page_statistic": m7,
+    "main_page_theme": m8,
     "no": MessageLookupByLibrary.simpleMessage("Нет"),
     "number_fail": MessageLookupByLibrary.simpleMessage(
       "Неверное число!\nПожалуйста, введите правильное число",
@@ -213,10 +215,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Количество посещений",
     ),
-    "statistic_page_show_top_countries": m7,
-    "statistic_page_switchYearDisplay": m8,
-    "statistic_page_visits": m9,
-    "statistic_page_xAxis": m11,
+    "statistic_page_show_top_countries": m9,
+    "statistic_page_switchYearDisplay": m10,
+    "statistic_page_visits": m11,
+    "statistic_page_xAxis": m13,
     "success": MessageLookupByLibrary.simpleMessage("Успех"),
     "today": MessageLookupByLibrary.simpleMessage("сегодня"),
     "update_failed": MessageLookupByLibrary.simpleMessage(

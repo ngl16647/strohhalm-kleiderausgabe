@@ -41,7 +41,6 @@ class StatisticPageState extends State<StatisticPage> {
   int _overAllNumberOfCountries = 0;
   bool _showYear = false;
   bool _useServer = false;
-  bool loading = false;
 
   Map<String, dynamic>? _countryData;
   Map<String, int>? _visitsInPeriod = {};
@@ -98,20 +97,16 @@ class StatisticPageState extends State<StatisticPage> {
   }
 
   Future<void> getData() async {
-    if(!mounted) return;
-    setState(() => loading = true);
+    if(!mounted) return; //to avoid state errors
     await limitCountryNumber();
     await getVisits();
-    if(!mounted) return;
-    setState(() => loading = false);
-
+    if(!mounted) return; //to avoid state errors
   }
 
   Future<void> getVisits() async {
     _useServer
       ? _visitsInPeriod  = await HttpHelper().getAllVisitsInPeriod(_monthBackNumber,_showYear)
       : _visitsInPeriod = await DatabaseHelper().getAllVisitsInPeriod(_monthBackNumber,_showYear);
-
     if(_visitsInPeriod != null) {
       setState(() {
         _visitsInPeriod;
@@ -174,7 +169,7 @@ class StatisticPageState extends State<StatisticPage> {
 
 
   PieChartSectionData chartData(double value, String title, int index, BoxConstraints constrains){
-    double normalRadius = _isMobile ? constrains.maxWidth*0.18 : constrains.maxWidth*0.09; //0.12
+    double normalRadius = _isMobile ? constrains.maxWidth*0.16 : constrains.maxWidth*0.09; //0.12
     final isTouched = index == _touchedIndex;
     final fontSize = isTouched ? 20.0 : 14.0;
     final radius = isTouched ? (normalRadius+10) : normalRadius;
@@ -198,8 +193,9 @@ class StatisticPageState extends State<StatisticPage> {
     if(_countryData == null) return [];
     ScrollController legendScrollController = ScrollController();
     return [
+      if(_isMobile) SizedBox(height: 10),
       SizedBox(
-        width: _isMobile ? constrains.maxWidth *0.9 : constrains.maxWidth*0.4,
+        width: _isMobile ? constrains.maxWidth : constrains.maxWidth*0.4,
         height: _isMobile ? constrains.maxHeight*0.2 : constrains.maxWidth*0.4, //0.9
         child: PieChart(
           PieChartData(
@@ -272,7 +268,7 @@ class StatisticPageState extends State<StatisticPage> {
                   ],
                 ),
               ],
-            ) : SizedBox(height: 20),
+            ) : SizedBox(height: 10),
             Expanded(
                 child: Scrollbar(
                   thumbVisibility: true,
@@ -360,6 +356,8 @@ class StatisticPageState extends State<StatisticPage> {
 
   @override
   Widget build(BuildContext context) {
+    //TODO: Mobile would be better to add a pageView and have PieChart and Flowcharts on separate pages
+    //whole page on Mobile
     return !_isMobile ? Dialog(
         shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
@@ -385,22 +383,27 @@ class StatisticPageState extends State<StatisticPage> {
                         color: Theme.of(context).listTileTheme.tileColor ?? Colors.blueGrey,
                         borderRadius: BorderRadius.circular(12),
                         elevation: 10,
-                        child: _countryData == null ? Center(
-                          child: SizedBox(
-                            width: 64,
-                            height: 64,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ) : _countryData!.isEmpty || context.watch<ConnectionProvider>().status != ConnectionStatus.connected
-                            ? Center(child: Text(S.of(context).statistic_page_noData))
+                        child: _countryData == null
+                            ? Center(
+                                child: SizedBox(
+                                  width: 64,
+                                  height: 64,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              )
+                            : _countryData!.isEmpty || context.watch<ConnectionProvider>().status != ConnectionStatus.connected
+                                ? Center(
+                                  child: Text(S.of(context).statistic_page_noData)
+                                  )
                                 : _isMobile ? Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: getPieChartChildren(constrains),
-                              ) : Row(
-                                spacing: 10,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: getPieChartChildren(constrains),
-                              ),
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: getPieChartChildren(constrains),
+                                  )
+                                : Row(
+                                    spacing: 10,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: getPieChartChildren(constrains),
+                                  ),
                       ),
                     ),
                   ),
@@ -409,6 +412,7 @@ class StatisticPageState extends State<StatisticPage> {
                         padding: EdgeInsets.all(5),
                         child: CustomTabs(
                           selectedIndex: 0,
+                          showSelected: false,
                           tabs: [
                             _visitsInPeriod == null
                                 ?  CustomTabData(title: "", child: Center(child: Text(S.of(context).settings_noConnection)))
@@ -509,7 +513,7 @@ class StatisticPageState extends State<StatisticPage> {
                                         customersList.add(element["customers"] as int);
                                       }
                                       return Padding(
-                                        padding: const EdgeInsets.all(16.0),
+                                        padding: EdgeInsets.all(16),
                                         child: BarChart(
                                           BarChartData(
                                             alignment: BarChartAlignment.spaceEvenly,
@@ -531,7 +535,8 @@ class StatisticPageState extends State<StatisticPage> {
                                                 sideTitles: SideTitles(
                                                     showTitles: true,
                                                     reservedSize: 40,
-                                                    interval: (maxY/3).ceil().toDouble()
+                                                    interval: ((maxY/5).ceil().toDouble()-1 > 5) ? (maxY/5).ceil().toDouble()-1 : 1,
+                                                    maxIncluded: false
                                                 ),
                                               ),
                                               bottomTitles: AxisTitles(
@@ -667,7 +672,7 @@ class StatisticPageState extends State<StatisticPage> {
             interval: xAxisInterval.toDouble(),
             getTitlesWidget: (index, tileMeta){
               //key is in Format
-              //!_showYear: "dd.MM.yyyy"
+              // !_showYear: "dd.MM.yyyy"
               // _showYear: "MM.yyyy"
               String dateString = visitList[index.toInt()].key;
               return SideTitleWidget(
@@ -686,6 +691,7 @@ class StatisticPageState extends State<StatisticPage> {
           sideTitles: SideTitles(
             showTitles: true,
             interval: yAxisInterval.toDouble(),
+            maxIncluded: false,
            // getTitlesWidget: leftTitleWidgets,
             reservedSize: 42,
           ),
@@ -737,7 +743,8 @@ class StatisticPageState extends State<StatisticPage> {
       )
     );
   }
-  
+
+  //since state gets set before data changes this stops a parsing error
   DateTime tryParseForCalendar(String dateString){
       try{
         DateFormat("dd.MM.yyyy").parse(dateString);

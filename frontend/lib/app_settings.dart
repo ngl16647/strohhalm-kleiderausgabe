@@ -13,7 +13,6 @@ class AppSettings{
   File? bannerSingleImage;
   Color? selectedColor;
   String? url;
-  //String? token;
   bool? isSocket;
   bool? darkMode;
   bool? useServer;
@@ -25,7 +24,6 @@ class AppSettings{
     this.bannerSingleImage,
     this.selectedColor,
     this.url,
-    //this.token,
     this.isSocket,
     this.darkMode,
     this.useServer,

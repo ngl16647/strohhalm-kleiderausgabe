@@ -36,8 +36,7 @@ class DatabaseHelper {
           CREATE TABLE visits(
             id INTEGER PRIMARY KEY,
             customerId INTEGER,
-            visitDate TEXT,
-            updated_on TEXT
+            visitDate TEXT
           )
         ''');
       },
@@ -140,11 +139,7 @@ class DatabaseHelper {
       ) async {
     final db = await database;
 
-    DateTime createdOn = time ?? DateTime.now(); //.subtract(Duration(days: );
-
-    //Isn't needed when checking before calling function
-    //var existingVisits = await getVisits(user.id);
-    //if(existingVisits.any((visit) => Utilities.isSameDay(visit.tookTime,createdOn))) return null;
+    DateTime createdOn = time ?? DateTime.now(); //.subtract(Duration(days: 400));
 
     int itemId = await db.insert(
       "visits",
@@ -250,16 +245,6 @@ class DatabaseHelper {
             conflictAlgorithm: ConflictAlgorithm.abort,
           );
           return AddUpdateUserReturnType(id, false);
-          //return User(
-          //  id: id,
-          //  uuId: uuId,
-          //  firstName: firstName,
-          //  lastName: lastName,
-          //  birthDay: birthDay,
-          //  country: birthCountry ?? "",
-          //  notes: notes ?? "",
-          //  lastVisit: null
-          //);
         } catch (e) {
           if (e is DatabaseException && e.isUniqueConstraintError()) {
             if (kDebugMode) {
@@ -273,6 +258,8 @@ class DatabaseHelper {
   Future<List<User>> getUsers({
     String? search,
     String? uuid,
+    int? page,
+    int? size,
     DateTime? lastVisitBefore,
   }) async {
     final db = await database;
@@ -292,10 +279,15 @@ class DatabaseHelper {
         whereArgs.add(lastVisitBefore.toIso8601String());
       }
 
+      size = size ?? 20; //default to 20
+      page = page != null ? page-1 : 0; //so page index doesn't start with 0
+
       List<Map<String, dynamic>> maps = await db.query(
         "users",
         where: conditions.join(" AND "),
         whereArgs: whereArgs,
+        limit: size,
+        offset: size * page,
         orderBy: "lastVisit DESC",
       );
 
@@ -324,24 +316,6 @@ class DatabaseHelper {
     return maps.map((mapRow) => Visit.fromMap(mapRow)).toList();
   }
 
-  //Future<bool?> updateUserNote(int id, String note)async { //bool updateSuccessFull
-  //  final db = await database;
-//
-  //  try{
-  //    await db.update(
-  //        "users",
-  //        {
-  //          "notes": note,
-  //        },
-  //        where: "id = ?",
-  //        whereArgs: [id]);
-  //    return true;
-  //  } catch(ev) {
-  //    debugPrint("$ev");
-  //    return null;
-  //  }
-  //}
-
   Future<bool?> updateUser(User user) async {
     final db = await database;
     int exists = await checkIfUserExists(
@@ -352,24 +326,23 @@ class DatabaseHelper {
         notes: user.notes
     );
     if(exists != -1) return false;
-
-      try{
-        await db.update(
-            "users",
-            {
-              "firstName" : user.firstName,
-              "lastName" : user.lastName,
-              "birthday": user.birthDay.toIso8601String(),
-              "country": user.country,
-              "notes": user.notes,
-            },
-            where: "id = ?",
-            whereArgs: [user.id]);
-        return true;
-      } catch(ev) {
-        debugPrint("$ev");
-        return null;
-      }
+    try{
+      await db.update(
+          "users",
+          {
+            "firstName" : user.firstName,
+            "lastName" : user.lastName,
+            "birthday": user.birthDay.toIso8601String(),
+            "country": user.country,
+            "notes": user.notes,
+          },
+          where: "id = ?",
+          whereArgs: [user.id]);
+      return true;
+    } catch(ev) {
+      debugPrint("$ev");
+      return null;
+    }
   }
 
   Future<String?> deleteLatestAndReturnPrevious(User user) async {
@@ -384,7 +357,7 @@ class DatabaseHelper {
       limit: 2,
     );
 
-    //result[0] is newest, is deleted, result[1] is the one before gets returned as new latest
+    //result[0] is newest, gets deleted, result[1] is the one before gets returned as new latest
     if (result.isEmpty) { //should never be the case since if empty there is no possibility to delete
       return null;
     }
@@ -411,23 +384,54 @@ class DatabaseHelper {
 
   Future<bool> deleteUser(int id) async {
     final db = await database;
-    int rowsAffected = await db.delete (
-        "users",
-      where: "id = ?",
-      whereArgs: [id]
-    );
 
-    //Set Visit id to 0-id, so its negatively unique
-    await db.update(
+    return await db.transaction((transaction) async {
+      int rowsAffected = await transaction.delete(
+        "users",
+        where: "id = ?",
+        whereArgs: [id],
+      );
+
+      await transaction.update(
         "visits",
         {
-          "customerId": 0-id,
+          "customerId": 0 - id
         },
         where: "customerId = ?",
-        whereArgs: [id]
-    );
+        whereArgs: [id],
+      );
 
-    return rowsAffected > 0;
+      return rowsAffected > 0;
+    });
+  }
+
+  Future<List<int>> deleteUsers(List<int> ids) async {
+    final db = await database;
+    List<int> deletedIds = [];
+
+    await db.transaction((transaction) async {
+      for (var id in ids) {
+        int rows = await transaction.delete(
+          "users",
+          where: "id = ?",
+          whereArgs: [id],
+        );
+
+        if (rows > 0) {
+          deletedIds.add(id);
+          await transaction.update(
+            "visits",
+            {
+              "customerId": -id //Set id to negative so it doesn't mess with the visits per customer statistic
+            },
+            where: "customerId = ?",
+            whereArgs: [id],
+          );
+        }
+      }
+    });
+
+    return deletedIds;
   }
 }
 

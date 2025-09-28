@@ -120,6 +120,11 @@ class S {
     return Intl.message('Failure', name: 'fail', desc: '', args: []);
   }
 
+  /// `Apply`
+  String get apply {
+    return Intl.message('Apply', name: 'apply', desc: '', args: []);
+  }
+
   /// `Strohhalm Clothing Distribution`
   String get application_name {
     return Intl.message(
@@ -321,13 +326,18 @@ class S {
     );
   }
 
-  /// `Search persons`
-  String get main_page_searchUsers {
-    return Intl.message(
-      'Search persons',
+  /// `{useServer, select, true{Search persons (server)} false{Search persons (lokal)} other{ }}`
+  String main_page_searchUsers(Object useServer) {
+    return Intl.select(
+      useServer,
+      {
+        'true': 'Search persons (server)',
+        'false': 'Search persons (lokal)',
+        'other': ' ',
+      },
       name: 'main_page_searchUsers',
       desc: '',
-      args: [],
+      args: [useServer],
     );
   }
 
@@ -347,13 +357,18 @@ class S {
     );
   }
 
-  /// `Statistics`
-  String get main_page_statistic {
-    return Intl.message(
-      'Statistics',
+  /// `{useServer, select, true{Statistics (server)} false{Statistics (lokal)} other{ }}`
+  String main_page_statistic(Object useServer) {
+    return Intl.select(
+      useServer,
+      {
+        'true': 'Statistics (server)',
+        'false': 'Statistics (lokal)',
+        'other': ' ',
+      },
       name: 'main_page_statistic',
       desc: '',
-      args: [],
+      args: [useServer],
     );
   }
 
@@ -795,6 +810,16 @@ class S {
     return Intl.message(
       'Upload CSV to server',
       name: 'settings_uploadCsvToServer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Importiere a exported CSV-File to the Server. Online possible if server-Database is empty!`
+  String get settings_uploadCsvToServerToolTip {
+    return Intl.message(
+      'Importiere a exported CSV-File to the Server. Online possible if server-Database is empty!',
+      name: 'settings_uploadCsvToServerToolTip',
       desc: '',
       args: [],
     );
@@ -1360,6 +1385,71 @@ class S {
       name: 'visit_added_error',
       desc: '',
       args: [isBefore14Days],
+    );
+  }
+
+  /// `online Database`
+  String get online_Database {
+    return Intl.message(
+      'online Database',
+      name: 'online_Database',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `offline Database`
+  String get offline_Database {
+    return Intl.message(
+      'offline Database',
+      name: 'offline_Database',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `We couldn’t detect your country automatically.\nPlease select a country from the following list.\n\nIf you don’t want to provide details, choose <bold>Worldwide</bold>.`
+  String get countryErrorMessage {
+    return Intl.message(
+      'We couldn’t detect your country automatically.\nPlease select a country from the following list.\n\nIf you don’t want to provide details, choose <bold>Worldwide</bold>.',
+      name: 'countryErrorMessage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Open List`
+  String get countryErrorButton {
+    return Intl.message(
+      'Open List',
+      name: 'countryErrorButton',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Visitor Check-In`
+  String get window_title {
+    return Intl.message(
+      'Visitor Check-In',
+      name: 'window_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reset`
+  String get reset {
+    return Intl.message('Reset', name: 'reset', desc: '', args: []);
+  }
+
+  /// `Shows you if the local or online-Database is used`
+  String get server_display_toolTip {
+    return Intl.message(
+      'Shows you if the local or online-Database is used',
+      name: 'server_display_toolTip',
+      desc: '',
+      args: [],
     );
   }
 }

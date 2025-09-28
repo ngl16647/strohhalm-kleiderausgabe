@@ -356,6 +356,7 @@ class BannerDesignerState extends State<BannerDesigner>{
   Widget build(BuildContext context) {
     return CustomTabs(
       selectedIndex: _useBannerDesigner ? 1 : 0,
+      showSelected: true,
       switchTab: (index){
         _useBannerDesigner = index == 1;
       },
@@ -523,12 +524,14 @@ class CustomTabs extends StatefulWidget {
   final int selectedIndex;
   final List<CustomTabData> tabs;
   final Function(int) switchTab;
+  final bool showSelected;
 
   const CustomTabs({
     super.key,
     required this.selectedIndex,
     required this.tabs,
-    required this.switchTab
+    required this.switchTab,
+    required this.showSelected,
   });
 
   @override
@@ -569,9 +572,10 @@ class _CustomTabsState extends State<CustomTabs> {
                     spacing: 10,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if(isSelected && widget.tabs.length > 1) Icon(Icons.check),
+                      if(isSelected && widget.tabs.length > 1 && widget.showSelected) Icon(Icons.check),
                       Text(
                         title,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                         ),

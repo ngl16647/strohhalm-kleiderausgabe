@@ -33,7 +33,7 @@ class BarcodeScannerListener {
     HardwareKeyboard.instance.addHandler(onHDIScan);
   }
 
-  //TODO: research if it works on MAC/Linux?
+  //TODO: doesnt work on mac
   void _detectScannerPort() {
     debugPrint("Checking for Scanner-Input");
     final ports = SerialPort.availablePorts;

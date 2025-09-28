@@ -36,28 +36,34 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m5(isListView) =>
       "${Intl.select(isListView, {'true': 'Show as tiles?', 'false': 'Show as list?', 'other': ' '})}";
 
-  static String m6(isDarkMode) =>
+  static String m6(useServer) =>
+      "${Intl.select(useServer, {'true': 'Search persons (server)', 'false': 'Search persons (lokal)', 'other': ' '})}";
+
+  static String m7(useServer) =>
+      "${Intl.select(useServer, {'true': 'Statistics (server)', 'false': 'Statistics (lokal)', 'other': ' '})}";
+
+  static String m8(isDarkMode) =>
       "${Intl.select(isDarkMode, {'true': 'Light Theme', 'false': 'Dark Theme', 'other': ' '})}";
 
-  static String m7(cutOffNumber, overAllNumberOfCountries) =>
+  static String m9(cutOffNumber, overAllNumberOfCountries) =>
       "Show top ${cutOffNumber} countries of ${overAllNumberOfCountries}";
 
-  static String m8(showYear) =>
+  static String m10(showYear) =>
       "${Intl.select(showYear, {'true': 'To month view', 'false': 'To year view', 'other': ' '})}";
 
-  static String m9(count) =>
+  static String m11(count) =>
       "${Intl.plural(count, one: 'Visit', other: 'Visits')}";
 
-  static String m10(visitorCount, visitCount) =>
+  static String m12(visitorCount, visitCount) =>
       "${Intl.plural(visitorCount, one: '${visitorCount} Visitor', other: '${visitorCount} Visitors')}\nhave ${visitCount} ${Intl.plural(visitCount, one: 'Visit', other: 'Visits')}";
 
-  static String m11(showYear) =>
+  static String m13(showYear) =>
       "${Intl.select(showYear, {'true': 'Month', 'false': 'Day', 'other': ' '})}";
 
-  static String m12(isBefore14Days) =>
+  static String m14(isBefore14Days) =>
       "${Intl.select(isBefore14Days, {'true': 'Error while adding\nVisitor was here in the last 14 days', 'false': 'Error while adding\nNo connection to Server', 'other': ' '})}";
 
-  static String m13(count) =>
+  static String m15(count) =>
       "${Intl.plural(count, one: 'Visit', other: 'Visits')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -86,6 +92,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "application_name": MessageLookupByLibrary.simpleMessage(
       "Strohhalm Clothing Distribution",
     ),
+    "apply": MessageLookupByLibrary.simpleMessage("Apply"),
     "back": MessageLookupByLibrary.simpleMessage("Back"),
     "banner_designer_bannerDesignerSubTitle":
         MessageLookupByLibrary.simpleMessage("Designer"),
@@ -127,6 +134,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "close": MessageLookupByLibrary.simpleMessage("Close"),
     "closesIn": m1,
     "confirm": MessageLookupByLibrary.simpleMessage("Confirm"),
+    "countryErrorButton": MessageLookupByLibrary.simpleMessage("Open List"),
+    "countryErrorMessage": MessageLookupByLibrary.simpleMessage(
+      "We couldn’t detect your country automatically.\nPlease select a country from the following list.\n\nIf you don’t want to provide details, choose <bold>Worldwide</bold>.",
+    ),
     "country_Name_worldWideReplacement": MessageLookupByLibrary.simpleMessage(
       "Not specified",
     ),
@@ -191,11 +202,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_scanQrCode": MessageLookupByLibrary.simpleMessage(
       "Scan QR Code",
     ),
-    "main_page_searchUsers": MessageLookupByLibrary.simpleMessage(
-      "Search persons",
-    ),
-    "main_page_statistic": MessageLookupByLibrary.simpleMessage("Statistics"),
-    "main_page_theme": m6,
+    "main_page_searchUsers": m6,
+    "main_page_statistic": m7,
+    "main_page_theme": m8,
     "no": MessageLookupByLibrary.simpleMessage("No"),
     "no_data": MessageLookupByLibrary.simpleMessage("No data available"),
     "no_internet": MessageLookupByLibrary.simpleMessage(
@@ -207,6 +216,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "number_fail": MessageLookupByLibrary.simpleMessage(
       "Invalid number!\nPlease enter a correct number",
     ),
+    "offline_Database": MessageLookupByLibrary.simpleMessage(
+      "offline Database",
+    ),
+    "online_Database": MessageLookupByLibrary.simpleMessage("online Database"),
     "password": MessageLookupByLibrary.simpleMessage("Password"),
     "password_false": MessageLookupByLibrary.simpleMessage(
       "Incorrect Password",
@@ -217,10 +230,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "qr_code_print": MessageLookupByLibrary.simpleMessage("Print QR Code"),
     "qr_code_share": MessageLookupByLibrary.simpleMessage("Share QR Code"),
     "reconnected": MessageLookupByLibrary.simpleMessage("Reconnected!"),
+    "reset": MessageLookupByLibrary.simpleMessage("Reset"),
     "same_user_exists": MessageLookupByLibrary.simpleMessage(
       "User with same Data already existed!",
     ),
     "save": MessageLookupByLibrary.simpleMessage("Save"),
+    "server_display_toolTip": MessageLookupByLibrary.simpleMessage(
+      "Shows you if the local or online-Database is used",
+    ),
     "settings": MessageLookupByLibrary.simpleMessage("Settings"),
     "settings_banner_desc": MessageLookupByLibrary.simpleMessage(
       "Image displayed at the top of the page.\\nAlso used as header for printing",
@@ -300,6 +317,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "settings_uploadCsvToServer": MessageLookupByLibrary.simpleMessage(
       "Upload CSV to server",
     ),
+    "settings_uploadCsvToServerToolTip": MessageLookupByLibrary.simpleMessage(
+      "Importiere a exported CSV-File to the Server. Online possible if server-Database is empty!",
+    ),
     "stat_page_alreadyGotToday": MessageLookupByLibrary.simpleMessage(
       "Already received something today",
     ),
@@ -330,9 +350,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Number of visits",
     ),
-    "statistic_page_show_top_countries": m7,
-    "statistic_page_switchYearDisplay": m8,
-    "statistic_page_visits": m9,
+    "statistic_page_show_top_countries": m9,
+    "statistic_page_switchYearDisplay": m10,
+    "statistic_page_visits": m11,
     "statistic_page_visitsPerPeriod": MessageLookupByLibrary.simpleMessage(
       "Visits per Month/Year",
     ),
@@ -343,8 +363,8 @@ class MessageLookup extends MessageLookupByLibrary {
         MessageLookupByLibrary.simpleMessage("Number of Visitors"),
     "statistic_page_visitsPerPerson_Visits":
         MessageLookupByLibrary.simpleMessage("Number of Visits"),
-    "statistic_page_visitsPerVisitor": m10,
-    "statistic_page_xAxis": m11,
+    "statistic_page_visitsPerVisitor": m12,
+    "statistic_page_xAxis": m13,
     "success": MessageLookupByLibrary.simpleMessage("Success"),
     "today": MessageLookupByLibrary.simpleMessage("Today"),
     "update": MessageLookupByLibrary.simpleMessage("Update"),
@@ -353,11 +373,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "uuId_fail_keyboard": MessageLookupByLibrary.simpleMessage(
       "Failed UuId Check!\nMake sure your Keyboard-Language (Left-Alt + Left-Shift) is the same as the Barcode-Scanner!",
     ),
-    "visit_added_error": m12,
+    "visit_added_error": m14,
     "visit_added_success": MessageLookupByLibrary.simpleMessage(
       "Visit added successfully!",
     ),
-    "visit_plural": m13,
+    "visit_plural": m15,
+    "window_title": MessageLookupByLibrary.simpleMessage("Visitor Check-In"),
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
   };
 }

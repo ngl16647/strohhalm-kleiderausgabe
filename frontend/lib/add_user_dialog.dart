@@ -52,12 +52,13 @@ class AddUserDialogState extends State<AddUserDialog> {
   final _lastNameController = TextEditingController();
   final _noteController = TextEditingController();
   DateTime? _selectedDate;
-  Country _selectedCountry = Country.worldWide;
+  Country? _selectedCountry;
   bool uploading = false;
   bool _useServer = false;
 
   @override
   void initState() {
+    super.initState();
     _useServer = AppSettingsManager.instance.settings.useServer ?? false;
     if(widget.user != null){
       _firstNameController.text = widget.user!.firstName;
@@ -65,9 +66,41 @@ class AddUserDialogState extends State<AddUserDialog> {
       _noteController.text = widget.user!.notes ?? "";
 
       _selectedDate = widget.user!.birthDay;
-      _selectedCountry = Country.tryParse(widget.user!.country) ?? Country.worldWide;
+      _selectedCountry = Country.tryParse(widget.user!.country);
+      checkIntegrity();
+    } else {
+      _selectedCountry = Country.worldWide;
     }
-    super.initState();
+  }
+
+  void checkIntegrity(){
+    if(_selectedCountry != null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if(context.mounted){
+        await DialogHelper.dialogConfirmation(
+          context: context,
+          message: S.of(context).countryErrorMessage,
+          acceptString: S.of(context).countryErrorButton,
+          hasChoice: false,
+          textSize: 16,
+        );
+        pickCountry();
+      }
+    });
+
+  }
+
+  void pickCountry(){
+    showCountryPicker(
+      context: context,
+      showSearch: true,
+      showWorldWide: true,
+      onSelect: (Country country) {
+        setState(() {
+          _selectedCountry = country;
+        });
+      },
+    );
   }
 
   Future<void> _pickDate() async {
@@ -147,18 +180,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                   ),
                 ),
                 InkWell(
-                  onTap: (){
-                    showCountryPicker(
-                      context: context,
-                      showSearch: true,
-                      showWorldWide: true,
-                      onSelect: (Country country) {
-                        setState(() {
-                          _selectedCountry = country;
-                        });
-                      },
-                    );
-                  },
+                  onTap: pickCountry,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
@@ -170,7 +192,11 @@ class AddUserDialogState extends State<AddUserDialog> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          Utilities.getLocalizedCountryNameFromCode(context, _selectedCountry.countryCode),
+                          widget.user == null
+                              ? Utilities.getLocalizedCountryNameFromCode(context, _selectedCountry!.countryCode)
+                              : _selectedCountry != null
+                                ? Utilities.getLocalizedCountryNameFromCode(context, _selectedCountry!.countryCode)
+                                : widget.user!.country,
                           style: TextStyle(
                             color: Theme.of(context).textTheme.bodyMedium!.color?.withAlpha(150),
                           ),
@@ -196,7 +222,10 @@ class AddUserDialogState extends State<AddUserDialog> {
             const SizedBox(height: 20),
             if(widget.user != null) TextButton.icon(
                 onPressed: () async {
-                  bool? result = await DialogHelper.dialogConfirmation(context, S.of(context).add_user_deleteMessage, true);
+                  bool? result = await DialogHelper.dialogConfirmation(
+                      context: context,
+                      message: S.of(context).add_user_deleteMessage,
+                      hasChoice:  true);
                   if(result != null){
                     navigatorKey.currentState?.pop(AddUserReturn(user: widget.user!, deleted: true));
                   }
@@ -232,7 +261,15 @@ class AddUserDialogState extends State<AddUserDialog> {
                             firstName: _firstNameController.text,
                             lastName: _lastNameController.text,
                             birthDay: _selectedDate!,
-                            country: _selectedCountry.countryCode,
+                            //If new User use WW or selected country
+                            //If updating:
+                            //   If no country selected and existing country isNotEmpty => take existing country
+                            //   If no country selected and existing country isEmpty => set to worldwide
+                            country: widget.user!.country.isNotEmpty && _selectedCountry == null
+                                    ? widget.user!.country
+                                    :  _selectedCountry == null
+                                        ? Country.worldWide.countryCode
+                                        :_selectedCountry!.countryCode,
                             notes: _noteController.text,
                             lastVisit: widget.user!.lastVisit
                         );
@@ -268,7 +305,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                             firstName: _firstNameController.text.trim(),
                             lastName: _lastNameController.text.trim(),
                             birthDay: _selectedDate!,
-                            country: _selectedCountry.countryCode,
+                            country: _selectedCountry!.countryCode,
                             lastVisit: null);
 
                         int? id;

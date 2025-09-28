@@ -1,5 +1,4 @@
 import 'package:country_picker/country_picker.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,7 +7,6 @@ import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:strohhalm_app/main_page.dart';
 import 'package:window_manager/window_manager.dart';
-
 import 'check_connection.dart';
 import 'generated/l10n.dart';
 
@@ -28,12 +26,12 @@ void main() async {
     databaseFactory = databaseFactoryFfi;
     await windowManager.ensureInitialized();
 
-    WindowOptions options = const WindowOptions(
-      title: "Strohhalm Kleiderausgabe",
+    WindowOptions options = WindowOptions(
+      title: "Besucher Check-In",
       minimumSize: Size(600, 800),
       center: true,
-    );
 
+    );
     windowManager.waitUntilReadyToShow(options, () async {
       await windowManager.show();
       await windowManager.focus();
@@ -94,7 +92,7 @@ class MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Strohhalm Kleiderausgabe",
+      title: "Besucher Check-In", //TODO: Change to Strohhalm for their version
       navigatorKey: navigatorKey,
       locale: _locale,
       localizationsDelegates: [
@@ -107,14 +105,14 @@ class MyAppState extends State<MyApp> {
       supportedLocales: [
         Locale("en", ""),
         Locale("de", ""),
-        Locale("ru", ""),
+        //Locale("ru", ""),
       ],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: seedColor,
           brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: CupertinoColors.lightBackgroundGray,
+        scaffoldBackgroundColor: Colors.white70,
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.white,
           foregroundColor: Colors.black87,
@@ -132,8 +130,8 @@ class MyAppState extends State<MyApp> {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: seedColor.withAlpha(75), // passt zum Farbschema
-            foregroundColor: Colors.white, // Text/Icon Farbe
+            backgroundColor: seedColor.withAlpha(110),
+            foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -143,9 +141,11 @@ class MyAppState extends State<MyApp> {
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
             foregroundColor: seedColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
-        useMaterial3: true,
       ),
       darkTheme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
@@ -168,11 +168,30 @@ class MyAppState extends State<MyApp> {
             textColor: Colors.white70,
             iconColor: Colors.white70,
           ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            //backgroundColor: seedColor.withAlpha(100),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            //foregroundColor: seedColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
       ),
       themeMode: themeMode,
-      home: ConnectionToastListener(child: MainPage(
-        onLocaleChange: setLocale,
-      ))
+      home: ConnectionToastListener(
+          child: MainPage(
+            onLocaleChange: setLocale,
+          )
+      )
     );
   }
 

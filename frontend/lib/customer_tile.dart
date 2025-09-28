@@ -208,8 +208,7 @@ class CustomerTileState extends State<CustomerTile>{
               children: [
                 IconButton(
                   onPressed: () {
-                    CreateQRCode.printQrCode(context, widget.user);
-                    //CreateQRCode().showQrCode(context, user);
+                    CreateQRCode().printQrCode(context, widget.user);
                   },
                   icon: Icon(Icons.print),
                 ),
@@ -288,7 +287,7 @@ class CustomerTileState extends State<CustomerTile>{
             children: [
               IconButton(
                 onPressed: () {
-                  CreateQRCode.printQrCode(context, widget.user);
+                  CreateQRCode().printQrCode(context, widget.user);
                 },
                 icon: Icon(Icons.print),
               ),

@@ -9,7 +9,6 @@ class User{
   final String country;
   String? notes;
   DateTime? lastVisit;
-  //List<TookItem> visits;
 
   User({
     required this.id,
@@ -19,7 +18,6 @@ class User{
     required this.birthDay,
     required this.country,
     this.notes,
-    //required this.visits,
     required this.lastVisit,
   });
 
@@ -43,7 +41,6 @@ class User{
       birthDay: birthDay ?? this.birthDay,
       country: country ?? this.country,
       notes: notes ?? this.notes,
-      //visits: tookItems ?? visits,
       lastVisit: lastVisit, //Could cause problems down the line, maybe think of something else to identify if no visits present
     );
   }
@@ -68,7 +65,6 @@ class User{
       birthDay: DateTime.parse(map["birthday"]),
       country: map["country"] ?? "DE",
       notes: map["notes"] ?? "",
-      //visits: list ?? [],
       lastVisit: map["lastVisit"] != null && (map["lastVisit"] as String).isNotEmpty ? tryParseIso(map["lastVisit"]) : null
     );
   }

@@ -285,13 +285,9 @@ class DataBaseExportFunctions{
     //TODO: Testen
     int firstDatumIndex = header.indexWhere((colTitle) => colTitle.startsWith("Datum"));
     for(var row in rows){
-      //if(row[colIndex["Herkunftsland"]!] != null && row[colIndex["Herkunftsland"]!].toString().isNotEmpty){
-      //  row[colIndex["Herkunftsland"]!] = tryParseCountry(row[colIndex["Herkunftsland"]!]);
-      //  //Country? country = Country.tryParse(row[colIndex["Herkunftsland"]!]);
-      //  //if(country != null){
-      //  //  row[colIndex["Herkunftsland"]!] = country.countryCode;
-      //  //}
-      //}
+      if(row[colIndex["Herkunftsland"]!] != null && row[colIndex["Herkunftsland"]!].toString().isNotEmpty){
+        row[colIndex["Herkunftsland"]!] = tryParseCountry(row[colIndex["Herkunftsland"]!]);
+      }
 
       if(row[colIndex["Geburtsdatum"]!] != null && row[colIndex["Geburtsdatum"]!].toString().isNotEmpty){
           DateTime? parsedTime = tryParseDate(row[colIndex["Geburtsdatum"]!]);
@@ -304,20 +300,20 @@ class DataBaseExportFunctions{
           if(parsedTime != null) row[i] = DateFormat("yyyy-MM-dd").format(parsedTime);
         }
       }
-
-
     }
 
-    rows.insert(0, header);
+    rows.insert(0, header); //reinsert header after manipulating rows
 
     return ListToCsvConverter().convert(rows);
   }
 
   String tryParseCountry(String s){
-    if(s == "Keine Angabe" || s == "Not specified") return "WW";
-    Country ? c =  Country.tryParse(s);
+    if(s == "Keine Angabe" || s == "Not specified"){
+      return "WW";
+    }
+    Country? c =  Country.tryParse(s);
     if(c != null) return c.countryCode;
-    return "WW";
+    return s;
   }
 
   DateTime? tryParseDate(String s) {

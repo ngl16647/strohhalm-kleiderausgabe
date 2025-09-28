@@ -1,3 +1,4 @@
+
 // ignore_for_file: avoid_print
 
 import 'dart:convert';
@@ -235,7 +236,7 @@ class HttpHelper {
         path: "/customers/$userId/visits"
     );
 
-    //visitTime = DateFormat("yyyy-MM-dd").format(DateTime.now().subtract(Duration(days: Random().nextInt(100) + 365)));
+    //visitTime = DateFormat("yyyy-MM-dd").format(DateTime.now().subtract(Duration(days: 375)));
     final body = jsonEncode({
       if(visitTime != null) "visitDate" : visitTime,
       if (notes != null) "notes": notes,
@@ -284,6 +285,7 @@ class HttpHelper {
       print(jsonDecode(response.body));
       final List<dynamic>? result = jsonDecode(response.body)["data"];
       if(result == null) return [];
+      print(result);
       return result.map((mapRow) => Visit.fromMap(mapRow)).toList();
     } else {
       print("Error: ${response.statusCode}");
@@ -397,7 +399,7 @@ class HttpHelper {
       }
     } catch (ev){
       connectionProvider.periodicCheckConnection();
-      print(ev);
+      print("$ev");
       return null;
     }
   }
@@ -430,8 +432,8 @@ class HttpHelper {
     }
   }
 
-  Future<void> uploadCsv(File csvFile) async {
-    if(!useServer || baseUrl.isEmpty) return;
+  Future<bool?> uploadCsv(File csvFile) async {
+    if(!useServer || baseUrl.isEmpty) return null;
 
     final uri = buildUri(
       path: "/stats/import",
@@ -463,14 +465,17 @@ class HttpHelper {
         print("Upload erfolgreich!");
         final respStr = await response.stream.bytesToString();
         print(respStr);
+        return true;
       } else {
         print("Fehler beim Upload: ${response.statusCode}");
         final respStr = await response.stream.bytesToString();
         print(respStr);
+        return false;
       }
     } catch (e) {
       print("Exception: $e");
     }
+    return null;
   }
 
   Future<String?> getCsv() async {
