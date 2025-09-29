@@ -45,6 +45,37 @@ func ok(w http.ResponseWriter) {
 	w.Write([]byte("ok"))
 }
 
+func parsePageParam(r *http.Request) (db.Page, error) {
+	sizeStr := getParam(r, "size")
+	pageStr := getParam(r, "page")
+
+	var size, page int64
+	var err error
+
+	if sizeStr == "" {
+		size = 10 // default
+	} else {
+		size, err = strconv.ParseInt(sizeStr, 10, 64)
+		if err != nil {
+			return db.Page{}, err
+		}
+	}
+
+	if pageStr == "" {
+		page = 1
+	} else {
+		page, err = strconv.ParseInt(pageStr, 10, 64)
+		if err != nil {
+			return db.Page{}, err
+		}
+	}
+
+	return db.Page{
+		Size: size,
+		Page: page,
+	}, nil
+}
+
 func parseIntFromUrl(r *http.Request, name string) (int64, error) {
 	id, err := strconv.ParseInt(chi.URLParam(r, name), 10, 64)
 	if err != nil {
@@ -68,4 +99,19 @@ func parseDateWithDefault(dateStr string, def time.Time) (time.Time, error) {
 		return def, nil
 	}
 	return time.Parse(db.DateFormat, dateStr)
+}
+
+func csvLine(row ...string) string {
+	result := ""
+	for i, str := range row {
+		if i != 0 {
+			result += ","
+		}
+		if strings.Contains(str, ",") {
+			result += fmt.Sprintf(`"%s"`, str)
+		} else {
+			result += str
+		}
+	}
+	return result
 }

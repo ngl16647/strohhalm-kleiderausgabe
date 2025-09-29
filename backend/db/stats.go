@@ -62,7 +62,7 @@ func GetVisitStats(from time.Time, to time.Time) (VisitStats, error) {
 
 func countCountries() ([]CountryDistribution, error) {
 	var cd []CountryDistribution
-	err := DB.Select(&cd, `
+	err := db.Select(&cd, `
         SELECT country, COUNT(*) AS count
         FROM customers
         GROUP BY country
@@ -73,13 +73,13 @@ func countCountries() ([]CountryDistribution, error) {
 
 func getTotalCustomers() (int64, error) {
 	var count int64
-	err := DB.Get(&count, "SELECT COUNT(*) FROM customers")
+	err := db.Get(&count, "SELECT COUNT(*) FROM customers")
 	return count, err
 }
 
 func getVisitDistribution(from string, to string) ([]DateDistribution, error) {
 	var distributions []DateDistribution
-	err := DB.Select(&distributions, `
+	err := db.Select(&distributions, `
 		SELECT visit_date, COUNT(*) AS count
 		FROM visits
 		WHERE visit_date BETWEEN $1 AND $2
@@ -91,7 +91,7 @@ func getVisitDistribution(from string, to string) ([]DateDistribution, error) {
 
 func getTotalVisits(from string, to string) (int64, error) {
 	var count int64
-	err := DB.Get(&count, `
+	err := db.Get(&count, `
 		SELECT COUNT(*) FROM visits
 		WHERE visit_date BETWEEN $1 AND $2
 	`, from, to)

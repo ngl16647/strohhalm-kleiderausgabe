@@ -33,16 +33,20 @@ GET {{base_url}}/customers/1
 GET {{base_url}}/customers/uuid/b2feb2db-25a8-4cba-92de-38ede14e425c
 
 ### Search customer
-GET {{base_url}}/customers?query=
+GET {{base_url}}/customers
+    ?query=pop
 Authorization: Bearer 12345
 
 ### Delete a customer
 DELETE {{base_url}}/customers/1
 
-# ---------------
+# -- visits -------------
+
+### Get visits of a customer
+GET {{base_url}}/customers/1/visits
 
 ### Record a visit
-POST {{base_url}}/customers/2/visits
+POST {{base_url}}/customers/1/visits
 
 {
     "visitDate": "2025-07-28",
@@ -57,8 +61,6 @@ GET {{base_url}}/visits
     ?begin=2000-07-20
     &end=
 
-### Get visit of a customer
-GET {{base_url}}/customers/4/visits
 
 ### Delete a visit
 DELETE {{base_url}}/visits/1
@@ -73,3 +75,21 @@ GET {{base_url}}/stats/visits
 
 ### export data
 GET {{base_url}}/stats/export
+
+
+
+### import data
+POST {{base_url}}/stats/import
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="data.csv"
+Content-Type: text/csv
+
+Nachname,Vorname,Notizen,Geburtsdatum,Herkunftsland,Datum
+1,Poop,Bing,,,"morbidly obese, and stupid",2025-03-28
+2,Pop,Bang,2000-01-01,Homeland,,2025-03-28,2025-07-28
+3,Pop,Bang,,Homeland,,
+4,Pop,Bang,,Homeland,,
+5,Pop,Bang,,Homeland,,
+--boundary--
