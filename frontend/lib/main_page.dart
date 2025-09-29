@@ -658,6 +658,7 @@ class MainPageState extends State<MainPage> {
                   Container(
                     constraints: BoxConstraints(
                       minHeight: 42,
+                      maxHeight: 60
                     ),
                     height: MediaQuery.of(context).size.height*0.07,
                     child: Padding(
