@@ -5,7 +5,7 @@ api:
     use_api_key: true
     api_key: ""
 tls:
-    use_tls: true
+    use_tls: false
     cert_file: cert/cert.pem
     key_file: cert/key.pem
 data: data.db

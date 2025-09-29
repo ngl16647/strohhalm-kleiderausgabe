@@ -73,17 +73,22 @@ func ExportCsvHandler(w http.ResponseWriter, r *http.Request) {
 	bw.Write([]byte("ID,Vorname,Nachname,Notizen,Geburtsdatum,Herkunftsland,Datum\n"))
 
 	for _, c := range data {
-		// use comma for separating visits to make the client happy
-		line := csvLine(
+		err := writeCsvLineWithTrailingComma(
+			bw,
 			fmt.Sprint(c.Id),
 			c.FirstName,
 			c.LastName,
 			c.Birthday,
 			c.Country,
 			c.Notes,
-		) + "," + strings.Join(c.Visits, ",") + "\n"
+		)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-		_, err := bw.Write([]byte(line))
+		// use comma for separating visits to make the client happy
+		_, err = bw.WriteString(strings.Join(c.Visits, ",") + "\n")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

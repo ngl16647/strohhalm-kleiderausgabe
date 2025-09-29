@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -101,17 +102,22 @@ func parseDateWithDefault(dateStr string, def time.Time) (time.Time, error) {
 	return time.Parse(db.DateFormat, dateStr)
 }
 
-func csvLine(row ...string) string {
-	result := ""
+func writeCsvLineWithTrailingComma(w *bufio.Writer, row ...string) error {
 	for i, str := range row {
-		if i != 0 {
-			result += ","
+		if i > 0 {
+			if err := w.WriteByte(','); err != nil {
+				return err
+			}
 		}
 		if strings.Contains(str, ",") {
-			result += fmt.Sprintf(`"%s"`, str)
+			if _, err := w.WriteString(fmt.Sprintf(`"%s"`, str)); err != nil {
+				return err
+			}
 		} else {
-			result += str
+			if _, err := w.WriteString(str); err != nil {
+				return err
+			}
 		}
 	}
-	return result
+	return nil
 }
