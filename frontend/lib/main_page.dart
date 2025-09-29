@@ -112,7 +112,7 @@ class MainPageState extends State<MainPage> {
   Future<void> checkForOldUsers() async {
   if(_useServer) {
     if(mounted){
-    oldUserList = await HttpHelper().searchCustomers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365)), size: 9999) ?? []; //If this fails automatically starts check for connection so no need to add a extra check before
+    oldUserList = await HttpHelper().searchCustomers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365)), size: 100) ?? []; //If this fails automatically starts check for connection so no need to add a extra check before
     oldUserList.removeWhere((item) => item.lastVisit == null); //Check since HttpRequest also returns Customers where lastVisit == null
     }
   } else {

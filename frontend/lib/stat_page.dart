@@ -13,6 +13,7 @@ import 'create_qr_code.dart';
 import 'dialog_helper.dart';
 import 'generated/l10n.dart';
 
+///Detailed display for Customers
 class StatPage extends StatefulWidget {
   final User user;
 
@@ -55,6 +56,7 @@ class StatPageState extends State<StatPage>{
     super.initState();
   }
 
+  ///Gets all Visits of the Customer
   Future<void> getVisits() async {
     _useServer
         ? _tookItems = await HttpHelper().getALlVisitsFromUser(id: widget.user.id)
@@ -63,6 +65,7 @@ class StatPageState extends State<StatPage>{
 
   }
 
+  ///returns Widgets for display of last Visit
   List<Widget> getVisitTiles(){
     return [
       Expanded(
@@ -126,6 +129,7 @@ class StatPageState extends State<StatPage>{
     ];
   }
 
+  ///Display for the personal Data
   Widget buildInfo({required Text title, required Text value}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

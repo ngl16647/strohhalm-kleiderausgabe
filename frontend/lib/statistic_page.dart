@@ -61,6 +61,7 @@ class StatisticPageState extends State<StatisticPage> {
 
   bool showTest = false;
 
+  ///Technically turns a country-Name to a color
   Color colorFromCountry(String country) {
     final hash = country.hashCode;
 
@@ -82,6 +83,7 @@ class StatisticPageState extends State<StatisticPage> {
     super.initState();
   }
 
+  ///Gets called when internet/Server gets reconnected after disconnect
   void _onProviderChanged() {
     if (provider.status == ConnectionStatus.connected) {
       getData();
@@ -96,6 +98,7 @@ class StatisticPageState extends State<StatisticPage> {
     super.dispose();
   }
 
+  ///Gets the data for PieChart and Visits in Period
   Future<void> getData() async {
     if(!mounted) return; //to avoid state errors
     await limitCountryNumber();
@@ -103,6 +106,7 @@ class StatisticPageState extends State<StatisticPage> {
     if(!mounted) return; //to avoid state errors
   }
 
+  ///Gets Visit in a month/year-Period depending on a int offset
   Future<void> getVisits() async {
     _useServer
       ? _visitsInPeriod  = await HttpHelper().getAllVisitsInPeriod(_monthBackNumber,_showYear)
@@ -115,6 +119,7 @@ class StatisticPageState extends State<StatisticPage> {
     }
   }
 
+  ///Limits the countries that get displayed in the pieChart
   Future<void> limitCountryNumber() async {
     Map<String, dynamic> countryDataLong;
     if(_useServer){
@@ -168,6 +173,7 @@ class StatisticPageState extends State<StatisticPage> {
   }
 
 
+  ///Turns country-data into data for the PieChart
   PieChartSectionData chartData(double value, String title, int index, BoxConstraints constrains){
     double normalRadius = _isMobile ? constrains.maxWidth*0.16 : constrains.maxWidth*0.09; //0.12
     final isTouched = index == _touchedIndex;
@@ -188,7 +194,8 @@ class StatisticPageState extends State<StatisticPage> {
       ),
     );
   }
-  
+
+  ///Widgets for Displaying PieChart and Legend
   List<Widget> getPieChartChildren(BoxConstraints constrains){
     if(_countryData == null) return [];
     ScrollController legendScrollController = ScrollController();
@@ -357,16 +364,18 @@ class StatisticPageState extends State<StatisticPage> {
   @override
   Widget build(BuildContext context) {
     //TODO: Mobile would be better to add a pageView and have PieChart and Flowcharts on separate pages
-    //whole page on Mobile
-    return !_isMobile ? Dialog(
-        shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-        ),
-      child: pageContent()
-    ).animate().slideX(duration: 300.ms, begin: 0.2).fadeIn(duration: 300.ms) : Scaffold(
-      appBar: AppBar(),
-      body: pageContent(),
-    );
+    //whole page on Mobile, Dialog on Desktop
+    return !_isMobile
+        ? Dialog(
+              shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+              ),
+            child: pageContent()
+          ).animate().slideX(duration: 300.ms, begin: 0.2).fadeIn(duration: 300.ms)
+        : Scaffold(
+          appBar: AppBar(),
+          body: pageContent(),
+        );
   }
 
   Widget pageContent(){
@@ -598,6 +607,7 @@ class StatisticPageState extends State<StatisticPage> {
     );
   }
 
+  ///Label for month/year display with controls
   String _buildPeriodLabel(BuildContext context) {
     int overAllInPeriod = _visitsInPeriod!.entries.toList().fold(0, (sum, element) => sum + element.value);
     String visits =  S.of(context).statistic_page_visits(overAllInPeriod);
@@ -745,6 +755,7 @@ class StatisticPageState extends State<StatisticPage> {
   }
 
   //since state gets set before data changes this stops a parsing error
+  ///parses Strings to dates for month/Year display
   DateTime tryParseForCalendar(String dateString){
       try{
         DateFormat("dd.MM.yyyy").parse(dateString);

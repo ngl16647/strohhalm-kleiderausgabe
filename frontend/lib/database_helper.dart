@@ -16,11 +16,11 @@ class DatabaseHelper {
   Future<Database> initDatabase() async {
     String path = await getDatabasesPath();
     return openDatabase(
-      join(path, "storhhalm_db_ver1_0.db"),
+      join(path, "visitor_CheckIn_db_ver1_0.db"),
       onCreate: (db, version) async {
 
         await db.execute('''
-          CREATE TABLE users(
+          CREATE TABLE customers(
             id INTEGER PRIMARY KEY,
             uuid TEXT UNIQUE,
             firstName TEXT,
@@ -66,8 +66,8 @@ class DatabaseHelper {
     final db = await database;
 
     final result = await db.query(
-      "users",
-      columns: ["country as country", "COUNT(*) * 100.0 / (SELECT COUNT(*) FROM users) AS percentage, COUNT(*) AS number"],
+      "customers",
+      columns: ["country as country", "COUNT(*) * 100.0 / (SELECT COUNT(*) FROM customers) AS percentage, COUNT(*) AS number"],
       where: "country IS NOT NULL AND country != ''",
       groupBy: "country",
     );
@@ -166,7 +166,7 @@ class DatabaseHelper {
   Future<void> updateUserLastVisit(int userId, DateTime? visitDate) async {
     final db = await database;
     await db.update(
-        "users",
+        "customers",
         {
           "lastVisit": visitDate?.toIso8601String()
         },
@@ -210,7 +210,7 @@ class DatabaseHelper {
     }
 
     final result = await db.query(
-      "users",
+      "customers",
       where: whereClauses.isNotEmpty ? whereClauses.join(" AND ") : null,
       whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
       limit: 1,
@@ -233,7 +233,7 @@ class DatabaseHelper {
       if(exists != -1) return AddUpdateUserReturnType(exists, true);
         try {
           int id = await db.insert(
-            "users",
+            "customers",
             {
               "uuid": user.uuId,
               "firstName": user.firstName,
@@ -283,7 +283,7 @@ class DatabaseHelper {
       page = page != null ? page-1 : 0; //so page index doesn't start with 0
 
       List<Map<String, dynamic>> maps = await db.query(
-        "users",
+        "customers",
         where: conditions.join(" AND "),
         whereArgs: whereArgs,
         limit: size,
@@ -301,7 +301,7 @@ class DatabaseHelper {
 
   Future<int> countAllUsers() async{
     final db = await database;
-    int result = Sqflite.firstIntValue(await db.rawQuery("SELECT COUNT(*) as count FROM users")) ?? 0;
+    int result = Sqflite.firstIntValue(await db.rawQuery("SELECT COUNT(*) as count FROM customers")) ?? 0;
     return result;
   }
 
@@ -328,7 +328,7 @@ class DatabaseHelper {
     if(exists != -1) return false;
     try{
       await db.update(
-          "users",
+          "customers",
           {
             "firstName" : user.firstName,
             "lastName" : user.lastName,
@@ -387,7 +387,7 @@ class DatabaseHelper {
 
     return await db.transaction((transaction) async {
       int rowsAffected = await transaction.delete(
-        "users",
+        "customers",
         where: "id = ?",
         whereArgs: [id],
       );
@@ -412,7 +412,7 @@ class DatabaseHelper {
     await db.transaction((transaction) async {
       for (var id in ids) {
         int rows = await transaction.delete(
-          "users",
+          "customers",
           where: "id = ?",
           whereArgs: [id],
         );

@@ -54,7 +54,7 @@ class DataBaseExportFunctions{
   static Future<String?> exportToCsv(BuildContext context) async {
     if(!context.mounted) return null;
       final db = await DatabaseHelper().database;
-      final users = await db.query("users");
+      final users = await db.query("customers");
 
       List<List<dynamic>> csvData = [];
 
@@ -110,7 +110,7 @@ class DataBaseExportFunctions{
   static Future<String?> generateCSVForExportToServer(BuildContext context) async {
     if (!context.mounted) return null;
     final db = await DatabaseHelper().database;
-    final users = await db.query("users");
+    final users = await db.query("customers");
 
     List<List<dynamic>> csvData = [];
 
@@ -160,6 +160,7 @@ class DataBaseExportFunctions{
     return csv;
   }
 
+  ///Imports a CSV into the local Database
   Future<void> importCSV(BuildContext context, [File? localCSVFile, Function(double progress)? done]) async {
     if(!context.mounted) return;
 
@@ -248,7 +249,7 @@ class DataBaseExportFunctions{
     }
   }
 
-
+  ///Matches offline/online headers
   String normalizeHeaderName(String headerName) {
     for (final entry in aliases.entries) {
       if (entry.value.contains(headerName)) {

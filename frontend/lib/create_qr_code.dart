@@ -80,7 +80,6 @@ class CreateQRCode{
     }
 
 
-
     doc.addPage(
       wg.Page(
         pageFormat: format, //Hier kann man die dimension theoretisch für den Drucker anpassen
@@ -140,6 +139,7 @@ class CreateQRCode{
     return doc.save();
   }
 
+  ///shows a print Dialog
   Future<void> printQrCode(BuildContext context, User user) async {
     bool isMobile = MyApp().getDeviceType() == DeviceType.mobile;
     //Map<String, PdfPageFormat> formatMap = {};
