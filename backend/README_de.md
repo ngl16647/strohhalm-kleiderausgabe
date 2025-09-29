@@ -55,7 +55,7 @@ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 3
 ```
 `<domain_name>` kann auch `localhost` sein.
 
-## Maintenance
+## Wartung
 
 Alle Daten werden in der Datei `data.db` gespeichert und können intern mit `sqlite3` abgerufen werden. `sqlite3` kann mit den meisten Paketmanagern installiert werden, z. B.:
 
@@ -70,3 +70,46 @@ sqlite3 data.db
 ``` 
 
 Ein Backup der Daten erstellst du, indem du die Datei `data.db` kopierst.
+
+## Entwicklung
+
+### Setup
+
+Installiere Go in Version 1.24.4 oder höher von [go.dev](https://go.dev/).
+
+Ich empfehle VSCode für die Entwicklung. Verwende das Run & Debug-Panel auf der linken Seite, um das Backend während der Entwicklung zu starten.
+
+Um das Backend zu erstellen, führe `go build .` aus.
+
+### Flags
+
+Das Backend-Binary kann mit verschiedenen Flags gestartet werden. Nutze `--help`, um alle verfügbaren Optionen zu sehen, z. B.:
+
+```bash
+backend.exe --help
+```
+
+Alternativ kannst du das Projekt direkt mit Go starten:
+
+```bash
+go run main.go --help
+```
+
+Besonders nützlich: Das Flag `--docs` gibt die Dokumentation aller Endpunkte aus.
+
+### Struktur
+
+Es gibt aktuell 5 Packages:
+
+- **db:** Datenbank-Schicht. Kommuniziert direkt mit der Datenbank.
+- **routes:** Route-Schicht. Nutzt die Datenbank-Schicht und verarbeitet API-Aufrufe.
+- **middlewares:** Middlewares für Logging und Autorisierung.
+- **cfg:** Konfiguration und Flag-Auswertung.
+- **tests:** Lockere Tests. Es gibt derzeit keine standardisierten Unit-Tests.
+
+### Actions
+
+Wir nutzen aktuell 3 GitHub Actions zum Bauen der App, konfiguriert in .github/workflows.
+Du kannst sie manuell im Actions-Tab auf GitHub ausführen, um Build-Artefakte mit Teammitgliedern zu teilen.
+
+Wenn du einen Tag in den main-Branch pusht (siehe [Git-Tags](https://git-scm.com/book/en/v2/Git-Basics-Tagging)), werden alle Actions ausgeführt und eine neue Release-Seite erstellt.

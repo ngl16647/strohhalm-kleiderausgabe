@@ -70,3 +70,46 @@ sqlite3 data.db
 ``` 
 
 You can backup your data by copying the file `data.db`.
+
+## Development
+
+### Setup
+
+Install Go version `1.24.4` or higher from [go.dev](https://go.dev/).
+
+I recommend using VSCode for development. Use `Run and Debug` tag on the left to run the backend in development.
+
+To build the backend, run `go build .`
+
+### Flags
+
+The backend binary can take multiple flags. Use `--help` to learn what they do. For example:
+
+```bash
+backend.exe --help
+```
+
+If you have Go environment, you can also do:
+
+```bash
+go run main.go --help
+``` 
+
+Notably the flag `--docs` prints out the endpoint documentation.
+
+### Structure
+
+There are currently 5 packages.
+
+- **db:** Database layer. Handles direct communication with database.
+- **routes:** Route layer. Uses database layer and handles API calls.
+- **middlewares:** Middlewares. Handles logging and authorization.
+- **cfg:** Configuration and flag parsing.
+- **tests:** Casual testing. Experimental, no standardized unit tests yet.
+
+### Actions
+
+We currently have 3 GitHub Actions for building the app, configured in `.github/workflows`.
+You can run them manually in the `Action` tag on the GitHub page. This makes it easier to share your build artifacts with teammates.
+
+When you push a tag to `main` branch (see [Git-Tags](https://git-scm.com/book/en/v2/Git-Basics-Tagging)), all actions run and a new release page appears.
