@@ -20,29 +20,52 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'de';
 
-  static String m0(visitMoreThan14Days) =>
-      "${Intl.select(visitMoreThan14Days, {'true': 'Neuen Besuch vermerken', 'false': 'Trotzdem vermerken'})}";
+  static String m0(isAdmin) =>
+      "${Intl.select(isAdmin, {'true': 'Admin', 'false': 'Logout', 'other': ' '})}";
 
-  static String m1(dateString) =>
+  static String m1(countDown) => "Schließt in ${countDown} Sekunden";
+
+  static String m2(visitMoreThan14Days) =>
+      "${Intl.select(visitMoreThan14Days, {'true': 'Neuen Besuch vermerken', 'false': 'Trotzdem vermerken', 'other': ' '})}";
+
+  static String m3(dateString) =>
       "War zuletzt am <bold>${dateString}</bold> da";
 
-  static String m2(isListView) =>
-      "${Intl.select(isListView, {'true': 'Als Kacheln anzeigen?', 'false': 'Als Liste anzeigen?'})}";
+  static String m4(isLoading) =>
+      "${Intl.select(isLoading, {'true': 'Lade...', 'false': 'Mehr laden...', 'other': 'Alles geladen!'})}";
 
-  static String m3(isDarkMode) =>
-      "${Intl.select(isDarkMode, {'true': 'Helle Ansicht', 'false': 'Dunkle Ansicht'})}";
+  static String m5(isListView) =>
+      "${Intl.select(isListView, {'true': 'Als Kacheln anzeigen?', 'false': 'Als Liste anzeigen?', 'other': ' '})}";
 
-  static String m4(cutOffNumber, overAllNumberOfCountries) =>
-      "Zeige die Top ${cutOffNumber} Länder von ${overAllNumberOfCountries}";
+  static String m6(useServer) =>
+      "${Intl.select(useServer, {'true': 'Personen durchsuchen (server)', 'false': 'Personen durchsuchen (lokal)', 'other': ' '})}";
 
-  static String m5(showYear) =>
-      "${Intl.select(showYear, {'true': 'zur Monatsansicht', 'false': 'zur Jahresansicht'})}";
+  static String m7(useServer) =>
+      "${Intl.select(useServer, {'true': 'Statistiken (server)', 'false': 'Statistiken (lokal)', 'other': ' '})}";
 
-  static String m6(count) =>
+  static String m8(isDarkMode) =>
+      "${Intl.select(isDarkMode, {'true': 'Helle Ansicht', 'false': 'Dunkle Ansicht', 'other': ' '})}";
+
+  static String m9(cutOffNumber, overAllNumberOfCountries) =>
+      "Zeige die Top ${cutOffNumber} von ${overAllNumberOfCountries} Ländern";
+
+  static String m10(showYear) =>
+      "${Intl.select(showYear, {'true': 'zur Monatsansicht', 'false': 'zur Jahresansicht', 'other': ' '})}";
+
+  static String m11(count) =>
       "${Intl.plural(count, one: 'Besuch', other: 'Besuche')}";
 
-  static String m7(showYear) =>
-      "${Intl.select(showYear, {'true': 'Monat', 'false': 'Tag'})}";
+  static String m12(visitorCount, visitCount) =>
+      "${Intl.plural(visitorCount, one: '${visitorCount} Besucher', other: '${visitorCount} Besucher')}\nmit ${visitCount} ${Intl.plural(visitCount, one: 'Besuch', other: 'Besuche')}";
+
+  static String m13(showYear) =>
+      "${Intl.select(showYear, {'true': 'Monat', 'false': 'Tag', 'other': ' '})}";
+
+  static String m14(isBefore14Days) =>
+      "${Intl.select(isBefore14Days, {'true': 'Fehler beim eintragen\nBesucher war in den letzten 14 Tagen bereits da', 'false': 'Fehler beim eintragen\nKeine Verbindung zum Server', 'other': ' '})}";
+
+  static String m15(count) =>
+      "${Intl.plural(count, one: 'Besuch', other: 'Besuche')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -68,9 +91,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "add_user_requiredFields": MessageLookupByLibrary.simpleMessage(
       "* Pflicht Felder",
     ),
+    "admin_login": m0,
     "application_name": MessageLookupByLibrary.simpleMessage(
       "Strohhalm Kleiderausgabe",
     ),
+    "apply": MessageLookupByLibrary.simpleMessage("Anwenden"),
     "back": MessageLookupByLibrary.simpleMessage("Zurück"),
     "banner_designer_bannerDesignerSubTitle":
         MessageLookupByLibrary.simpleMessage("Designer"),
@@ -112,19 +137,37 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "cancel": MessageLookupByLibrary.simpleMessage("Abbrechen"),
     "close": MessageLookupByLibrary.simpleMessage("Schließen"),
+    "closesIn": m1,
     "confirm": MessageLookupByLibrary.simpleMessage("Bestätigen"),
-    "customer_tile_addNewEntry": m0,
+    "countryErrorButton": MessageLookupByLibrary.simpleMessage("Liste öffnen"),
+    "countryErrorMessage": MessageLookupByLibrary.simpleMessage(
+      "Das Land konnte nicht automatisch erkannt werden.\nBitte wähle ein Land aus der nachfolgenden Liste aus.\n\nWenn du keine genaueren Angaben machen möchtest, wähle <bold>Weltweit</bold>.",
+    ),
+    "country_Name_worldWideReplacement": MessageLookupByLibrary.simpleMessage(
+      "Keine Angabe",
+    ),
+    "csv_conversion_failed": MessageLookupByLibrary.simpleMessage(
+      "Fehler beim Konvertieren zu CSV",
+    ),
+    "customer_tile_addNewEntry": m2,
     "customer_tile_deleteLastEntry": MessageLookupByLibrary.simpleMessage(
       "Vermerk löschen",
     ),
     "customer_tile_lastVisit_never": MessageLookupByLibrary.simpleMessage(
       "War <bold>noch nie</bold> da",
     ),
-    "customer_tile_lastVisit_onDate": m1,
+    "customer_tile_lastVisit_onDate": m3,
     "customer_tile_lastVisit_today": MessageLookupByLibrary.simpleMessage(
       "War <bold>heute</bold> da",
     ),
+    "dark_mode": MessageLookupByLibrary.simpleMessage("Dunkler Modus"),
     "delete": MessageLookupByLibrary.simpleMessage("Löschen"),
+    "deletionRequest_buttonTitle": MessageLookupByLibrary.simpleMessage(
+      "Löschungs Anträge",
+    ),
+    "deletionRequest_restore": MessageLookupByLibrary.simpleMessage(
+      "Wiederherstellen",
+    ),
     "deletion_failed": MessageLookupByLibrary.simpleMessage(
       "Löschen fehlgeschlagen",
     ),
@@ -135,13 +178,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Alle löschen",
     ),
     "deletion_request_page_deleteAllDesc": MessageLookupByLibrary.simpleMessage(
-      "Alle inaktiven Besucher auf einmal löschen",
+      "Alle inaktiven Besucher auf einmal Löschen?",
     ),
     "deletion_request_page_lastVisit": MessageLookupByLibrary.simpleMessage(
       "Letzter Besuch:",
     ),
     "deletion_request_page_resetUser": MessageLookupByLibrary.simpleMessage(
-      "Besucher zurücksetzen",
+      "Der letzte Besuch des Besuchers wird auf „Noch Nie“ gesetzt",
     ),
     "deletion_request_page_title": MessageLookupByLibrary.simpleMessage(
       "Inaktive Besucher",
@@ -149,16 +192,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "deletion_success": MessageLookupByLibrary.simpleMessage(
       "Löschen erfolgreich",
     ),
+    "edit": MessageLookupByLibrary.simpleMessage("Bearbeiten"),
     "fail": MessageLookupByLibrary.simpleMessage("Fehlschlag"),
     "language_de": MessageLookupByLibrary.simpleMessage("Deutsch"),
     "language_en": MessageLookupByLibrary.simpleMessage("Englisch"),
     "language_ru": MessageLookupByLibrary.simpleMessage("Russisch"),
+    "load_more": m4,
     "main_page_add": MessageLookupByLibrary.simpleMessage("Hinzufügen"),
     "main_page_emptyUserListText": MessageLookupByLibrary.simpleMessage(
       "Suche nach einem Namen oder Scanne einen Code um Besucher anzuzeigen",
     ),
     "main_page_fullScreen": MessageLookupByLibrary.simpleMessage("Vollbild"),
-    "main_page_isListView": m2,
+    "main_page_isListView": m5,
     "main_page_languages": MessageLookupByLibrary.simpleMessage("Sprachen"),
     "main_page_noUserWithUUID": MessageLookupByLibrary.simpleMessage(
       "Es konnte keine passende Person gefunden werden!",
@@ -166,22 +211,47 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_scanQrCode": MessageLookupByLibrary.simpleMessage(
       "QR-Code scannen",
     ),
-    "main_page_searchUsers": MessageLookupByLibrary.simpleMessage(
-      "Personen durchsuchen",
-    ),
-    "main_page_statistic": MessageLookupByLibrary.simpleMessage("Statistiken"),
-    "main_page_theme": m3,
+    "main_page_searchUsers": m6,
+    "main_page_statistic": m7,
+    "main_page_theme": m8,
     "no": MessageLookupByLibrary.simpleMessage("Nein"),
+    "no_data": MessageLookupByLibrary.simpleMessage("Keine Daten verfügbar"),
+    "no_internet": MessageLookupByLibrary.simpleMessage(
+      "Keine Verbindung zum Internet",
+    ),
+    "no_server": MessageLookupByLibrary.simpleMessage(
+      "Keine Verbindung zum Server",
+    ),
     "number_fail": MessageLookupByLibrary.simpleMessage(
       "Keine erlaubte Zahl!\nBitte gib eine korrekte Zahl ein",
     ),
+    "offline_Database": MessageLookupByLibrary.simpleMessage(
+      "offline Datenbank",
+    ),
+    "online_Database": MessageLookupByLibrary.simpleMessage("online Datenbank"),
+    "password": MessageLookupByLibrary.simpleMessage("Passwort"),
+    "password_false": MessageLookupByLibrary.simpleMessage("Falsches Passwort"),
     "print": MessageLookupByLibrary.simpleMessage("Drucken"),
+    "print_height": MessageLookupByLibrary.simpleMessage("Höhe"),
+    "print_width": MessageLookupByLibrary.simpleMessage("Breite"),
     "qr_code_print": MessageLookupByLibrary.simpleMessage("QR-Code Drucken"),
-    "qr_code_share": MessageLookupByLibrary.simpleMessage("QR-Code Teilen"),
+    "qr_code_share": MessageLookupByLibrary.simpleMessage(
+      "QR-Code Exportieren/Teilen",
+    ),
+    "reconnected": MessageLookupByLibrary.simpleMessage(
+      "Verbindung wieder hergestellt",
+    ),
+    "reset": MessageLookupByLibrary.simpleMessage("Zurücksetzen"),
+    "same_user_exists": MessageLookupByLibrary.simpleMessage(
+      "Benutzer mit gleichen Daten existiert schon!",
+    ),
     "save": MessageLookupByLibrary.simpleMessage("Speichern"),
+    "server_display_toolTip": MessageLookupByLibrary.simpleMessage(
+      "Zeigt ob die lokale oder online-Datenbank verwendet wird",
+    ),
     "settings": MessageLookupByLibrary.simpleMessage("Einstellungen"),
     "settings_banner_desc": MessageLookupByLibrary.simpleMessage(
-      "Bild das oben auf der Seite dargestellt wird.\\nWird außerdem als Header fürs drucken verwendet",
+      "Bild das oben auf der Seite dargestellt wird.\nWird außerdem als Header fürs drucken verwendet",
     ),
     "settings_banner_title": MessageLookupByLibrary.simpleMessage(
       "Banner / Bild",
@@ -190,9 +260,51 @@ class MessageLookup extends MessageLookupByLibrary {
       "Akzentfarbe für die Anwendung",
     ),
     "settings_color_title": MessageLookupByLibrary.simpleMessage("Farbe"),
+    "settings_downloadCSVFromServer": MessageLookupByLibrary.simpleMessage(
+      "Downloade CSV-Datei (Excel)",
+    ),
+    "settings_downloadFromServer": MessageLookupByLibrary.simpleMessage(
+      "Vom Server herunterladen",
+    ),
+    "settings_exportCsvDescription": MessageLookupByLibrary.simpleMessage(
+      "Exportiere oder Importiere eine CSV-Datei\nDaten können nur importiert werden, wenn die Zieldatenbank leer ist!",
+    ),
+    "settings_exportCsvDialogTitle": MessageLookupByLibrary.simpleMessage(
+      "Daten als CSV exportieren",
+    ),
+    "settings_exportCsvFile": MessageLookupByLibrary.simpleMessage(
+      "CSV-Datei exportieren",
+    ),
+    "settings_exportCsvFromServer": MessageLookupByLibrary.simpleMessage(
+      "CSV vom Server exportieren",
+    ),
+    "settings_exportCsvLocal": MessageLookupByLibrary.simpleMessage(
+      "CSV lokal exportieren",
+    ),
+    "settings_exportDetailedCsvLocal": MessageLookupByLibrary.simpleMessage(
+      "Detaillierte CSV lokal exportieren",
+    ),
+    "settings_exportLessDetailsToolTip": MessageLookupByLibrary.simpleMessage(
+      "Exportiert eine CSV mit:\nid\nVorname\nNachname\nLand als Code\nNotizen\nBesuchen",
+    ),
+    "settings_exportToolTip": MessageLookupByLibrary.simpleMessage(
+      "Exportiert eine CSV mit:\nid\nVorname\nNachname\nLand als ganzer Name\nNotizen\nAnzahl an Besuchen\nBesuche mit Uhrzeit",
+    ),
+    "settings_importCsv": MessageLookupByLibrary.simpleMessage(
+      "Importiere eine CSV-Datei",
+    ),
+    "settings_importCsvToolTip": MessageLookupByLibrary.simpleMessage(
+      "Importiere eine kompatible CSV-Datei",
+    ),
+    "settings_noConnection": MessageLookupByLibrary.simpleMessage(
+      "Keine Verbindung!",
+    ),
     "settings_pick_Color": MessageLookupByLibrary.simpleMessage("Farbe wählen"),
+    "settings_saveServerSettings": MessageLookupByLibrary.simpleMessage(
+      "Server-Einstellungen speichern, um Verbindung zu prüfen",
+    ),
     "settings_server_desc": MessageLookupByLibrary.simpleMessage(
-      "Falls ein Server verwendet werden soll können hier Url und Passwort eingegeben werden",
+      "Falls ein Server verwendet werden soll können hier Url und API-Schlüssel eingegeben werden",
     ),
     "settings_server_switch": MessageLookupByLibrary.simpleMessage(
       "Server verwenden?",
@@ -206,9 +318,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "settings_server_urlHint": MessageLookupByLibrary.simpleMessage(
       "Server Url / IP",
     ),
+    "settings_switchWarningMessage": MessageLookupByLibrary.simpleMessage(
+      "<bigger><bold>Achtung!</bold></bigger>\n\nDie Server-Datenbank und die lokale Datenbank sind getrennt.\nEs ist möglich die Datenbanken als CSV zu exportieren und importieren solange nicht bereits Einträge existieren!\n\n<bigger>Beim Umschalten gehen <bold>keine</bold> Daten verloren.</bigger>\n\nWillst du umschalten?",
+    ),
     "settings_themeMode_Title": MessageLookupByLibrary.simpleMessage("Thema"),
     "settings_themeMode_desc": MessageLookupByLibrary.simpleMessage(
       "Heller oder Dunkler Modus",
+    ),
+    "settings_uploadCsvToServer": MessageLookupByLibrary.simpleMessage(
+      "CSV zum Server hochladen",
+    ),
+    "settings_uploadCsvToServerToolTip": MessageLookupByLibrary.simpleMessage(
+      "Importiere eine exportierte CSV-Datei in den Server. Geht nur, wenn die Server-Datenbank leer ist!",
     ),
     "stat_page_alreadyGotToday": MessageLookupByLibrary.simpleMessage(
       "Hat heute schon was bekommen",
@@ -216,7 +337,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "stat_page_children": MessageLookupByLibrary.simpleMessage("Hat Kinder:"),
     "stat_page_country": MessageLookupByLibrary.simpleMessage("Herkunftsland:"),
     "stat_page_lastTimeTookClothes": MessageLookupByLibrary.simpleMessage(
-      "Letzter Besuch am am:",
+      "Letzter Besuch am:",
     ),
     "stat_page_miscellaneous": MessageLookupByLibrary.simpleMessage("Notizen:"),
     "stat_page_removeLastVisit": MessageLookupByLibrary.simpleMessage(
@@ -230,13 +351,27 @@ class MessageLookup extends MessageLookupByLibrary {
       "Besuch eingetragen!",
     ),
     "stat_page_visits": MessageLookupByLibrary.simpleMessage("Besuche:"),
+    "statistic_page_noData": MessageLookupByLibrary.simpleMessage(
+      "Keine Daten oder Internetverbindung.\nSobald wieder eine Verbindung hergestellt wurde, werden die Daten automatisch geladen!",
+    ),
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Anzahl an Besuchen",
     ),
-    "statistic_page_show_top_countries": m4,
-    "statistic_page_switchYearDisplay": m5,
-    "statistic_page_visits": m6,
-    "statistic_page_xAxis": m7,
+    "statistic_page_show_top_countries": m9,
+    "statistic_page_switchYearDisplay": m10,
+    "statistic_page_visits": m11,
+    "statistic_page_visitsPerPeriod": MessageLookupByLibrary.simpleMessage(
+      "Besuche pro Monat/Jahr",
+    ),
+    "statistic_page_visitsPerPerson": MessageLookupByLibrary.simpleMessage(
+      "Besucher pro Besuch-Anzahl",
+    ),
+    "statistic_page_visitsPerPerson_Persons":
+        MessageLookupByLibrary.simpleMessage("Anzahl von Besuchern"),
+    "statistic_page_visitsPerPerson_Visits":
+        MessageLookupByLibrary.simpleMessage("Anzahl von Besuchen"),
+    "statistic_page_visitsPerVisitor": m12,
+    "statistic_page_xAxis": m13,
     "success": MessageLookupByLibrary.simpleMessage("Erfolg"),
     "today": MessageLookupByLibrary.simpleMessage("Heute"),
     "update": MessageLookupByLibrary.simpleMessage("Updaten"),
@@ -249,6 +384,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "uuId_fail_keyboard": MessageLookupByLibrary.simpleMessage(
       "uuId-Check Fehlgeschlagen!!\nStelle sicher, dass die Tastatur/System-Sprache (Links-Alt + Links-Umschalt) die gleiche ist, die auch beim Scanner eingestellt ist!",
     ),
+    "visit_added_error": m14,
+    "visit_added_success": MessageLookupByLibrary.simpleMessage(
+      "Besuch erfolgreich eingetragen!",
+    ),
+    "visit_plural": m15,
+    "window_title": MessageLookupByLibrary.simpleMessage("Besucher Check-In"),
     "yes": MessageLookupByLibrary.simpleMessage("Ja"),
   };
 }

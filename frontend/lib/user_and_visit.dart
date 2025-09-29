@@ -9,7 +9,6 @@ class User{
   final String country;
   String? notes;
   DateTime? lastVisit;
-  //List<TookItem> visits;
 
   User({
     required this.id,
@@ -19,34 +18,45 @@ class User{
     required this.birthDay,
     required this.country,
     this.notes,
-    //required this.visits,
     required this.lastVisit,
   });
 
   User copyWith({
+    int? newId,
+    String? newUuId,
     String? firstName,
     String? lastName,
     DateTime? birthDay,
     String? country,
     bool? hasChild,
     String? notes,
-    List<TookItem>? tookItems,
+    List<Visit>? tookItems,
     DateTime? lastVisit
   }) {
     return User(
-      id: id ,
-      uuId: uuId,
+      id: newId ?? id ,
+      uuId: newUuId ?? uuId,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       birthDay: birthDay ?? this.birthDay,
       country: country ?? this.country,
       notes: notes ?? this.notes,
-      //visits: tookItems ?? visits,
       lastVisit: lastVisit, //Could cause problems down the line, maybe think of something else to identify if no visits present
     );
   }
 
   factory User.fromMap(Map<String, dynamic> map){
+    DateTime? tryParseIso(String s){
+      try {
+        return DateTime.parse(s);
+      } catch (_) {}
+
+      try {
+        return DateFormat("yyyy-MM-dd").parse(s);
+      } catch (_) {}
+      return null;
+    }
+
     return User(
       id: map["id"],
       uuId: map["uuid"],
@@ -55,9 +65,16 @@ class User{
       birthDay: DateTime.parse(map["birthday"]),
       country: map["country"] ?? "DE",
       notes: map["notes"] ?? "",
-      //visits: list ?? [],
-      lastVisit: map["lastVisit"] != null && (map["lastVisit"] as String).isNotEmpty ? DateFormat("yyyy-MM-dd").parse(map["lastVisit"]) : null
+      lastVisit: map["lastVisit"] != null && (map["lastVisit"] as String).isNotEmpty ? tryParseIso(map["lastVisit"]) : null
     );
+  }
+
+  bool equals(User user){
+    return user.firstName == firstName &&
+           user.lastName == lastName &&
+           user.birthDay == birthDay &&
+           user.country == country &&
+           user.notes == notes;
   }
 
   @override
@@ -68,23 +85,23 @@ class User{
   }
 }
 
-class TookItem{
+class Visit{
   final int id;
-  final int? userId; //TODO: While testing, was being changed to null if user deleted, now gets set to -1
+  final int? userId; //gets set to -id if user is deleted
   final DateTime tookTime;
-  final bool? wasBedSheet;
 
-  const TookItem({
+  const Visit({
     required this.id,
     required this.userId,
     required this.tookTime,
-    this.wasBedSheet});
+  });
 
-  static TookItem fromMap(Map map){
-    return TookItem(
-        id: map["visitId"] ?? map["id"], //A litte hacky
+  static Visit fromMap(Map map){
+    //A litte hacky
+    return Visit(
+        id: map["visitId"] ?? map["id"],
         userId: map["customerId"] ?? map["userId"] ?? map["customer_id"],
-        tookTime: DateTime.parse(map["visitDate"] ?? map["visit_date"])
+        tookTime: DateTime.parse(map["visitDate"] ?? map["visit_date"]),
     );
   }
 

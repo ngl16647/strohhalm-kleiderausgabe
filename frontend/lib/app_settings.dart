@@ -13,7 +13,6 @@ class AppSettings{
   File? bannerSingleImage;
   Color? selectedColor;
   String? url;
-  String? token;
   bool? isSocket;
   bool? darkMode;
   bool? useServer;
@@ -25,7 +24,6 @@ class AppSettings{
     this.bannerSingleImage,
     this.selectedColor,
     this.url,
-    this.token,
     this.isSocket,
     this.darkMode,
     this.useServer,
@@ -40,7 +38,6 @@ class AppSettings{
         "\nbannerImage: ${bannerSingleImage?.path}, "
         "\nselectedColor: $selectedColor, "
         "\nurl: $url, "
-        "\ntoken: $token, "
         "\nisSocket: $isSocket, "
         "\ndarkMode: $darkMode, "
         "\nuseServer: $useServer, "
@@ -55,6 +52,7 @@ class AppSettingsManager {
   static final AppSettingsManager instance = AppSettingsManager._privateConstructor();
 
   AppSettings? _settings;
+  String? _cachedToken;
 
   Future<void> load() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
@@ -62,6 +60,7 @@ class AppSettingsManager {
     final appDir = await getApplicationDocumentsDirectory();
     final bannerDir = join(appDir.path, "bannerImages");
 
+    _cachedToken = await secureStorage.read(key: "auth_token");
 
     File? bannerFile;
     if (pref.getString("bannerFileName") != null) {
@@ -87,13 +86,11 @@ class AppSettingsManager {
       selectColor = Color(pref.getInt("selectedColor")!);
     }
 
-    String? token = await secureStorage.read(key: "auth_token");
-
     _settings = AppSettings(
         bannerSingleImage: bannerFile,
         selectedColor: selectColor,
         url: pref.getString("serverUrl"),
-        token: token,
+        //token: token,
         isSocket: pref.getBool("scannerMode"),
         darkMode: pref.getBool("darkMode"),
         useServer: pref.getBool("useServer"),
@@ -108,9 +105,8 @@ class AppSettingsManager {
     return _settings!;
   }
 
-  Future<String?> get authToken async {
-    final secureStorage = FlutterSecureStorage();
-    return await secureStorage.read(key: "auth_token");
+  String? get authToken {
+    return _cachedToken;
   }
 
   Future<void> setUseServer(bool value) async {
@@ -126,8 +122,8 @@ class AppSettingsManager {
   }
 
   Future<void> setToken(String token) async {
-    _settings?.token = token;
     final secureStorage = FlutterSecureStorage();
+    _cachedToken = token;
     await secureStorage.write(key: "auth_token", value: token);
   }
 

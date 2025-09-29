@@ -120,6 +120,11 @@ class S {
     return Intl.message('Failure', name: 'fail', desc: '', args: []);
   }
 
+  /// `Apply`
+  String get apply {
+    return Intl.message('Apply', name: 'apply', desc: '', args: []);
+  }
+
   /// `Strohhalm Clothing Distribution`
   String get application_name {
     return Intl.message(
@@ -300,11 +305,11 @@ class S {
     );
   }
 
-  /// `{visitMoreThan14Days, select, true{Add new visit} false{Add Visit anyway}}`
+  /// `{visitMoreThan14Days, select, true{Add new visit} false{Add Visit anyway} other{ }}`
   String customer_tile_addNewEntry(Object visitMoreThan14Days) {
     return Intl.select(
       visitMoreThan14Days,
-      {'true': 'Add new visit', 'false': 'Add Visit anyway'},
+      {'true': 'Add new visit', 'false': 'Add Visit anyway', 'other': ' '},
       name: 'customer_tile_addNewEntry',
       desc: '',
       args: [visitMoreThan14Days],
@@ -321,13 +326,18 @@ class S {
     );
   }
 
-  /// `Search persons`
-  String get main_page_searchUsers {
-    return Intl.message(
-      'Search persons',
+  /// `{useServer, select, true{Search persons (server)} false{Search persons (lokal)} other{ }}`
+  String main_page_searchUsers(Object useServer) {
+    return Intl.select(
+      useServer,
+      {
+        'true': 'Search persons (server)',
+        'false': 'Search persons (lokal)',
+        'other': ' ',
+      },
       name: 'main_page_searchUsers',
       desc: '',
-      args: [],
+      args: [useServer],
     );
   }
 
@@ -336,24 +346,29 @@ class S {
     return Intl.message('Add', name: 'main_page_add', desc: '', args: []);
   }
 
-  /// `{isListView, select, true{Show as tiles?} false{Show as list?}}`
+  /// `{isListView, select, true{Show as tiles?} false{Show as list?} other{ }}`
   String main_page_isListView(Object isListView) {
     return Intl.select(
       isListView,
-      {'true': 'Show as tiles?', 'false': 'Show as list?'},
+      {'true': 'Show as tiles?', 'false': 'Show as list?', 'other': ' '},
       name: 'main_page_isListView',
       desc: '',
       args: [isListView],
     );
   }
 
-  /// `Statistics`
-  String get main_page_statistic {
-    return Intl.message(
-      'Statistics',
+  /// `{useServer, select, true{Statistics (server)} false{Statistics (lokal)} other{ }}`
+  String main_page_statistic(Object useServer) {
+    return Intl.select(
+      useServer,
+      {
+        'true': 'Statistics (server)',
+        'false': 'Statistics (lokal)',
+        'other': ' ',
+      },
       name: 'main_page_statistic',
       desc: '',
-      args: [],
+      args: [useServer],
     );
   }
 
@@ -387,11 +402,11 @@ class S {
     );
   }
 
-  /// `{isDarkMode, select, true{Light Theme} false{Dark Theme}}`
+  /// `{isDarkMode, select, true{Light Theme} false{Dark Theme} other{ }}`
   String main_page_theme(Object isDarkMode) {
     return Intl.select(
       isDarkMode,
-      {'true': 'Light Theme', 'false': 'Dark Theme'},
+      {'true': 'Light Theme', 'false': 'Dark Theme', 'other': ' '},
       name: 'main_page_theme',
       desc: '',
       args: [isDarkMode],
@@ -498,11 +513,11 @@ class S {
     );
   }
 
-  /// `{showYear, select, true{Month} false{Day}}`
+  /// `{showYear, select, true{Month} false{Day} other{ }}`
   String statistic_page_xAxis(Object showYear) {
     return Intl.select(
       showYear,
-      {'true': 'Month', 'false': 'Day'},
+      {'true': 'Month', 'false': 'Day', 'other': ' '},
       name: 'statistic_page_xAxis',
       desc: '',
       args: [showYear],
@@ -531,11 +546,11 @@ class S {
     );
   }
 
-  /// `{showYear, select, true{To month view} false{To year view}}`
+  /// `{showYear, select, true{To month view} false{To year view} other{ }}`
   String statistic_page_switchYearDisplay(Object showYear) {
     return Intl.select(
       showYear,
-      {'true': 'To month view', 'false': 'To year view'},
+      {'true': 'To month view', 'false': 'To year view', 'other': ' '},
       name: 'statistic_page_switchYearDisplay',
       desc: '',
       args: [showYear],
@@ -675,6 +690,176 @@ class S {
     return Intl.message(
       'Password',
       name: 'settings_server_tokenHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Save server settings to check for connection`
+  String get settings_saveServerSettings {
+    return Intl.message(
+      'Save server settings to check for connection',
+      name: 'settings_saveServerSettings',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Download from server`
+  String get settings_downloadFromServer {
+    return Intl.message(
+      'Download from server',
+      name: 'settings_downloadFromServer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No connection!`
+  String get settings_noConnection {
+    return Intl.message(
+      'No connection!',
+      name: 'settings_noConnection',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Export CSV file`
+  String get settings_exportCsvFile {
+    return Intl.message(
+      'Export CSV file',
+      name: 'settings_exportCsvFile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Export a CSV file (which can be imported in e.g. Excel)\nIf the database on the server is empty, a CSV file can be uploaded.`
+  String get settings_exportCsvDescription {
+    return Intl.message(
+      'Export a CSV file (which can be imported in e.g. Excel)\nIf the database on the server is empty, a CSV file can be uploaded.',
+      name: 'settings_exportCsvDescription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Export CSV locally\n(Server compatible)`
+  String get settings_exportCsvLocal {
+    return Intl.message(
+      'Export CSV locally\n(Server compatible)',
+      name: 'settings_exportCsvLocal',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Exports a CSV with:\nid\nFirst name\nLast name\nCountry as code\nNotes\nVisits`
+  String get settings_exportLessDetailsToolTip {
+    return Intl.message(
+      'Exports a CSV with:\nid\nFirst name\nLast name\nCountry as code\nNotes\nVisits',
+      name: 'settings_exportLessDetailsToolTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Exports a CSV with:\nid\nFirst name\nLast name\nCountry as full name\nNotes\nNumber of visits\nVisits with timestamp`
+  String get settings_exportToolTip {
+    return Intl.message(
+      'Exports a CSV with:\nid\nFirst name\nLast name\nCountry as full name\nNotes\nNumber of visits\nVisits with timestamp',
+      name: 'settings_exportToolTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Export detailed CSV locally\n(Server incompatible)`
+  String get settings_exportDetailedCsvLocal {
+    return Intl.message(
+      'Export detailed CSV locally\n(Server incompatible)',
+      name: 'settings_exportDetailedCsvLocal',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Download a CSV file (Excel)`
+  String get settings_downloadCSVFromServer {
+    return Intl.message(
+      'Download a CSV file (Excel)',
+      name: 'settings_downloadCSVFromServer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Export CSV from server`
+  String get settings_exportCsvFromServer {
+    return Intl.message(
+      'Export CSV from server',
+      name: 'settings_exportCsvFromServer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Upload CSV to server`
+  String get settings_uploadCsvToServer {
+    return Intl.message(
+      'Upload CSV to server',
+      name: 'settings_uploadCsvToServer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Importiere a exported CSV-File to the Server. Online possible if server-Database is empty!`
+  String get settings_uploadCsvToServerToolTip {
+    return Intl.message(
+      'Importiere a exported CSV-File to the Server. Online possible if server-Database is empty!',
+      name: 'settings_uploadCsvToServerToolTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Export data as CSV`
+  String get settings_exportCsvDialogTitle {
+    return Intl.message(
+      'Export data as CSV',
+      name: 'settings_exportCsvDialogTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import a compatible CSV-File (CSV with less Details!)`
+  String get settings_importCsvToolTip {
+    return Intl.message(
+      'Import a compatible CSV-File (CSV with less Details!)',
+      name: 'settings_importCsvToolTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import a compatible CSV-File`
+  String get settings_importCsv {
+    return Intl.message(
+      'Import a compatible CSV-File',
+      name: 'settings_importCsv',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `<bigger><bold>Warning!</bold></bigger>\n\nThe server database and the local database are separate.\nIt is possible to add the server database to the local one – but <bold>not</bold> the other way around!\n\n<bigger>No data will be lost when switching.</bigger>\n\nDo you want to switch?`
+  String get settings_switchWarningMessage {
+    return Intl.message(
+      '<bigger><bold>Warning!</bold></bigger>\n\nThe server database and the local database are separate.\nIt is possible to add the server database to the local one – but <bold>not</bold> the other way around!\n\n<bigger>No data will be lost when switching.</bigger>\n\nDo you want to switch?',
+      name: 'settings_switchWarningMessage',
       desc: '',
       args: [],
     );
@@ -940,6 +1125,329 @@ class S {
     return Intl.message(
       'Failed UuId Check!\nMake sure your Keyboard-Language (Left-Alt + Left-Shift) is the same as the Barcode-Scanner!',
       name: 'uuId_fail_keyboard',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{count, plural, =1{Visit} other{Visits}}`
+  String visit_plural(num count) {
+    return Intl.plural(
+      count,
+      one: 'Visit',
+      other: 'Visits',
+      name: 'visit_plural',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{visitorCount, plural, =1{{visitorCount} Visitor} other{{visitorCount} Visitors}}\nhave {visitCount} {visitCount, plural, =1{Visit} other{Visits}}`
+  String statistic_page_visitsPerVisitor(num visitorCount, num visitCount) {
+    return Intl.message(
+      '${Intl.plural(visitorCount, one: '$visitorCount Visitor', other: '$visitorCount Visitors')}\nhave $visitCount ${Intl.plural(visitCount, one: 'Visit', other: 'Visits')}',
+      name: 'statistic_page_visitsPerVisitor',
+      desc: '',
+      args: [visitorCount, visitCount],
+    );
+  }
+
+  /// `Visitors per Visit-Number`
+  String get statistic_page_visitsPerPerson {
+    return Intl.message(
+      'Visitors per Visit-Number',
+      name: 'statistic_page_visitsPerPerson',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Number of Visitors`
+  String get statistic_page_visitsPerPerson_Persons {
+    return Intl.message(
+      'Number of Visitors',
+      name: 'statistic_page_visitsPerPerson_Persons',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Number of Visits`
+  String get statistic_page_visitsPerPerson_Visits {
+    return Intl.message(
+      'Number of Visits',
+      name: 'statistic_page_visitsPerPerson_Visits',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No data or internet connection.\nData will automatically load once internet is available!`
+  String get statistic_page_noData {
+    return Intl.message(
+      'No data or internet connection.\nData will automatically load once internet is available!',
+      name: 'statistic_page_noData',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `User with same Data already existed!`
+  String get same_user_exists {
+    return Intl.message(
+      'User with same Data already existed!',
+      name: 'same_user_exists',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No Connection to Internet`
+  String get no_internet {
+    return Intl.message(
+      'No Connection to Internet',
+      name: 'no_internet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No Connection to Server`
+  String get no_server {
+    return Intl.message(
+      'No Connection to Server',
+      name: 'no_server',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reconnected!`
+  String get reconnected {
+    return Intl.message(
+      'Reconnected!',
+      name: 'reconnected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Width`
+  String get print_width {
+    return Intl.message('Width', name: 'print_width', desc: '', args: []);
+  }
+
+  /// `Height`
+  String get print_height {
+    return Intl.message('Height', name: 'print_height', desc: '', args: []);
+  }
+
+  /// `Restore`
+  String get deletionRequest_restore {
+    return Intl.message(
+      'Restore',
+      name: 'deletionRequest_restore',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Deletion\nRequests`
+  String get deletionRequest_buttonTitle {
+    return Intl.message(
+      'Deletion\nRequests',
+      name: 'deletionRequest_buttonTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to convert to CSV`
+  String get csv_conversion_failed {
+    return Intl.message(
+      'Failed to convert to CSV',
+      name: 'csv_conversion_failed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{isAdmin, select, true{Admin} false{Logout} other{ }}`
+  String admin_login(Object isAdmin) {
+    return Intl.select(
+      isAdmin,
+      {'true': 'Admin', 'false': 'Logout', 'other': ' '},
+      name: 'admin_login',
+      desc: '',
+      args: [isAdmin],
+    );
+  }
+
+  /// `Password`
+  String get password {
+    return Intl.message('Password', name: 'password', desc: '', args: []);
+  }
+
+  /// `Incorrect Password`
+  String get password_false {
+    return Intl.message(
+      'Incorrect Password',
+      name: 'password_false',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Dark Mode`
+  String get dark_mode {
+    return Intl.message('Dark Mode', name: 'dark_mode', desc: '', args: []);
+  }
+
+  /// `Edit`
+  String get edit {
+    return Intl.message('Edit', name: 'edit', desc: '', args: []);
+  }
+
+  /// `Visits per Month/Year`
+  String get statistic_page_visitsPerPeriod {
+    return Intl.message(
+      'Visits per Month/Year',
+      name: 'statistic_page_visitsPerPeriod',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No data available`
+  String get no_data {
+    return Intl.message(
+      'No data available',
+      name: 'no_data',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not specified`
+  String get country_Name_worldWideReplacement {
+    return Intl.message(
+      'Not specified',
+      name: 'country_Name_worldWideReplacement',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{isLoading, select, true{loading...} false{Load more...} other{Everything loaded!}}`
+  String load_more(Object isLoading) {
+    return Intl.select(
+      isLoading,
+      {
+        'true': 'loading...',
+        'false': 'Load more...',
+        'other': 'Everything loaded!',
+      },
+      name: 'load_more',
+      desc: '',
+      args: [isLoading],
+    );
+  }
+
+  /// `Closes in {countDown} seconds`
+  String closesIn(Object countDown) {
+    return Intl.message(
+      'Closes in $countDown seconds',
+      name: 'closesIn',
+      desc: '',
+      args: [countDown],
+    );
+  }
+
+  /// `Visit added successfully!`
+  String get visit_added_success {
+    return Intl.message(
+      'Visit added successfully!',
+      name: 'visit_added_success',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{isBefore14Days, select, true{Error while adding\nVisitor was here in the last 14 days} false{Error while adding\nNo connection to Server} other{ }}`
+  String visit_added_error(Object isBefore14Days) {
+    return Intl.select(
+      isBefore14Days,
+      {
+        'true': 'Error while adding\nVisitor was here in the last 14 days',
+        'false': 'Error while adding\nNo connection to Server',
+        'other': ' ',
+      },
+      name: 'visit_added_error',
+      desc: '',
+      args: [isBefore14Days],
+    );
+  }
+
+  /// `online Database`
+  String get online_Database {
+    return Intl.message(
+      'online Database',
+      name: 'online_Database',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `offline Database`
+  String get offline_Database {
+    return Intl.message(
+      'offline Database',
+      name: 'offline_Database',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `We couldn’t detect your country automatically.\nPlease select a country from the following list.\n\nIf you don’t want to provide details, choose <bold>Worldwide</bold>.`
+  String get countryErrorMessage {
+    return Intl.message(
+      'We couldn’t detect your country automatically.\nPlease select a country from the following list.\n\nIf you don’t want to provide details, choose <bold>Worldwide</bold>.',
+      name: 'countryErrorMessage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Open List`
+  String get countryErrorButton {
+    return Intl.message(
+      'Open List',
+      name: 'countryErrorButton',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Visitor Check-In`
+  String get window_title {
+    return Intl.message(
+      'Visitor Check-In',
+      name: 'window_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reset`
+  String get reset {
+    return Intl.message('Reset', name: 'reset', desc: '', args: []);
+  }
+
+  /// `Shows you if the local or online-Database is used`
+  String get server_display_toolTip {
+    return Intl.message(
+      'Shows you if the local or online-Database is used',
+      name: 'server_display_toolTip',
       desc: '',
       args: [],
     );

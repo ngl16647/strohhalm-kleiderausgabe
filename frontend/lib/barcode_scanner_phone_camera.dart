@@ -45,12 +45,12 @@ class _BarcodeScannerSmartPhoneCameraState extends State<BarcodeScannerSmartPhon
 
   Future<void> _handleBarcode(BarcodeCapture barcodes) async {
     if (mounted && !_codeFound) {
-        _codeFound = true; //Hier, damit der Barcode nicht mehrmals gescannt wird was im Zusammenhang mit dem 1 Sekunden delay zu crashes führt
+        _codeFound = true; //Here so code isn't scanned multiple times and throws a error
         _barcode = barcodes.barcodes.firstOrNull;
         setState(() {
           _barcode;
         });
-        await Future.delayed(const Duration(seconds: 1)); //Warte 1 Sekunde damit der Nutzer Feedback bekommt, dass es geklappt hat
+        await Future.delayed(const Duration(seconds: 1)); //Wait a second to show feedback
         returnToPage();
     }
   }

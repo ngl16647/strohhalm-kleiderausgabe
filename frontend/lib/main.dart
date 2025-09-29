@@ -1,20 +1,23 @@
 import 'package:country_picker/country_picker.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:strohhalm_app/main_page.dart';
 import 'package:window_manager/window_manager.dart';
-
+import 'check_connection.dart';
 import 'generated/l10n.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+late final ConnectionProvider connectionProvider;
 enum DeviceType { mobile, desktop, web }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  connectionProvider = ConnectionProvider();
+
 
   if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.windows ||
       defaultTargetPlatform == TargetPlatform.linux ||
@@ -23,12 +26,12 @@ void main() async {
     databaseFactory = databaseFactoryFfi;
     await windowManager.ensureInitialized();
 
-    WindowOptions options = const WindowOptions(
-      title: "Strohhalm Kleiderausgabe",
+    WindowOptions options = WindowOptions(
+      title: "Besucher Check-In",
       minimumSize: Size(600, 800),
       center: true,
-    );
 
+    );
     windowManager.waitUntilReadyToShow(options, () async {
       await windowManager.show();
       await windowManager.focus();
@@ -37,7 +40,12 @@ void main() async {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider.value(
+      value: connectionProvider,
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -84,7 +92,7 @@ class MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Strohhalm Kleiderausgabe",
+      title: "Besucher Check-In", //TODO: Change to Strohhalm for their version
       navigatorKey: navigatorKey,
       locale: _locale,
       localizationsDelegates: [
@@ -97,14 +105,14 @@ class MyAppState extends State<MyApp> {
       supportedLocales: [
         Locale("en", ""),
         Locale("de", ""),
-        Locale("ru", ""),
+        //Locale("ru", ""),
       ],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: seedColor,
           brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: CupertinoColors.lightBackgroundGray,
+        scaffoldBackgroundColor: Colors.white70,
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.white,
           foregroundColor: Colors.black87,
@@ -120,7 +128,24 @@ class MyAppState extends State<MyApp> {
           textColor: Colors.black87,
           iconColor: Colors.black54,
         ),
-        useMaterial3: true,
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: seedColor.withAlpha(110),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: seedColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
       ),
       darkTheme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
@@ -143,10 +168,29 @@ class MyAppState extends State<MyApp> {
             textColor: Colors.white70,
             iconColor: Colors.white70,
           ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            //backgroundColor: seedColor.withAlpha(100),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            //foregroundColor: seedColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
       ),
       themeMode: themeMode,
-      home: MainPage(
-        onLocaleChange: setLocale,
+      home: ConnectionToastListener(
+          child: MainPage(
+            onLocaleChange: setLocale,
+          )
       )
     );
   }
