@@ -6,6 +6,6 @@ api:
     api_key: ""
 tls:
     use_tls: true
-    cert_file: cert.pem
-    key_file: key.pem
+    cert_file: cert/cert.pem
+    key_file: cert/key.pem
 data: data.db

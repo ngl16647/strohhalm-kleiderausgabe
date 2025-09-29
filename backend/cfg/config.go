@@ -40,8 +40,8 @@ func defaultConfig() *Config {
 	cfg.Api.UseApiKey = true
 
 	cfg.Tls.UseTls = false
-	cfg.Tls.CertFile = "cert.pem"
-	cfg.Tls.KeyFile = "key.pem"
+	cfg.Tls.CertFile = "cert/cert.pem"
+	cfg.Tls.KeyFile = "cert/key.pem"
 
 	cfg.Data = "data.db"
 	return cfg

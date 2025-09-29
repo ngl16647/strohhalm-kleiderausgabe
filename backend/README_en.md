@@ -23,27 +23,37 @@ curl -L -o server \
 
 ```bash
 touch data.db config.yml && \
-    docker run \
+    docker run -d \
         --name strohhalm-kleiderausgabe-backend \
+        --restart unless-stopped \
         -v $(pwd)/data.db:/app/data.db \
         -v $(pwd)/config.yml:/app/config.yml \
+        -v $(pwd)/cert:/app/cert \
         -p 8080:8080 \
-        royjxu/strohhalm-kleiderausgabe
+        royjxu/strohhalm-kleiderausgabe:latest
 ```
 
 The server generate an API key when started for the first time, something like `1BLK-XVGG-56OW-H29T`. Note down your key and enter it to your frontend privately. Check the config file `config.yml` if you forget your key.
 
 ## HTTPS
 
-The server does not use HTTPS by default. You can configure this in `config.yml`.
+The server does not use HTTPS by default.
 
-For developers or internal usage, you can create a self-signed TLS certificate with the following command. This certificate expires in 10 years.
+To enable HTTPS, create a TLS certificate and store it in the folder `strohhalm-kleiderausgabe/cert` (create this folder first if it does not exist), then adjust the configuration in `config.yml`.
+
+For developers or internal usage, you can create a self-signed TLS certificate with the following command. This certificate expires in 1000 years so remember to generate a new one by then.
 
 ```bash
-openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 3650 -nodes -subj "/CN=<domain_name>"
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 365000 -nodes -subj "/CN=<domain_name>"
 ```
 
-`domain_name` can also be `localhost`.
+`<domain_name>` can also be `localhost`.
+
+You can optionally restrict access to important data:
+
+```bash
+chmod 600 config.yml data.db
+```
 
 ## Maintenance
 
@@ -59,4 +69,4 @@ After installing, you can start your SQL query by
 sqlite3 data.db
 ``` 
 
-You can backup data by copying the file `data.db`.
+You can backup your data by copying the file `data.db`.

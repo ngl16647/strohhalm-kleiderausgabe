@@ -1,4 +1,3 @@
 *.db
 server
-cert.pem
-key.pem
+cert/
