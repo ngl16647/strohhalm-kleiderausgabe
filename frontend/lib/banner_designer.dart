@@ -2,13 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:strohhalm_app/main.dart';
 import 'package:strohhalm_app/utilities.dart';
 import 'app_settings.dart';
+import 'custom_tab_widget.dart';
 import 'generated/l10n.dart';
 
+///Object which saves left/right-Image
 class BannerImage{
   File? leftImage;
   File? rightImage;
@@ -27,6 +29,7 @@ class BannerImage{
       rightImage == null &&
       (title?.isEmpty ?? true);
 
+  ///Turns a bannerImage-Objekt into a json-String to be saved in sharedPreferences
   String toJsonString(){
     Map<String, String> bannerMap = {
       "imageLeft": leftImage == null ? "" : leftImage!.uri.pathSegments.last,
@@ -36,30 +39,27 @@ class BannerImage{
     return jsonEncode(bannerMap);
   }
 
+  ///turns the saved jsonString (with only left/right-image-names) into a Objekt with full path
   static Future<BannerImage> fromJsonString(String jsonString) async {
     Map<String, dynamic> bannerMap = jsonDecode(jsonString);
     final appDir = await getApplicationDocumentsDirectory();
     final bannerDir = join(appDir.path, "bannerImages");
 
-    //String? leftPath = bannerMap["imageLeft"] != null && bannerMap["imageLeft"]!.isNotEmpty ? join(bannerDir, bannerMap["imageLeft"]) : null;
-    //String? rightPath =  bannerMap["imageRight"] != null && bannerMap["imageRight"]!.isNotEmpty ? join(bannerDir, bannerMap["imageRight"]) : null;
-    //bool leftExists = leftPath != null ? await File(leftPath).exists() : false;
-    //bool rightExists = rightPath != null ? await File(rightPath).exists() : false;
-
-    Future<File?> resolveFile(String? fileName) async {
+    Future<File?> joinAndCheckFile(String? fileName) async {
       if (fileName == null || fileName.isEmpty) return null;
       final path = join(bannerDir, fileName);
       return await File(path).exists() ? File(path) : null;
     }
 
     return BannerImage(
-      leftImage: await resolveFile(bannerMap["imageLeft"]),
-      rightImage: await resolveFile(bannerMap["imageRight"]),
+      leftImage: await joinAndCheckFile(bannerMap["imageLeft"]),
+      rightImage: await joinAndCheckFile(bannerMap["imageRight"]),
       title: bannerMap["title"] == "" ? null : bannerMap["title"],
     );
   }
 }
 
+///Widget for setting the individual bannerImage-Elements or a full banner
 class BannerDesigner extends StatefulWidget{
   final bool useDesigner;
   final BannerImage? bannerDesignerImage;
@@ -82,9 +82,11 @@ class BannerDesignerState extends State<BannerDesigner>{
   BannerImage? bannerDesignerImage;
   final Color _selectedColor = Color.fromRGBO(169, 171, 25, 1.0);
   bool _useBannerDesigner = true;
+  bool _isMobile = false;
 
   @override
   void initState() {
+    _isMobile = MyApp().getDeviceType() == DeviceType.mobile;
     _useBannerDesigner = widget.useDesigner;
     _bannerWholeImage = widget.wholeBannerImage;
     bannerDesignerImage = widget.bannerDesignerImage ?? BannerImage();
@@ -98,6 +100,7 @@ class BannerDesignerState extends State<BannerDesigner>{
     super.dispose();
   }
 
+  ///Saves banner-required variables in sharedPreferences/Settings-Singleton
   void saveBanner(){
     var manager = AppSettingsManager.instance;
     manager.setBannerType(_useBannerDesigner);
@@ -105,6 +108,7 @@ class BannerDesignerState extends State<BannerDesigner>{
     manager.setDynamicBanner(bannerDesignerImage);
   }
 
+  ///opens the native File-Picker and sets the right image
   Future<void> _pickImage(BuildContext context, bool? left) async {
     final result = await FilePicker.platform.pickFiles(type: FileType.image);
     if (result != null && result.files.single.path != null) {
@@ -143,6 +147,7 @@ class BannerDesignerState extends State<BannerDesigner>{
     }
   }
 
+  ///Filters images by aspectRatio for single bannerImages  and the bannerDesigner
   Future<List<File>> filterFilesByAspectRatio(List<File> files, int? bannerAspectRatio) async {
     final result = <File>[];
     for (final file in files) {
@@ -160,6 +165,7 @@ class BannerDesignerState extends State<BannerDesigner>{
     return result;
   }
 
+  ///Opens a Dialog that shows previously used images, optional with aspect ratio
   Future<File?> showExistingImagePicker(BuildContext context, int? aspectRatio) async {
     final appDir = await getApplicationDocumentsDirectory();
     final bannerDir = Directory(join(appDir.path,"bannerImages"));
@@ -174,7 +180,7 @@ class BannerDesignerState extends State<BannerDesigner>{
         builder: (context){
           return Dialog(
             constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width*0.6
+                maxWidth: _isMobile ? double.infinity : MediaQuery.of(context).size.width*0.6
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -189,66 +195,72 @@ class BannerDesignerState extends State<BannerDesigner>{
                   ),
                 ),
                 Expanded(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    childAspectRatio: 2,
-                    children: [
-                      for(int i= 0; i < files.length; i++)...{
-                        Padding(
-                          padding: EdgeInsets.all(15),
-                          child: Material(
-                            elevation: 5,
-                            borderRadius: BorderRadius.circular(6),
-                            color: Theme.of(context).listTileTheme.tileColor,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                SizedBox(),
-                                Padding(
-                                    padding: EdgeInsets.all(5),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: SizedBox(
-                                        height: 75,
-                                        child:  Image.file(files.elementAt(i)),
-                                      ),
-                                    )
-                                ),
-                                _bannerWholeImage == null || files[i].path != _bannerWholeImage!.path ? Row(
+                  child: LayoutBuilder(
+                    builder: (context, constrains){
+                      bool oneRow = constrains.maxWidth < 450;
+                      return GridView.count(
+                        crossAxisCount:_isMobile || oneRow ? 1 : 2,
+                        childAspectRatio: 2,
+                        children: [
+                          for(int i= 0; i < files.length; i++)...{
+                            Padding(
+                              padding: EdgeInsets.all(5),
+                              child: Material(
+                                elevation: 5,
+                                borderRadius: BorderRadius.circular(6),
+                                color: Theme.of(context).listTileTheme.tileColor,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Expanded(
-                                        flex: 3,
-                                        child: TextButton.icon(
-                                          onPressed: (){
-                                            Navigator.of(context).pop(files.elementAt(i));
-                                          },
-                                          label: Text(S.of(context).banner_designer_pick),
-                                          icon: Icon(Icons.hdr_auto_select),
-                                          style: TextButton.styleFrom(
-                                              minimumSize: Size(double.infinity, 32)
+                                    SizedBox(),
+                                    Expanded(child:  Padding(
+                                        padding: EdgeInsets.all(5),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: ConstrainedBox(
+                                            constraints: BoxConstraints(maxHeight: 150),
+                                            child:  Image.file(files.elementAt(i), fit: BoxFit.contain,),
                                           ),
-                                        )),
-                                    IconButton(
-                                      onPressed: (){
-                                        files[i].delete();
-                                        setState(() {
-                                          files.removeAt(i);
-                                        });
-                                      },
-                                      icon: Icon(Icons.delete),
-                                    ),
+                                        )
+                                    ),),
+                                    aspectRatio == null || _bannerWholeImage == null || files[i].path != _bannerWholeImage!.path ? Row(
+                                      children: [
+                                        Expanded(
+                                            flex: 3,
+                                            child: TextButton.icon(
+                                              onPressed: (){
+                                                Navigator.of(context).pop(files.elementAt(i));
+                                              },
+                                              label: Text(S.of(context).banner_designer_pick),
+                                              icon: Icon(Icons.hdr_auto_select),
+                                              style: TextButton.styleFrom(
+                                                  minimumSize: Size(double.infinity, 32)
+                                              ),
+                                            )),
+                                        IconButton(
+                                          onPressed: (){
+                                            files[i].delete();
+                                            setState(() {
+                                              files.removeAt(i);
+                                            });
+                                          },
+                                          icon: Icon(Icons.delete),
+                                        ),
+                                      ],
+                                    ) : Padding(
+                                      padding: EdgeInsets.all(4),
+                                      child: Text(S.of(context).banner_designer_picked),
+                                    )
                                   ],
-                                ) : Padding(
-                                  padding: EdgeInsets.all(4),
-                                  child: Text(S.of(context).banner_designer_picked),
-                                )
-                              ],
-                            ),
-                          ),
-                        )
-                      }
-                    ],
-                  ),),
+                                ),
+                              ),
+                            )
+                          }
+                        ],
+                      );
+                    },
+                  )
+                ),
                 TextButton(
                   onPressed: Navigator.of(context).pop,
                   style: TextButton.styleFrom(
@@ -266,13 +278,19 @@ class BannerDesignerState extends State<BannerDesigner>{
     return null;
   }
 
+  ///Creates the Buttons for the Designer above the used image
   Widget buildDynamicBannerButtons({
     required BuildContext context,
     required File? dynBannerImage,
     required VoidCallback onAddOrDelete,
     required VoidCallback onPick,
   }){
-    return Stack(
+    double maxWidth = _isMobile ? MediaQuery.of(context).size.width*0.2 : MediaQuery.of(context).size.width*0.3;
+    return ConstrainedBox(
+        constraints: BoxConstraints(
+        maxWidth: maxWidth
+    ),
+    child:  Stack(
       alignment: AlignmentGeometry.center,
       children: [
         if(dynBannerImage != null) SizedBox(
@@ -282,6 +300,34 @@ class BannerDesignerState extends State<BannerDesigner>{
             fit: BoxFit.contain,
           ),
         ),
+        _isMobile
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: (){
+                      onAddOrDelete();
+                    },
+                    icon: Icon(dynBannerImage != null ? Icons.delete : Icons.add_a_photo, size: 22,),
+                    style: TextButton.styleFrom(
+                        minimumSize: Size(20, 25),
+                        backgroundColor: Colors.transparent,
+                        alignment: AlignmentGeometry.center
+                    ),
+                  ),
+                  if(dynBannerImage == null)IconButton(
+                    onPressed: () async {
+                      onPick();
+                    },
+                    icon: Icon(Icons.photo_album, size: 22,),
+                    style: TextButton.styleFrom(
+                        minimumSize: Size(20, 25),
+                        backgroundColor: Colors.transparent
+                    ),
+                  )
+                ],
+              )
+            :
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -290,7 +336,7 @@ class BannerDesignerState extends State<BannerDesigner>{
                 onAddOrDelete();
               },
               icon: Icon(dynBannerImage != null ? Icons.delete : Icons.add_a_photo, size: 22,),
-              label : Text(dynBannerImage != null ? S.of(context).delete : S.of(context).banner_designer_new),
+              label :  Text(dynBannerImage != null ? S.of(context).delete : S.of(context).banner_designer_new),
               style: TextButton.styleFrom(
                   minimumSize: Size(20, 25),
                   backgroundColor: Colors.transparent,
@@ -310,7 +356,8 @@ class BannerDesignerState extends State<BannerDesigner>{
             )
           ],
         )
-      ],
+      ]
+    ),
     );
   }
 
@@ -318,6 +365,7 @@ class BannerDesignerState extends State<BannerDesigner>{
   Widget build(BuildContext context) {
     return CustomTabs(
       selectedIndex: _useBannerDesigner ? 1 : 0,
+      showSelected: true,
       switchTab: (index){
         _useBannerDesigner = index == 1;
       },
@@ -338,7 +386,7 @@ class BannerDesignerState extends State<BannerDesigner>{
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     Expanded(
-                      flex: 1,
+                      flex: 0,
                       child: ElevatedButton.icon(
                         onPressed: () => _pickImage(context, null),
                         label:  Text(S.of(context).banner_designer_uploadImage),
@@ -396,27 +444,29 @@ class BannerDesignerState extends State<BannerDesigner>{
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Row(
+                          spacing: 2,
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             buildDynamicBannerButtons(
-                                context: context,
-                                dynBannerImage: bannerDesignerImage?.leftImage,
-                                onAddOrDelete: (){
-                                  if(bannerDesignerImage?.leftImage != null){
-                                    bannerDesignerImage?.leftImage = null;
-                                  } else {
-                                    _pickImage(context, true);
-                                  }
-                                  setState(() {});
-                                },
-                                onPick: () async {
-                                  var result = await showExistingImagePicker(context, null);
-                                  if(result != null){
-                                    setState(() {
-                                      bannerDesignerImage?.leftImage = result;
-                                    });
-                                  }
-                                }),
+                                  context: context,
+                                  dynBannerImage: bannerDesignerImage?.leftImage,
+                                  onAddOrDelete: (){
+                                    if(bannerDesignerImage?.leftImage != null){
+                                      bannerDesignerImage?.leftImage = null;
+                                    } else {
+                                      _pickImage(context, true);
+                                    }
+                                    setState(() {});
+                                  },
+                                  onPick: () async {
+                                    var result = await showExistingImagePicker(context, null);
+                                    if(result != null){
+                                      setState(() {
+                                        bannerDesignerImage?.leftImage = result;
+                                      });
+                                    }
+                                  },
+                            ),
                             Expanded(
                               child: TextField(
                                 controller: _bannerTitleController,
@@ -431,7 +481,6 @@ class BannerDesignerState extends State<BannerDesigner>{
                                 },
                               ),
                             ),
-                            SizedBox(width: 40,),
                             buildDynamicBannerButtons(
                                 context: context,
                                 dynBannerImage: bannerDesignerImage?.rightImage,
@@ -467,123 +516,6 @@ class BannerDesignerState extends State<BannerDesigner>{
             ],
           ),
         ),
-      ],
-    );
-  }
-}
-
-//Tab-Widget
-class CustomTabData {
-  final String title;
-  final Widget child;
-
-  CustomTabData({required this.title, required this.child});
-}
-
-class CustomTabs extends StatefulWidget {
-  final int selectedIndex;
-  final List<CustomTabData> tabs;
-  final Function(int) switchTab;
-
-  const CustomTabs({
-    super.key,
-    required this.selectedIndex,
-    required this.tabs,
-    required this.switchTab
-  });
-
-  @override
-  State<CustomTabs> createState() => _CustomTabsState();
-}
-
-class _CustomTabsState extends State<CustomTabs> {
-  int selectedIndex = 0;
-
-  @override
-  void initState() {
-    selectedIndex = widget.selectedIndex;
-    super.initState();
-  }
-
-  Widget _buildTabHeader(BuildContext context, int index, String title) {
-    final bool isSelected = selectedIndex == index;
-    return GestureDetector(
-      onTap: () {
-        setState((){ selectedIndex = index;});
-        widget.switchTab(index);
-      },
-      child: Row(
-        children: [
-          //if(selectedIndex < index && !isSelected) SizedBox(width: 10,),
-          Expanded(
-              child: Material(
-                elevation: 10,
-                color: Theme.of(context).listTileTheme.tileColor!.withAlpha(isSelected ? 255 : 150),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(12)
-                  ),
-                ),
-                child: AnimatedContainer(
-                  duration: Duration(milliseconds: 200),
-                  height: isSelected ? 35 : 30,
-                  child: Row(
-                    spacing: 10,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if(isSelected) Icon(Icons.check),
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-          ),
-          //if(selectedIndex >= index && !isSelected) SizedBox(width: 10,),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        //Tab-Header
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            for (int i = 0; i < widget.tabs.length; i++) ...[
-              Expanded(child: _buildTabHeader(context, i, widget.tabs[i].title)),
-            ],
-          ],
-        ),
-        //Tab-Body
-        ConstrainedBox(
-          constraints: BoxConstraints(
-              minHeight: 160
-          ),
-          child:Material(
-            elevation: 10,
-            color: Theme.of(context).listTileTheme.tileColor ?? Colors.blueGrey,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(
-                  bottom: Radius.circular(12)
-              ),
-            ),
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: widget.tabs[selectedIndex].child
-                  .animate(key: ValueKey(selectedIndex))
-                  .fade(duration: 300.ms)
-                  .slide(begin: Offset(0, 0.2)),
-            ),
-
-          ),)
       ],
     );
   }

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -60,13 +61,17 @@ func RecordVisitDetailHandler(w http.ResponseWriter, r *http.Request) {
 func VisitDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	beginStr := getParam(r, "begin")
 	endStr := getParam(r, "end")
+	page, err := parsePageParam(r)
+	if err != nil {
+		http.Error(w, "invalid page params", http.StatusBadRequest)
+		return
+	}
 
-	var cvs []db.VisitDetail
-	var err error
+	var cvs db.PageResult[db.VisitDetail]
 
 	// Return all visits when no time param is provided
 	if beginStr == "" && endStr == "" {
-		cvs, err = db.AllVisitDetails()
+		cvs, err = db.AllVisitDetailsPaginated(page)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -88,7 +93,7 @@ func VisitDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cvs, err = db.VisitDetailsBetween(begin, end)
+	cvs, err = db.VisitDetailsBetweenPaginated(begin, end, page)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -141,6 +146,10 @@ func DeleteLastVisitOfCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	lastVisit, err := db.DeleteLastVisitOfCustomer(customerId)
 	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			http.Error(w, "customer not found", http.StatusNotFound)
+			return
+		}
 		http.Error(w, "deletion failed", http.StatusInternalServerError)
 		return
 	}
@@ -153,8 +162,13 @@ func VisitsOfCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "invalid visit id", http.StatusBadRequest)
 	}
+	page, err := parsePageParam(r)
+	if err != nil {
+		http.Error(w, "invalid page params", http.StatusBadRequest)
+		return
+	}
 
-	cvs, err := db.VisitDetailsOfCustomer(customerId)
+	cvs, err := db.VisitsOfCustomerPaginated(customerId, page)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

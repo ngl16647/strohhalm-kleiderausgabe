@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_libserialport/flutter_libserialport.dart';
 import 'package:uuid/uuid.dart';
 
-
+///Listens for scanner and sets it if a valid uuid is found
 class BarcodeScannerListener {
   //For Serial
   final Map<String, String> _portStringBuffers = {};
@@ -26,6 +26,7 @@ class BarcodeScannerListener {
 
   BarcodeScannerListener({this.context, this.onSuccessScan, this.onFailedUuIdCheck});
 
+  ///Starts serial-Port detection and HID
   void listenForScan() async {
     var ports = SerialPort.availablePorts;
     _lastPorts = ports;
@@ -33,7 +34,7 @@ class BarcodeScannerListener {
     HardwareKeyboard.instance.addHandler(onHDIScan);
   }
 
-  //TODO: research if it works on MAC/Linux?
+  ///Doesn't work on mac! opens all serialPorts and checks if one registers a valid uuid
   void _detectScannerPort() {
     debugPrint("Checking for Scanner-Input");
     final ports = SerialPort.availablePorts;
@@ -107,6 +108,7 @@ class BarcodeScannerListener {
     }
   }
 
+  ///Checks for HID inputs (if input is fast enough and correct uuid)
   bool onHDIScan(KeyEvent event) {
     if (event is KeyDownEvent) {
       final key = event.logicalKey.keyLabel;
@@ -125,7 +127,7 @@ class BarcodeScannerListener {
 
         _timer?.cancel();
         _timer = Timer(Duration(milliseconds: 50), () {
-          debugPrint("Buffer reseting!");
+          //debugPrint("Buffer reseting!");
           _keyEventBuffer = "";
         });
       }
@@ -152,6 +154,7 @@ class BarcodeScannerListener {
     });
   }
 
+  ///Checks if a list of serial-ports equals another
   bool listEquals(List<String> a, List<String> b) {
     if (a.length != b.length) return false;
     for (var i = 0; i < a.length; i++) {

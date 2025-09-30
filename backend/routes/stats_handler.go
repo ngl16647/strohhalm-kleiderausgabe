@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"encoding/csv"
+	"bufio"
 	"fmt"
 	"net/http"
 	"strings"
@@ -62,27 +62,63 @@ func ExportHandler(w http.ResponseWriter, r *http.Request) {
 func ExportCsvHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/csv")
 	w.Header().Set("Content-Disposition", "attachment; filename=\"customers_visits.csv\"")
-
-	csvWriter := csv.NewWriter(w)
-	defer csvWriter.Flush()
+	bw := bufio.NewWriter(w) // use buffer for optimization
+	defer bw.Flush()
 
 	data, err := db.ExportJson()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	csvWriter.Write([]string{"id", "firstname", "lastname", "birthday", "country", "notes", "visits"})
+	bw.Write([]byte("ID,Vorname,Nachname,Notizen,Geburtsdatum,Herkunftsland,Datum\n"))
 
 	for _, c := range data {
-		visitsStr := strings.Join(c.Visits, ";") // Join visits with semicolon
-		csvWriter.Write([]string{
+		err := writeCsvLineWithTrailingComma(
+			bw,
 			fmt.Sprint(c.Id),
-			c.Firstname,
-			c.Lastname,
+			c.FirstName,
+			c.LastName,
 			c.Birthday,
 			c.Country,
 			c.Notes,
-			visitsStr,
-		})
+		)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// use comma for separating visits to make the client happy
+		_, err = bw.WriteString(strings.Join(c.Visits, ",") + "\n")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
+}
+
+func ImportCsvHandler(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		http.Error(w, "failed to parse form: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "failed to read file: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	cs, err := db.ParseCSV(file)
+	if err != nil {
+		http.Error(w, "failed to parse CSV: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := db.ImportJson(cs); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	ok(w)
 }

@@ -1,13 +1,20 @@
 package db
 
 import (
+	"encoding/csv"
 	"fmt"
+	"io"
+	"log"
+	"slices"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type CustomerJsonRow struct {
 	Id        int64    `json:"id"`
-	Firstname string   `json:"firstname"`
-	Lastname  string   `json:"lastname"`
+	FirstName string   `json:"firstname"`
+	LastName  string   `json:"lastname"`
 	Birthday  string   `json:"birthday"`
 	Country   string   `json:"country"`
 	Notes     string   `json:"notes"`
@@ -15,38 +22,217 @@ type CustomerJsonRow struct {
 }
 
 func ExportJson() ([]CustomerJsonRow, error) {
-	cs, err := AllCustomers()
+	rows, err := db.Query(`
+        SELECT c.id, c.first_name, c.last_name, c.birthday, c.country, c.notes, v.visit_date
+        FROM customers c
+        LEFT JOIN visits v ON v.customer_id = c.id
+        ORDER BY c.id, v.visit_date
+    `)
 	if err != nil {
-		return []CustomerJsonRow{}, fmt.Errorf("export json: %w", err)
+		return nil, fmt.Errorf("export json: %w", err)
 	}
+	defer rows.Close()
 
-	vs, err := AllVisits()
-	if err != nil {
-		return []CustomerJsonRow{}, fmt.Errorf("export json: %w", err)
-	}
+	var result []CustomerJsonRow
+	var current *CustomerJsonRow
 
-	data := make([]CustomerJsonRow, len(cs))
-	customerIdMap := make(map[int64]int)
-	for index := range data {
-		c := cs[index]
-		customerIdMap[c.Id] = index
-		data[index] = CustomerJsonRow{
-			Id:        c.Id,
-			Firstname: c.FirstName,
-			Lastname:  c.LastName,
-			Country:   c.Country,
-			Notes:     c.Notes,
+	for rows.Next() {
+		var (
+			id       int64
+			first    string
+			last     string
+			birthday string
+			country  string
+			notes    string
+			visit    *string
+		)
+
+		err := rows.Scan(&id, &first, &last, &birthday, &country, &notes, &visit)
+		if err != nil {
+			return nil, err
+		}
+
+		// If new customer, append to result
+		if current == nil || current.Id != id {
+			current = &CustomerJsonRow{
+				Id:        id,
+				FirstName: first,
+				LastName:  last,
+				Birthday:  birthday,
+				Country:   country,
+				Notes:     notes,
+				Visits:    []string{},
+			}
+			result = append(result, *current)
+			current = &result[len(result)-1]
+		}
+
+		// Add visit if not NULL
+		if visit != nil {
+			current.Visits = append(current.Visits, *visit)
 		}
 	}
+	return result, nil
+}
 
-	// collect visits array
-	for _, v := range vs {
-		if v.CustomerId == nil {
-			continue
+func ImportJson(data []CustomerJsonRow) error {
+	tx, err := db.Beginx()
+	if err != nil {
+		return ErrNoDbConnection
+	}
+	defer tx.Rollback()
+
+	// -- prepare insert statements --
+	stmtCustomer, err := tx.Prepare(`
+        INSERT INTO customers (uuid, first_name, last_name, birthday, country, notes)
+        VALUES (?, ?, ?, ?, ?, ?)
+        RETURNING id
+    `)
+	if err != nil {
+		return err
+	}
+	defer stmtCustomer.Close()
+
+	stmtSetLastVisit, err := tx.Prepare(`
+		UPDATE customers
+		SET last_visit_id = ?, last_visit = ?
+		WHERE id = ?
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmtSetLastVisit.Close()
+
+	stmtVisit, err := tx.Prepare(`
+        INSERT INTO visits (customer_id, visit_date, notes)
+        VALUES (?, ?, ?)
+		RETURNING id
+    `)
+	if err != nil {
+		return err
+	}
+	defer stmtVisit.Close()
+
+	// -- importing --
+	for i := range data {
+		row := &data[i]
+
+		// import customer
+		var customerID int64
+		err = stmtCustomer.QueryRow(
+			uuid.NewString(),
+			row.FirstName,
+			row.LastName,
+			row.Birthday,
+			row.Country,
+			row.Notes,
+		).Scan(&customerID)
+		if err != nil {
+			log.Printf("WARNING: Unable to import customer %s %s: %s\n",
+				row.FirstName, row.LastName, err.Error())
 		}
-		index := customerIdMap[*v.CustomerId]
-		data[index].Visits = append(data[index].Visits, v.VisitDate)
+
+		// import that customer's visits
+		var lastVisit string = ""
+		var lastVisitId int64 = 0
+		for _, visit := range row.Visits {
+			if visit == "" {
+				continue
+			}
+
+			_, err := time.Parse(DateFormat, visit)
+			if err != nil {
+				log.Printf("WARNING: Invalid visit date for %s %s: %s\n",
+					row.FirstName, row.LastName, visit)
+				continue
+			}
+
+			// insert visit
+			var visitId int64
+			err = stmtVisit.QueryRow(customerID, visit, "").Scan(&visitId)
+			if err != nil {
+				log.Printf("WARNING: Unable to import visit for %s %s: %s\n",
+					row.FirstName, row.LastName, err.Error())
+			}
+
+			if visit > lastVisit {
+				lastVisit = visit
+				lastVisitId = visitId
+			}
+		}
+
+		// update last visit
+		if lastVisit != "" {
+			_, err = stmtSetLastVisit.Exec(lastVisitId, lastVisit, customerID)
+			if err != nil {
+				log.Printf("WARNING: Unable to update last visit for %s %s",
+					row.FirstName, row.LastName)
+			}
+		}
+
+		log.Printf("import completed for customer: %s %s", row.FirstName, row.LastName)
+	}
+	return tx.Commit()
+}
+
+func ParseCSV(r io.Reader) ([]CustomerJsonRow, error) {
+	reader := csv.NewReader(r)
+	reader.FieldsPerRecord = -1 // allows different numbers of field each line
+
+	// read header
+	header, err := reader.Read()
+	if err != nil {
+		return nil, fmt.Errorf("reading header: %w", err)
 	}
 
-	return data, nil
+	// check if headers are valid
+	// map header and column
+	colIndex, err := mapHeader(header)
+	if err != nil {
+		return nil, err
+	}
+
+	var cs []CustomerJsonRow
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("reading row: %w", ErrInvalidFormat)
+		}
+
+		c := CustomerJsonRow{
+			FirstName: record[colIndex["Vorname"]],
+			LastName:  record[colIndex["Nachname"]],
+			Birthday:  record[colIndex["Geburtsdatum"]],
+			Country:   record[colIndex["Herkunftsland"]],
+			Notes:     record[colIndex["Notizen"]],
+		}
+
+		c.Visits = record[colIndex["Datum"]:]
+
+		cs = append(cs, c)
+	}
+	return cs, nil
+}
+
+func mapHeader(header []string) (map[string]int, error) {
+	if header[len(header)-1] != "Datum" {
+		return nil, fmt.Errorf("last column is not \"Datum\": %w", ErrInvalidFormat)
+	}
+	if !slices.Contains(header, "Vorname") {
+		return nil, fmt.Errorf("column \"Vorname\" not found: %w", ErrInvalidFormat)
+	}
+	if !slices.Contains(header, "Nachname") {
+		return nil, fmt.Errorf("column \"Nachname\" not found: %w", ErrInvalidFormat)
+	}
+	colIndex := make(map[string]int)
+	for i, col := range header {
+		if _, exists := colIndex[col]; exists {
+			return nil, fmt.Errorf("duplicated column header: %w", ErrInvalidFormat)
+		}
+		colIndex[col] = i
+	}
+	return colIndex, nil
 }

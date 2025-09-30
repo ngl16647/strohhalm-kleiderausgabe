@@ -5,18 +5,26 @@ import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
 import 'package:strohhalm_app/app_settings.dart';
 import 'package:strohhalm_app/banner_designer.dart';
-import 'package:strohhalm_app/user.dart';
+import 'package:strohhalm_app/main.dart';
+import 'package:strohhalm_app/user_and_visit.dart';
 import 'package:pdf/widgets.dart' as wg;
 import 'package:pdf/pdf.dart';
 import 'package:image/image.dart' as img;
 import 'package:strohhalm_app/utilities.dart';
 import 'generated/l10n.dart';
 
+
+///Class for creating and printing QR-Codes
 class CreateQRCode{
+  TextEditingController heightController = TextEditingController(text: "54");
+  TextEditingController widthController = TextEditingController(text: "85");
+  PdfPageFormat pdfPageFormat = PdfPageFormat(85 * PdfPageFormat.mm, 54 * PdfPageFormat.mm);
+
 
   CreateQRCode();
 
-  Future<wg.MemoryImage> fileToGrayScaleImage(File file) async {
+  ///Turns the bannerImages into grayscale
+  static Future<wg.MemoryImage> fileToGrayScaleImage(File file) async {
     final imageData = await file.readAsBytes();
 
     img.Image image = img.decodeImage(imageData.buffer.asUint8List())!;
@@ -25,7 +33,8 @@ class CreateQRCode{
     return wg.MemoryImage(bwBytes);
   }
 
-  Future<Uint8List> buildPdf(User user, PdfPageFormat format) async {
+  ///Builds the pdf to be printed with the specified dimensions
+  static Future<Uint8List> buildPdf(User user, PdfPageFormat format) async {
     final doc = wg.Document();
     var settings = AppSettingsManager.instance.settings;
 
@@ -59,7 +68,7 @@ class CreateQRCode{
                   crossAxisAlignment: wg.CrossAxisAlignment.center,
                   children: [
                     if(pdfImageLeft != null)wg.Image(pdfImageLeft),
-                    wg.Text("  ${bannerImage.title}", style: wg.TextStyle(fontSize: qrSize*0.1)),
+                    if(bannerImage.title != null)wg.Text("  ${bannerImage.title}", style: wg.TextStyle(fontSize: qrSize*0.1)),
                     wg.Spacer(),
                     if(pdfImageRight != null)wg.Image(pdfImageRight),
                   ]
@@ -73,8 +82,6 @@ class CreateQRCode{
         );
       }
     }
-
-
 
     doc.addPage(
       wg.Page(
@@ -135,130 +142,177 @@ class CreateQRCode{
     return doc.save();
   }
 
+  ///shows a print Dialog
   Future<void> printQrCode(BuildContext context, User user) async {
-    TextEditingController heightController = TextEditingController(text: "54");
-    TextEditingController widthController = TextEditingController(text: "85");
-    PdfPageFormat pdfPageFormat = PdfPageFormat(85 * PdfPageFormat.mm, 54 * PdfPageFormat.mm);
+    bool isMobile = MyApp().getDeviceType() == DeviceType.mobile;
     //Map<String, PdfPageFormat> formatMap = {};
 
     if(context.mounted) {
       showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        content: StatefulBuilder(builder: (context, setState){
-          return SizedBox(
-              width: MediaQuery.of(context).size.width*0.6,
-              height: MediaQuery.of(context).size.width*0.4,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Expanded(
-                    flex: 7,
-                    child: PdfPreview(
-                      build: (format) async => buildPdf(user, pdfPageFormat),
-                      allowPrinting: false,
-                      allowSharing: false,
-                      canChangeOrientation: false,
-                      canChangePageFormat: false,
-                      //pageFormats: formatMap,
-                    ),
-                  ),
-                  Expanded(
-                      flex: 1,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  //crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                        child: TextField(
-                                          controller: widthController,
-                                          keyboardType: TextInputType.number,
-                                          decoration: InputDecoration(
-                                            labelText: "Breite",
-                                            suffixText: "mm",
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(6),
-                                            ),
-                                          ),
-                                          inputFormatters: [
-                                            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                                          ],
-                                        )),
-                                    Text(" x ", style: TextStyle(fontSize: 22),),
-                                    Expanded(child: TextField(
-                                      controller: heightController,
-                                      keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(
-                                        labelText: "Höhe",
-                                        suffixText: "mm",
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                      ),
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                                      ],
-                                    )),
-                                    IconButton(
-                                      onPressed: () {
-                                        final w = double.tryParse(widthController.text);
-                                        final h = double.tryParse(heightController.text);
-                                        if (w != null && h != null) {
-                                          setState(() {
-                                            pdfPageFormat = PdfPageFormat(w * PdfPageFormat.mm, h * PdfPageFormat.mm);
-                                            //formatMap["$w x $h"] = PdfPageFormat(w * PdfPageFormat.mm, h * PdfPageFormat.mm);
-                                          });
-                                        } else {
-                                          Utilities.showToast(context: context, title:  S.of(context).fail, description: S.of(context).number_fail);
-                                        }
-                                      },
-                                      icon:  Icon(Icons.refresh),
-                                    ),
-                                  ],
-                                ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child:  ElevatedButton.icon(
-                                icon: Icon(Icons.print),
-                                label: Text(S.of(context).print),
-                                onPressed: () async {
-                                  await Printing.layoutPdf(
-                                      onLayout: (format) async => buildPdf(user, pdfPageFormat),
-                                      usePrinterSettings: true
-                                  );
-                                },
-                              ),
-                            ),
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                icon: Icon(Icons.share),
-                                label: Text(S.of(context).qr_code_share, textAlign: TextAlign.center,),
-                                onPressed: () async {
-                                  await Printing.sharePdf(
-                                    bytes: await buildPdf(user, pdfPageFormat),
-                                    filename: "${user.id}_${user.uuId}.pdf",
-                                  );
-                                },
-                              ),)
-                          ],
+      builder: (context) => Dialog(
+        constraints: BoxConstraints(
+          minWidth: isMobile ? MediaQuery.of(context).size.width * 0.9 : 400,
+          maxWidth: isMobile ? MediaQuery.of(context).size.width * 0.9 : 1200,
+          minHeight: isMobile ? MediaQuery.of(context).size.height * 0.8 : 400,
+          maxHeight: isMobile ? MediaQuery.of(context).size.height * 0.8 : 700
+        ),
+        child: StatefulBuilder(builder: (context, setState){
+          return Padding(
+            padding: EdgeInsets.all(15),
+              child: LayoutBuilder(
+                builder: (context, constrains){
+                  bool useRow = constrains.maxWidth < 1000;
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Expanded(
+                        flex: isMobile  ? 3 : useRow ? 4 : 9,
+                        child: PdfPreview(
+                          build: (format) async => buildPdf(user, pdfPageFormat),
+                          allowPrinting: false,
+                          allowSharing: false,
+                          canChangeOrientation: false,
+                          canChangePageFormat: false,
+                          //pageFormats: formatMap,
                         ),
-                      )
-                  ),
-                ],
+                      ),
+                      Expanded(
+                          flex: 1,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: MyApp().getDeviceType() == DeviceType.mobile || useRow
+                                ? Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: printControls(context, setState, user)
+
+                            )
+                                : Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: printControls(context, setState, user)
+                              ,
+                            ),
+                          )
+                      ),
+                    ],
+                  );
+                },
               )
           );
         }),
       ),
     );
     }
+  }
+
+  ///List of the controls to be used in a Row or Column depending on screen size
+  List<Widget> printControls(BuildContext context, setState, User user){
+    return [
+      Expanded(
+        flex: 2,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+                child: TextField(
+                  controller: widthController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: S.of(context).print_width,
+                    suffixText: "mm",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                  ],
+                )),
+            Text(" x ", style: TextStyle(fontSize: 22),),
+            Expanded(child: TextField(
+              controller: heightController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: S.of(context).print_height,
+                suffixText: "mm",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+              ],
+            )),
+            SizedBox(width: 10,),
+            ElevatedButton.icon(
+              onPressed: () {
+                final w = double.tryParse(widthController.text);
+                final h = double.tryParse(heightController.text);
+                if (w != null && h != null) {
+                  setState(() {
+                    pdfPageFormat = PdfPageFormat(w * PdfPageFormat.mm, h * PdfPageFormat.mm);
+                  });
+                } else {
+                  Utilities.showToast(context: context, title:  S.of(context).fail, description: S.of(context).number_fail, isError: true);
+                }
+              },
+              icon:  Icon(Icons.refresh),
+              label: Text(S.of(context).apply),
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size(50, double.infinity),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+              ),
+            ),
+          ],
+        ),
+      ),
+      Divider(),
+      VerticalDivider(),
+      Expanded(
+        flex: 2,
+        child: Row(
+          spacing: 5,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: 2,
+              child:  ElevatedButton.icon(
+                icon: Icon(Icons.print),
+                label: Text(S.of(context).print),
+                onPressed: () async {
+                  await Printing.layoutPdf(
+                      onLayout: (format) async => buildPdf(user, pdfPageFormat),
+                      usePrinterSettings: true
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppSettingsManager.instance.settings.selectedColor?.withAlpha(140),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.share),
+                label: Text(S.of(context).qr_code_share, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis,),
+                onPressed: () async {
+                  await Printing.sharePdf(
+                    bytes: await buildPdf(user, pdfPageFormat),
+                    filename: "${user.id}_${user.uuId}.pdf",
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+                ),
+              ),
+            )
+          ],
+        ),
+      )
+    ];
   }
 }

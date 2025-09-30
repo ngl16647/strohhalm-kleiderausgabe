@@ -24,7 +24,28 @@ func main() {
 
 	routes.InitRoutes(r)
 
+	runServer(r)
+
+}
+
+func runServer(r chi.Router) {
 	addr := fmt.Sprintf("%s:%d", cfg.GlobalConfig.Server.Host, cfg.GlobalConfig.Server.Port)
-	log.Printf("Server started on port %s\n", addr)
-	http.ListenAndServe(addr, r)
+
+	if !cfg.GlobalConfig.Api.UseApiKey {
+		log.Println("WARNING: Server running without API key verification")
+	}
+
+	var err error
+	if !cfg.GlobalConfig.Tls.UseTls {
+		log.Println("WARNING: Server running without TLS")
+		log.Printf("Server started on port %s\n", addr)
+		err = http.ListenAndServe(addr, r)
+	} else {
+		log.Printf("Server started on port %s\n", addr)
+		err = http.ListenAndServeTLS(addr, cfg.GlobalConfig.Tls.CertFile, cfg.GlobalConfig.Tls.KeyFile, r)
+	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }

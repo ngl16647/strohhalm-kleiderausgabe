@@ -1,16 +1,15 @@
-import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:strohhalm_app/app_settings.dart';
 import 'package:strohhalm_app/create_qr_code.dart';
 import 'package:strohhalm_app/database_helper.dart';
-import 'package:strohhalm_app/user.dart';
+import 'package:strohhalm_app/user_and_visit.dart';
 import 'package:strohhalm_app/utilities.dart';
 import 'package:styled_text/styled_text.dart';
-
 import 'generated/l10n.dart';
 import 'http_helper.dart';
 
+///Display of Customers on the main_page
 class CustomerTile extends StatefulWidget {
   final bool isListView;
   final User user;
@@ -32,53 +31,51 @@ class CustomerTile extends StatefulWidget {
 }
 
 class CustomerTileState extends State<CustomerTile>{
-  late User _user;
   bool _mouseIsOver = false;
-  DateTime? _lastVisit;
   bool _uploading = false;
   bool _useServer = false;
 
   @override
   void initState() {
     _useServer = AppSettingsManager.instance.settings.useServer ?? false;
-    _user = widget.user;
-    _lastVisit = _user.lastVisit;
     super.initState();
   }
 
-  bool get visitMoreThan14Days => _lastVisit != null ? DateTime.now().difference(_lastVisit!).inDays > 13 : true;
+  bool get visitIsMoreThan14Days => widget.user.lastVisit != null ? DateTime.now().difference(widget.user.lastVisit!).inDays > 13 : true;
 
+  ///Creates the Text that displays the lastVisit status
   String _buildLastVisitStyledText() {
-    if (_lastVisit == null) {
+    if (widget.user.lastVisit == null) {
       // Never visited
       return S.of(context).customer_tile_lastVisit_never;
-    } else if (Utilities.isSameDay(DateTime.now(), _lastVisit!)) {
+    } else if (Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)) {
       // visited today
       return S.of(context).customer_tile_lastVisit_today;
     } else {
       // Visited on !today
-      final dateString = DateFormat("dd.MM.yyyy").format(_lastVisit!);
+      final dateString = DateFormat("dd.MM.yyyy").format(widget.user.lastVisit!);
       return S.of(context).customer_tile_lastVisit_onDate(dateString);
     }
   }
 
+  ///Creates the available buttons depending on the lastVisit
   Widget? _buildVisitActions() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if(!visitMoreThan14Days) Expanded(
+        //If user should be able to book anyway: if(!visitMoreThan14Days)
+        if(widget.user.lastVisit != null && Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)) Expanded(
           child:  TextButton(
             onPressed: () async {
               String? newLastTime;
               _useServer
-                  ? newLastTime = await HttpHelper().deleteVisit(customerId: _user.id)
-                  : newLastTime = await DatabaseHelper().deleteLatestAndReturnPrevious(_user);
+                  ? newLastTime = await HttpHelper().deleteVisit(customerId: widget.user.id)
+                  : newLastTime = await DatabaseHelper().deleteLatestAndReturnPrevious(widget.user);
               if(newLastTime == "-1") return;
               DateTime? newVisitTime = newLastTime == null ? null : DateTime.parse(newLastTime);
               setState(() {
                 widget.user.lastVisit = newVisitTime;
-                _lastVisit = newVisitTime;
               });
               widget.updatedVisit();
             },
@@ -92,8 +89,8 @@ class CustomerTileState extends State<CustomerTile>{
             child: Text(S.of(context).customer_tile_deleteLastEntry, textAlign: TextAlign.center,),
           ),
         ),
-        if(!visitMoreThan14Days && !Utilities.isSameDay(DateTime.now(), _lastVisit!)) SizedBox(width: 5,),
-        if(_lastVisit == null || !Utilities.isSameDay(DateTime.now(), _lastVisit!))
+        //If user should be able to book anyway: if(!visitMoreThan14Days && !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)) SizedBox(width: 5,),
+        if(widget.user.lastVisit == null || visitIsMoreThan14Days) //If user should be able to book anyway: if(widget.user.lastVisit == null || !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!))
           Expanded(
             child: TextButton(
               onPressed: () async {
@@ -101,17 +98,14 @@ class CustomerTileState extends State<CustomerTile>{
                   _uploading = true;
                 });
 
-                TookItem? newLastVisit;
-                _useServer
-                    ? newLastVisit = await HttpHelper().addVisit(userId: widget.user.id)
-                    : newLastVisit = await DatabaseHelper().addVisit(_user.id);
+                Visit? newLastVisit = await Utilities.addVisit(widget.user, context, true);
                 setState(() {
-                  widget.user.lastVisit = newLastVisit?.tookTime;
-                  _lastVisit = newLastVisit?.tookTime;
+                  if(newLastVisit != null){
+                    widget.user.lastVisit = newLastVisit.tookTime;
+                  }
                   _uploading = false;
                 });
                 if(!mounted) return;
-                Utilities.showToast(context: context, title:  S.of(context).success, description: S.of(context).stat_page_savedVisit);
                 widget.updatedVisit();
               },
               style: TextButton.styleFrom(
@@ -125,13 +119,14 @@ class CustomerTileState extends State<CustomerTile>{
                 height: 24, // kleiner als 40
                 width: 24,
                 child: CircularProgressIndicator(strokeWidth: 2),
-              ) : Text(S.of(context).customer_tile_addNewEntry(visitMoreThan14Days), textAlign: TextAlign.center,),
+              ) : Text(S.of(context).customer_tile_addNewEntry(visitIsMoreThan14Days), textAlign: TextAlign.center,),
             ),
           ),
       ],
     );
   }
 
+  ///Creates a ListItem of the customer
   Widget buildListTile(){
     return Padding(
         padding: EdgeInsets.all(_mouseIsOver ? 4 : 2),
@@ -139,9 +134,11 @@ class CustomerTileState extends State<CustomerTile>{
           spacing: 10,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(width: 10),
-            Text(_user.id.toString()),
-            SizedBox(width: 10),
+            SizedBox(),
+            SizedBox(
+              width: 32,
+              child:  Text(widget.user.id.toString(),textAlign: TextAlign.start,),
+            ),
             Expanded(
               flex: 2,
               child: Column(
@@ -149,19 +146,30 @@ class CustomerTileState extends State<CustomerTile>{
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text("${_user.firstName} ${_user.lastName}", style: TextStyle(fontWeight: FontWeight.bold)),
+                  Tooltip(
+                    message: "${widget.user.firstName} ${widget.user.lastName}",
+                    child: Text("${widget.user.firstName} ${widget.user.lastName}", style: TextStyle(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis, maxLines: 2,),
+                  ),
                   Row(
+                    spacing: 0,
                     children: [
-                      Text(
-                          DateFormat("dd.MM.yyyy").format(_user.birthDay),
+                      Flexible(
+                        child: Text(
+                          DateFormat("dd.MM.yyyy").format(widget.user.birthDay),
                           style: TextStyle(color: Theme.of(context).textTheme.headlineSmall!.color?.withAlpha(170))
+                        ),
                       ),
                       SizedBox(width: 10),
-                      Text(
-                        CountryLocalizations.of(context)?.countryName(countryCode: _user.country) ?? Country.tryParse(_user.country)!.name,
-                        style: TextStyle(color: Theme.of(context).textTheme.headlineSmall!.color?.withAlpha(170)),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      Expanded(
+                        child: Tooltip(
+                          message: Utilities.getLocalizedCountryNameFromCode(context, widget.user.country),
+                          child: Text(
+                            Utilities.getLocalizedCountryNameFromCode(context, widget.user.country),
+                            style: TextStyle(color: Theme.of(context).textTheme.headlineSmall!.color?.withAlpha(170)),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
+                      )
                     ],
                   ),
                 ],
@@ -173,13 +181,13 @@ class CustomerTileState extends State<CustomerTile>{
                   padding: EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    color: visitMoreThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
+                    color: visitIsMoreThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(visitMoreThan14Days ? Icons.check_circle : Icons.error),
+                      Icon(visitIsMoreThan14Days ? Icons.check_circle : Icons.error),
                       SizedBox(width: 5),
                       Flexible(
                         child: StyledText(
@@ -205,8 +213,7 @@ class CustomerTileState extends State<CustomerTile>{
               children: [
                 IconButton(
                   onPressed: () {
-                    CreateQRCode().printQrCode(context, _user);
-                    //CreateQRCode().showQrCode(context, user);
+                    CreateQRCode().printQrCode(context, widget.user);
                   },
                   icon: Icon(Icons.print),
                 ),
@@ -223,6 +230,7 @@ class CustomerTileState extends State<CustomerTile>{
     );
   }
 
+  ///Creates a gridTile of a customer
   Widget buildGridTile(){
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -233,14 +241,14 @@ class CustomerTileState extends State<CustomerTile>{
             children: [
               Align(
                 alignment: Alignment.topRight,
-                child: Text("#${_user.id}"),
+                child: Text("#${widget.user.id}"),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("${_user.firstName} ${_user.lastName}", style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text(DateFormat("dd.MM.yyyy").format(_user.birthDay), style: TextStyle(color: Colors.grey)),
-                  Text(CountryLocalizations.of(context)?.countryName(countryCode: _user.country) ?? Country.tryParse(_user.country)!.name, style: TextStyle(color: Colors.grey))
+                  Text("${widget.user.firstName} ${widget.user.lastName}", style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(DateFormat("dd.MM.yyyy").format(widget.user.birthDay), style: TextStyle(color: Colors.grey)),
+                  Text(Utilities.getLocalizedCountryNameFromCode(context, widget.user.country), style: TextStyle(color: Colors.grey))
                 ],
               )
 
@@ -252,14 +260,14 @@ class CustomerTileState extends State<CustomerTile>{
           padding:  EdgeInsets.all(5),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: visitMoreThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
+            color: visitIsMoreThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
           ),
           constraints: BoxConstraints(minHeight: 50),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(visitMoreThan14Days ? Icons.check_circle : Icons.error),
+              Icon(visitIsMoreThan14Days ? Icons.check_circle : Icons.error),
               SizedBox(width: 5),
               Expanded(
                 child: StyledText(
@@ -285,7 +293,7 @@ class CustomerTileState extends State<CustomerTile>{
             children: [
               IconButton(
                 onPressed: () {
-                  CreateQRCode().printQrCode(context, _user);
+                  CreateQRCode().printQrCode(context, widget.user);
                 },
                 icon: Icon(Icons.print),
               ),
@@ -302,11 +310,13 @@ class CustomerTileState extends State<CustomerTile>{
     );
   }
 
+  ///handels display as Tile/grid depending on screenWidth/Mobile
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: _mouseIsOver ? 1 : 3, horizontal: 3),
       child: InkWell(
+        borderRadius:  BorderRadius.circular(12),
         onTap: (){
           //openStatPage(user);
           widget.click();

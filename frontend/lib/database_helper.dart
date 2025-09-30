@@ -2,8 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:strohhalm_app/user.dart';
+import 'package:strohhalm_app/user_and_visit.dart';
 
+
+///Handles local Database interactions
 class DatabaseHelper {
   static Database? _database;
 
@@ -13,14 +15,15 @@ class DatabaseHelper {
     return _database!;
   }
 
+  ///Initializes the Database
   Future<Database> initDatabase() async {
     String path = await getDatabasesPath();
     return openDatabase(
-      join(path, "storhhalm_db_version8.db"),
+      join(path, "visitor_CheckIn_db_ver1_0.db"),
       onCreate: (db, version) async {
 
         await db.execute('''
-          CREATE TABLE users(
+          CREATE TABLE customers(
             id INTEGER PRIMARY KEY,
             uuid TEXT UNIQUE,
             firstName TEXT,
@@ -36,8 +39,7 @@ class DatabaseHelper {
           CREATE TABLE visits(
             id INTEGER PRIMARY KEY,
             customerId INTEGER,
-            visitDate TEXT,
-            updated_on TEXT
+            visitDate TEXT
           )
         ''');
       },
@@ -45,13 +47,31 @@ class DatabaseHelper {
     );
   }
 
+  ///Gets the distribution of visits (How many customers visited how many times)
+  Future<List<Map<String, dynamic>>> getVisitDistribution() async {
+    final db = await database;
 
+    final result = await db.rawQuery('''
+      SELECT visit_count AS visits, COUNT(*) AS customers
+      FROM (
+        SELECT customerId, COUNT(*) AS visit_count
+        FROM visits
+        GROUP BY customerId
+      )
+      GROUP BY visit_count
+      ORDER BY visit_count;
+    ''');
+
+    return result;
+  }
+
+ ///Gets all the Countries with the percentage as a whole and total Number
  Future<Map<String, dynamic>> getBirthCountries() async {
     final db = await database;
 
     final result = await db.query(
-      "users",
-      columns: ["country as country", "COUNT(*) * 100.0 / (SELECT COUNT(*) FROM users) AS percentage, COUNT(*) AS number"],
+      "customers",
+      columns: ["country as country", "COUNT(*) * 100.0 / (SELECT COUNT(*) FROM customers) AS percentage, COUNT(*) AS number"],
       where: "country IS NOT NULL AND country != ''",
       groupBy: "country",
     );
@@ -63,7 +83,7 @@ class DatabaseHelper {
     return countryCounts;
   }
 
-
+  ///Gets all Visits in a specified time-period of a month or year
   Future<Map<String, int>> getAllVisitsInPeriod(int monthsBack, bool year) async {
     final db = await database;
     final now = DateTime.now();
@@ -116,129 +136,207 @@ class DatabaseHelper {
     return dateMap;
   }
 
-
-  Future<TookItem> addVisit(int userId) async {
+  ///adds a Visit to the Database
+  Future<Visit?> addVisit(
+      User user,
+      [DateTime? time]
+      ) async {
     final db = await database;
 
-    DateTime createdOn = DateTime.now(); //.subtract(Duration(days: Random().nextInt(365)+300));
+    DateTime createdOn = time ?? DateTime.now(); //.subtract(Duration(days: 7));
+
     int itemId = await db.insert(
       "visits",
       {
-        "customerId" : userId,
+        "customerId" : user.id,
         "visitDate" : createdOn.toIso8601String(),
-        //"updated_on": item != null ? item.tookTime.toIso8601String() : "-1" //if HttpRequest successful => date else -1
       },
       conflictAlgorithm: ConflictAlgorithm.ignore,
     );
-    
-   updateUserLastVisit(userId, createdOn);
 
-    return TookItem(
-        id:itemId,
-        userId: userId,
-        tookTime: createdOn
-    );
+    if(user.lastVisit == null || user.lastVisit!.isBefore(createdOn)){
+      updateUserLastVisit(user.id, createdOn);
+
+      return Visit(
+          id: itemId,
+          userId: user.id,
+          tookTime: createdOn
+      );
+    } else {
+      return null;
+    }
   }
 
+  Future<void> addVisits(User user, List<DateTime> visits) async {
+    final db = await database;
+    await updateUserLastVisit(user.id, visits.last);
+    await db.transaction((txn) async {
+      for (DateTime t in visits) {
+        await txn.insert(
+          "visits",
+          {
+            "customerId": user.id,
+            "visitDate": t.toIso8601String(),
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    });
+  }
+
+  ///Updates the lastVisit in the Customer-Table
   Future<void> updateUserLastVisit(int userId, DateTime? visitDate) async {
     final db = await database;
     await db.update(
-        "users",
+        "customers",
         {
-          "lastVisit": visitDate == null ? null : DateFormat("yyyy-MM-dd").format(visitDate)
+          "lastVisit": visitDate?.toIso8601String()
         },
         where: "id = ?",
         whereArgs: [userId]
     );
   }
 
+  ///Checks if a User with the specified fields already exists. If true returns the id, else -1
+  Future<int> checkIfUserExists({
+    String? firstName,
+    String? lastName,
+    DateTime? birthDay,
+    String? country,
+    String? notes,
+  }) async {
+    final db = await database;
 
-  Future<User> addUser({
-    required String uuId,
-    required String firstName,
-    required String lastName,
-    required DateTime birthDay,
-    String? birthCountry,
-    String? notes}) async {
+    final whereClauses = <String>[];
+    final whereArgs = <Object?>[];
+
+    if (firstName != null) {
+      whereClauses.add("firstName = ?");
+      whereArgs.add(firstName);
+    }
+    if (lastName != null) {
+      whereClauses.add("lastName = ?");
+      whereArgs.add(lastName);
+    }
+    if (birthDay != null) {
+      whereClauses.add("birthday = ?");
+      whereArgs.add(birthDay.toIso8601String());
+    }
+    if (country != null) {
+      whereClauses.add("country = ?");
+      whereArgs.add(country);
+    }
+    if (notes != null) {
+      whereClauses.add("notes = ?");
+      whereArgs.add(notes);
+    }
+
+    final result = await db.query(
+      "customers",
+      where: whereClauses.isNotEmpty ? whereClauses.join(" AND ") : null,
+      whereArgs: whereArgs.isNotEmpty ? whereArgs : null,
+      limit: 1,
+    );
+
+    return result.isNotEmpty ? result.first["id"] as int : -1;
+  }
+
+  ///Adds a User and returns a special Object with id andOr if it already existed
+  Future<AddUpdateUserReturnType?> addUser({
+    required User user
+  }) async {
       final db = await database;
-      //final minNegativeIdRow = await db.rawQuery(
-      //    "SELECT MIN(id) as minId FROM users WHERE id < 0"
-      //);
-      //int minId = minNegativeIdRow.first["minId"] as int? ?? 0;
-      //id ??= (minId - 1);
+
+      int exists = await checkIfUserExists(
+          firstName: user.firstName,
+          lastName: user.lastName,
+          birthDay: user.birthDay,
+          country: user.country
+      );
+      if(exists != -1) return AddUpdateUserReturnType(exists, true);
         try {
           int id = await db.insert(
-            "users",
+            "customers",
             {
-              "uuid": uuId,
-              "firstName": firstName,
-              "lastName": lastName,
-              "birthday": birthDay.toIso8601String(),
-              "country": birthCountry ?? "",
-              "notes": notes ?? "",
-              //"updated_on" : DateTime.now().toIso8601String()
+              "uuid": user.uuId,
+              "firstName": user.firstName,
+              "lastName": user.lastName,
+              "birthday": user.birthDay.toIso8601String(),
+              "country": user.country,
+              "notes": user.notes ?? "",
             },
             conflictAlgorithm: ConflictAlgorithm.abort,
           );
-
-          return User(
-            id: id,
-            uuId: uuId,
-            firstName: firstName,
-            lastName: lastName,
-            birthDay: birthDay,
-            country: birthCountry ?? "",
-            notes: notes ?? "",
-            lastVisit: null
-          );
+          return AddUpdateUserReturnType(id, false);
         } catch (e) {
           if (e is DatabaseException && e.isUniqueConstraintError()) {
             if (kDebugMode) {
               print(e);
             }
           }
-          rethrow;
+          return null;
         }
   }
 
+  ///Gets Users depending on several variables like name, uuid or visitTime. Limit/Offset provide pagination
   Future<List<User>> getUsers({
     String? search,
     String? uuid,
+    int? id,
+    int? page,
+    int? size,
     DateTime? lastVisitBefore,
   }) async {
     final db = await database;
-    List<String> conditions = [];
-    List<dynamic> whereArgs = [];
+      List<String> conditions = [];
+      List<dynamic> whereArgs = [];
 
-    if (search != null && search.isNotEmpty) {
-      conditions.add("LOWER(firstName || ' ' || lastName) LIKE ?");
-      whereArgs.add("%${search.toLowerCase()}%");
-    }
-    if (uuid != null && uuid.isNotEmpty) {
-      conditions.add("LOWER(uuid) = ?");
-      whereArgs.add(uuid.toLowerCase());
-    }
-    if(lastVisitBefore != null){
-      conditions.add("lastVisit < ?");
-      whereArgs.add(lastVisitBefore.toIso8601String());
-    }
+      if (search != null && search.isNotEmpty) {
+        conditions.add("LOWER(firstName || ' ' || lastName) LIKE ?");
+        whereArgs.add("%${search.toLowerCase()}%");
+      }
+      if (id != null) {
+        conditions.add("id = ?");
+        whereArgs.add(id);
+      }
+      if (uuid != null && uuid.isNotEmpty) {
+        conditions.add("LOWER(uuid) = ?");
+        whereArgs.add(uuid.toLowerCase());
+      }
+      if(lastVisitBefore != null){
+        conditions.add("lastVisit < ?");
+        whereArgs.add(lastVisitBefore.toIso8601String());
+      }
 
-    List<Map<String, dynamic>> maps = await db.query(
-      "users",
-      where: conditions.join(" AND "),
-      whereArgs: whereArgs,
-      orderBy: "lastVisit DESC",
-    );
+      size = size ?? 20; //default to 20
+      page = page != null ? page-1 : 0; //so page index doesn't start with 0
 
-    List<User> users = [];
-    for(Map<String, dynamic> map in maps){
-      User user = User.fromMap(map);
-      users.add(user);
-    }
-    return users;
+      List<Map<String, dynamic>> maps = await db.query(
+        "customers",
+        where: conditions.join(" AND "),
+        whereArgs: whereArgs,
+        limit: size,
+        offset: size * page,
+        orderBy: "lastVisit DESC",
+      );
+
+      List<User> users = [];
+      for(Map<String, dynamic> map in maps){
+        User user = User.fromMap(map);
+        users.add(user);
+      }
+      return users;
   }
 
-  Future<List<TookItem>> getVisits(int userId) async {
+  ///Gives back the total Number of users
+  Future<int> countAllUsers() async{
+    final db = await database;
+    int result = Sqflite.firstIntValue(await db.rawQuery("SELECT COUNT(*) as count FROM customers")) ?? 0;
+    return result;
+  }
+
+  ///Gives back all Visits of a specified Customer
+  Future<List<Visit>> getVisits(int userId) async {
     final db = await database;
     List<Map<String, dynamic>> maps = await db.query(
       "visits",
@@ -246,14 +344,23 @@ class DatabaseHelper {
       whereArgs: [userId],
       orderBy: "visitDate DESC",
     );
-    return maps.map((mapRow) => TookItem.fromMap(mapRow)).toList();
+    return maps.map((mapRow) => Visit.fromMap(mapRow)).toList();
   }
 
-  Future<void> updateUser(User user) async { //bool updateSuccessFull
+  ///Updates a user and checks if it already exists
+  Future<bool?> updateUser(User user) async {
     final db = await database;
-
+    int exists = await checkIfUserExists(
+        firstName: user.firstName,
+        lastName: user.lastName,
+        birthDay: user.birthDay,
+        country: user.country,
+        notes: user.notes
+    );
+    if(exists != -1) return false;
+    try{
       await db.update(
-          "users",
+          "customers",
           {
             "firstName" : user.firstName,
             "lastName" : user.lastName,
@@ -263,8 +370,14 @@ class DatabaseHelper {
           },
           where: "id = ?",
           whereArgs: [user.id]);
+      return true;
+    } catch(ev) {
+      debugPrint("$ev");
+      return null;
+    }
   }
 
+  ///Deletes the last Visit and returns the previous one if available
   Future<String?> deleteLatestAndReturnPrevious(User user) async {
     final db = await database;
     int id = user.id;
@@ -277,7 +390,7 @@ class DatabaseHelper {
       limit: 2,
     );
 
-    //result[0] is newest, is deleted, result[1] is the one before gets returned as new latest
+    //result[0] is newest, gets deleted, result[1] is the one before gets returned as new latest
     if (result.isEmpty) { //should never be the case since if empty there is no possibility to delete
       return null;
     }
@@ -302,26 +415,70 @@ class DatabaseHelper {
     return newLastVisit?.toIso8601String();
   }
 
+  ///Deletes a Customer and sets all its visits to -id so it can still be referenced for statistics
   Future<bool> deleteUser(int id) async {
     final db = await database;
-    int rowsAffected = await db.delete (
-        "users",
-      where: "id = ?",
-      whereArgs: [id]
-    );
 
-    //Set Visit id to -1 so it still counts in the statistic
-    await db.update(
+    return await db.transaction((transaction) async {
+      int rowsAffected = await transaction.delete(
+        "customers",
+        where: "id = ?",
+        whereArgs: [id],
+      );
+
+      await transaction.update(
         "visits",
         {
-          "customerId": -1,
+          "customerId": 0 - id
         },
         where: "customerId = ?",
-        whereArgs: [id]
-    );
+        whereArgs: [id],
+      );
 
-    return rowsAffected > 0;
+      return rowsAffected > 0;
+    });
   }
+
+  ///Starts a transaction that deletes several users at once
+  Future<List<int>> deleteUsers(List<int> ids) async {
+    final db = await database;
+    List<int> deletedIds = [];
+
+    await db.transaction((transaction) async {
+      for (var id in ids) {
+        int rows = await transaction.delete(
+          "customers",
+          where: "id = ?",
+          whereArgs: [id],
+        );
+
+        if (rows > 0) {
+          deletedIds.add(id);
+          await transaction.update(
+            "visits",
+            {
+              "customerId": -id //Set id to negative so it doesn't mess with the visits per customer statistic
+            },
+            where: "customerId = ?",
+            whereArgs: [id],
+          );
+        }
+      }
+    });
+
+    return deletedIds;
+  }
+}
+
+///Return type for adding/updating users
+class AddUpdateUserReturnType{
+  int id;
+  bool existed;
+
+  AddUpdateUserReturnType(
+      this.id,
+      this.existed
+      );
 }
 
 //Sync Strategy:
@@ -436,33 +593,4 @@ class DatabaseHelper {
     final db = await database;
     int result = Sqflite.firstIntValue(await db.rawQuery("SELECT COUNT(*) as count FROM visits")) ?? 0;
     return result;
-  }
-
-  /*final maps = await db.rawQuery('''
-
-        SELECT u.*,
-               v.id as visitId,
-               v.userId,
-               v.visitDate
-        FROM users u
-        LEFT JOIN visits v ON u.id = v.userId
-        ${conditions.isNotEmpty ? "WHERE ${conditions.join(" AND ")}" : ""}
-        ORDER BY u.id, v.visitDate DESC
-        ''',
-        whereArgs);
-
-    Map<int, User> usersMap = {};
-
-    for (final row in maps) {
-      final userId = row["id"] as int;
-
-      if (!usersMap.containsKey(userId)) {
-        usersMap[userId] = User.fromMap(row, []);
-      }
-
-      if (row["visitId"] != null) {
-        usersMap[userId]!.visits.add(TookItem.fromMap(row));
-      }
-    }
-    return usersMap.values.toList();*/
-  */
+  }*/

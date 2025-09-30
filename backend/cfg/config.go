@@ -22,6 +22,11 @@ type Config struct {
 		UseApiKey bool   `yaml:"use_api_key"`
 		ApiKey    string `yaml:"api_key"`
 	}
+	Tls struct {
+		UseTls   bool   `yaml:"use_tls"`
+		CertFile string `yaml:"cert_file"`
+		KeyFile  string `yaml:"key_file"`
+	}
 	Data string
 }
 
@@ -31,21 +36,24 @@ func defaultConfig() *Config {
 	cfg := &Config{}
 	cfg.Server.Host = "0.0.0.0"
 	cfg.Server.Port = 8080
-	cfg.Api.UseApiKey = false
+
+	cfg.Api.UseApiKey = true
+
+	cfg.Tls.UseTls = false
+	cfg.Tls.CertFile = "cert/cert.pem"
+	cfg.Tls.KeyFile = "cert/key.pem"
+
 	cfg.Data = "data.db"
 	return cfg
 }
 
 func InitConfig() {
 	var rewriteConfigFile = false
-	// check if config file exists
+	// load existing config file
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		rewriteConfigFile = true
 	} else {
-		// when config file exists, load it
-		if err := loadConfig(configPath, GlobalConfig); err != nil {
-			log.Fatal(err)
-		}
+		loadConfig(configPath, GlobalConfig)
 	}
 
 	// flags
@@ -54,14 +62,10 @@ func InitConfig() {
 
 	noKey := flag.Bool("no-key", false, "Turn off API key verification")
 	newKey := flag.Bool("new-key", false, "Generate new API key")
+	useTls := flag.Bool("tls", false, "Use TLS")
 	docsFlag := flag.Bool("docs", false, "Print API documentation")
 
 	flag.Parse()
-
-	GlobalConfig.Api.UseApiKey = !*noKey
-	if *noKey {
-		log.Println("WARNING: Server running without API key verification")
-	}
 
 	// print docs if --docs flag is on
 	if *docsFlag {
@@ -69,56 +73,68 @@ func InitConfig() {
 		os.Exit(0) // do not run the server
 	}
 
-	if GlobalConfig.Api.UseApiKey {
+	// generate new API key
+	if !*noKey {
 		if GlobalConfig.Api.ApiKey == "" || *newKey {
-			resetApiKey(GlobalConfig)
+			var err error
+			GlobalConfig.Api.ApiKey, err = keyOfLength(16)
+			if err != nil {
+				log.Fatal("Unable to generate new keys")
+			}
+			fmt.Println("API key: ", GlobalConfig.Api.ApiKey)
 			rewriteConfigFile = true
 		}
 	}
 
+	// update config file when not exists or new API key is generated
 	if rewriteConfigFile {
-		data, err := yaml.Marshal(&GlobalConfig)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if err := os.WriteFile(configPath, data, 0644); err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Println("Config file updated")
+		writeConfig(configPath, GlobalConfig)
 	}
+
+	// adjust global config object for startup
+	if *noKey {
+		GlobalConfig.Api.UseApiKey = false
+	}
+	if *useTls {
+		GlobalConfig.Tls.UseTls = *useTls
+	}
+
 }
 
-func loadConfig(path string, cfg *Config) error {
+func loadConfig(path string, cfg *Config) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return fmt.Errorf("reading config file: %w", err)
+		log.Fatalf("reading config file: %s", err)
 	}
 
 	if err := yaml.Unmarshal(data, cfg); err != nil {
-		return fmt.Errorf("parsing config file: %w", err)
+		log.Fatalf("parsing config file: %s", err)
 	}
-
-	return nil
 }
 
-func resetApiKey(config *Config) error {
-	var err error
-	config.Api.ApiKey, err = keyOfLength(16)
+func writeConfig(path string, cfg *Config) {
+	data, err := yaml.Marshal(cfg)
 	if err != nil {
-		return fmt.Errorf("setting new API keys: %w", err)
+		log.Fatal(err)
 	}
 
-	fmt.Println("API key: ", config.Api.ApiKey)
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		log.Fatal(err)
+	}
 
-	return nil
+	fmt.Println("Config file updated")
 }
 
 func keyOfLength(length int) (string, error) {
-	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	length += length/4 - 1 // make space for dashes
 	key := make([]byte, length)
 	for i := 0; i < length; i++ {
+		if i%5 == 4 && i != length-1 {
+			key[i] = '-'
+			continue
+		}
+
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
 		if err != nil {
 			return "", err
