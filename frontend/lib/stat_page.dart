@@ -13,6 +13,7 @@ import 'create_qr_code.dart';
 import 'dialog_helper.dart';
 import 'generated/l10n.dart';
 
+///Detailed display for Customers
 class StatPage extends StatefulWidget {
   final User user;
 
@@ -34,7 +35,7 @@ class StatPage extends StatefulWidget {
 }
 
 class StatPageState extends State<StatPage>{
-  List<Visit> _tookItems = [];
+  List<Visit> _allVisits = [];
   bool uploading = false;
   bool _isMobile = false;
   bool _useServer = false;
@@ -44,7 +45,7 @@ class StatPageState extends State<StatPage>{
   TextEditingController noteEditController = TextEditingController();
   ScrollController noteScrollController = ScrollController();
 
-  bool get isMoreThan14Days => widget.user.lastVisit != null ?  DateTime.now().difference(widget.user.lastVisit!) > Duration(days: 13) : true;
+  bool get visitIsMoreThan14Days => widget.user.lastVisit != null ?  DateTime.now().difference(widget.user.lastVisit!) > Duration(days: 13) : true;
 
   @override
   void initState() {
@@ -55,14 +56,15 @@ class StatPageState extends State<StatPage>{
     super.initState();
   }
 
+  ///Gets all Visits of the Customer
   Future<void> getVisits() async {
     _useServer
-        ? _tookItems = await HttpHelper().getALlVisitsFromUser(id: widget.user.id)
-        : _tookItems = await DatabaseHelper().getVisits(widget.user.id);
-    setState(() {_tookItems;});
-
+        ? _allVisits = await HttpHelper().getALlVisitsFromUser(id: widget.user.id)
+        : _allVisits = await DatabaseHelper().getVisits(widget.user.id);
+    setState(() {_allVisits;});
   }
 
+  ///returns Widgets for display of last Visit
   List<Widget> getVisitTiles(){
     return [
       Expanded(
@@ -70,7 +72,7 @@ class StatPageState extends State<StatPage>{
           decoration: BoxDecoration(
             color: widget.user.lastVisit == null
                 ? Colors.grey
-                : (isMoreThan14Days)
+                : (visitIsMoreThan14Days)
                 ? Colors.green.withAlpha(170)
                 : Colors.red.withAlpha(170),
             borderRadius: BorderRadius.circular(12),
@@ -79,7 +81,7 @@ class StatPageState extends State<StatPage>{
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon((isMoreThan14Days) ? Icons.check_circle : Icons.block),
+              Icon((visitIsMoreThan14Days) ? Icons.check_circle : Icons.block),
               SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -95,7 +97,8 @@ class StatPageState extends State<StatPage>{
                   ],
                 ),
               ),
-              _tookItems.isNotEmpty
+              //If user should be able to book anyway: _allVisits.isNotEmpty && widget.user.lastVisit != null
+              widget.user.lastVisit != null && Utilities.isSameDay(widget.user.lastVisit!, DateTime.now()) &&  _allVisits.isNotEmpty
                   ? TextButton.icon(
                 onPressed: () async {
                   bool? result = await DialogHelper.dialogConfirmation(
@@ -103,14 +106,13 @@ class StatPageState extends State<StatPage>{
                       message: S.of(context).stat_page_removeLastVisitConfirmation,
                       hasChoice: true);
                   if (result != null) {
-
                     String? newLastTime;
                     _useServer
                         ? newLastTime = await HttpHelper().deleteVisit(customerId: widget.user.id)
                         : newLastTime = await DatabaseHelper().deleteLatestAndReturnPrevious(widget.user);
 
                     setState(() {
-                      if(_tookItems.isNotEmpty) _tookItems.removeAt(0);
+                      if(_allVisits.isNotEmpty) _allVisits.removeAt(0);
                       DateTime? newVisitTime = newLastTime == null ? null : DateTime.parse(newLastTime);
                       widget.user.lastVisit = newVisitTime;
                     });
@@ -126,6 +128,7 @@ class StatPageState extends State<StatPage>{
     ];
   }
 
+  ///Display for the personal Data
   Widget buildInfo({required Text title, required Text value}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,7 +218,7 @@ class StatPageState extends State<StatPage>{
                                       //overallVisits
                                       buildInfo(
                                           title: Text(S.of(context).stat_page_visits),
-                                          value: Text(_tookItems.length.toString(), style: TextStyle(color: Colors.grey),)
+                                          value: Text(_allVisits.length.toString(), style: TextStyle(color: Colors.grey),)
                                       ),
                                     ],
                                   ),
@@ -249,7 +252,7 @@ class StatPageState extends State<StatPage>{
                                                   borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
                                                   color: Colors.teal.withAlpha(120),
                                                 ),
-                                                child: Text("Saved", textAlign: TextAlign.center),
+                                                child: Text(S.of(context).saved, textAlign: TextAlign.center),
                                               ),
                                             ),
                                             onEnd: () => setState(() => saving = false),
@@ -304,7 +307,8 @@ class StatPageState extends State<StatPage>{
                     spacing: 10,
                     children: getVisitTiles(),
                   ),
-                  Row(
+                  //If user should be able to book anyway: remove if-Statement
+                  if(visitIsMoreThan14Days) Row(
                     spacing: 10,
                     children: [
                       Expanded(
@@ -322,7 +326,7 @@ class StatPageState extends State<StatPage>{
                                 setState(() {
                                   if(newLastVisit != null) {
                                     widget.user.lastVisit = newLastVisit.tookTime;
-                                    _tookItems.insert(0, newLastVisit);
+                                    _allVisits.insert(0, newLastVisit);
                                   }
                                   uploading = false;
                                 });
@@ -332,7 +336,7 @@ class StatPageState extends State<StatPage>{
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   minimumSize: Size(double.infinity, 75)
                               ),
-                              child: uploading ? Center(child: CircularProgressIndicator()) : Text( S.of(context).customer_tile_addNewEntry(isMoreThan14Days))))
+                              child: uploading ? Center(child: CircularProgressIndicator()) : Text( S.of(context).customer_tile_addNewEntry(visitIsMoreThan14Days))))
                     ],
                   )
                 ],

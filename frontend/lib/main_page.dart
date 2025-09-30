@@ -26,10 +26,8 @@ import 'check_connection.dart';
 import 'generated/l10n.dart';
 import 'main.dart';
 
-/*
-TODO:
- */
 
+///Main/Start-Page
 class MainPage extends StatefulWidget {
   final void Function(Locale) onLocaleChange;
 
@@ -76,6 +74,7 @@ class MainPageState extends State<MainPage> {
     await loadSettings();
   }
 
+  ///Loads all Settings
   Future<void> loadSettings() async {
     await AppSettingsManager.instance.load();
     var settings = AppSettingsManager.instance.settings;
@@ -109,10 +108,11 @@ class MainPageState extends State<MainPage> {
     }
   }
 
+  ///Checks the relevant Database for users where lastVisit is older than one year
   Future<void> checkForOldUsers() async {
   if(_useServer) {
     if(mounted){
-    oldUserList = await HttpHelper().searchCustomers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365)), size: 9999) ?? []; //If this fails automatically starts check for connection so no need to add a extra check before
+    oldUserList = await HttpHelper().searchCustomers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365)), size: 100) ?? [];
     oldUserList.removeWhere((item) => item.lastVisit == null); //Check since HttpRequest also returns Customers where lastVisit == null
     }
   } else {
@@ -125,6 +125,7 @@ class MainPageState extends State<MainPage> {
   });
 }
 
+///Starts listening for scanner-Input and displays results
   void listenForScanner(){
     void scanSuccess(scannedValue) async {
       openUserFromUuId(scannedValue);
@@ -179,6 +180,7 @@ class MainPageState extends State<MainPage> {
     });
   }
 
+  ///Makes the next request after initial search
   Future<void> loadMore() async {
     _page++;
     String searchTerm = _searchController.text;
@@ -231,6 +233,7 @@ class MainPageState extends State<MainPage> {
     _blockScan = false;
   }
 
+  ///Opens the page of a Customer with more Details
   Future<void> openStatPage(User user, [bool? addNewVisit]) async {
     _blockScan = true;
     User? updatedUser = await StatPage.showStatPageDialog(
@@ -245,8 +248,9 @@ class MainPageState extends State<MainPage> {
     _blockScan = false;
   }
 
+  ///clears the searchbar and displays a newly added or a Customer found by uuid on the mainPage
   void showUserInSearchBar(User user){
-    _page = 1;
+    _page = 0;
     _userList.clear();
     setState(() {
       _userList.add(user);
@@ -254,6 +258,7 @@ class MainPageState extends State<MainPage> {
     _searchController.text = "${user.firstName} ${user.lastName}";
   }
 
+  ///searches for a Customer by Uuid and opens its stat page
   Future<void> openUserFromUuId(String uuIdString) async {
     if(_blockScan) return;
     User? user;
@@ -312,10 +317,9 @@ class MainPageState extends State<MainPage> {
             hasChoice: false);
       }
     }
-
-
   }
 
+  ///Changes the Language of the Application live
   Future<void> changeLanguage(String localeId) async {
     widget.onLocaleChange(Locale(localeId));
     AppSettingsManager.instance.setLanguage(localeId);
@@ -334,6 +338,7 @@ class MainPageState extends State<MainPage> {
     super.dispose();
   }
 
+  ///creates a Customer-Tile and handles actions
   Widget _buildUserTile(User user, int index, bool isList) {
     return CustomerTile(
         isListView: isList,
@@ -349,6 +354,7 @@ class MainPageState extends State<MainPage> {
           .slideX(begin: -0.2, end: 0);
   }
 
+  ///Load-More widget for pagination
   Widget _buildLoadMoreTile(){
     if(_page == 0) return Center(child: Padding(padding: EdgeInsets.all(15),child: Text( S.of(context).load_more(""),),),);
     return Padding(
@@ -381,6 +387,7 @@ class MainPageState extends State<MainPage> {
     );
   }
 
+  ///Checks if a changes user now is older than a year again
   void checkIfUserGotOld(User user) {
     final index = oldUserList.indexWhere((item) => item.id == user.id);
     final isOld = user.lastVisit != null && user.lastVisit!.isBefore(DateTime.now().subtract(Duration(days: 365)));
@@ -392,7 +399,15 @@ class MainPageState extends State<MainPage> {
     }
   }
 
-  Widget buildLanguageDropDown(List<LanguageOption> languages, bool showOnlyIcons) {
+  ///Drop-Down Menu for Languages. Makes it easy to add more
+  Widget buildLanguageDropDown(bool showOnlyIcons) {
+    var languages = [
+      LanguageOption(code: "de", label: S.of(context).language_de, onPressed: () => changeLanguage("de")),
+      LanguageOption(code: "en", label: S.of(context).language_en, onPressed: () => changeLanguage("en")),
+      //LanguageOption(code: "ru", label: S.of(context).language_ru, onPressed: () => changeLanguage("ru")),
+      //Here one can add new Languages if necessary (code = Country-Code from http://www.lingoes.net/en/translator/langcode.htm)
+    ];
+
     return MenuAnchor(
       menuChildren: languages.map((lang) {
         return MenuItemButton(
@@ -447,12 +462,7 @@ class MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     ScrollController scrollController = ScrollController();
-    var languages = [
-      LanguageOption(code: "de", label: S.of(context).language_de, onPressed: () => changeLanguage("de")),
-      LanguageOption(code: "en", label: S.of(context).language_en, onPressed: () => changeLanguage("en")),
-      //LanguageOption(code: "ru", label: S.of(context).language_ru, onPressed: () => changeLanguage("ru")),
-      //Here one can add new Languages if necessary (code = Country-Code from http://www.lingoes.net/en/translator/langcode.htm)
-    ];
+
     double width = MediaQuery.of(context).size.width;
     bool showOnlyIcons = width < (_isAdmin ? 860 : 700) || _isMobile;
 
@@ -529,7 +539,7 @@ class MainPageState extends State<MainPage> {
                             }
                           },
                         ),
-                        buildLanguageDropDown(languages, showOnlyIcons),
+                        buildLanguageDropDown(showOnlyIcons),
                         if(_isAdmin)ActionChip(
                             label: showOnlyIcons ?  Icon(Icons.settings, size: 17) : Text(S.of(context).settings),
                             avatar: showOnlyIcons ? null :Icon(Icons.settings),
@@ -658,6 +668,7 @@ class MainPageState extends State<MainPage> {
                   Container(
                     constraints: BoxConstraints(
                       minHeight: 42,
+                      maxHeight: 60
                     ),
                     height: MediaQuery.of(context).size.height*0.07,
                     child: Padding(
@@ -782,7 +793,7 @@ class MainPageState extends State<MainPage> {
                   Expanded(
                     child: _userList.isEmpty
                         ? Center(
-                            child: Text(S.of(context).main_page_emptyUserListText, textAlign: TextAlign.center,),
+                            child: Text(_searchController.text.length > 3 ? "Keine nutzer gefunden" : S.of(context).main_page_emptyUserListText , textAlign: TextAlign.center,),
                           )
                         : LayoutBuilder(
                             builder: (context, constraints) {
@@ -933,6 +944,7 @@ class MainPageState extends State<MainPage> {
   }
 }
 
+///Language options with displayName, language-Code and onClick function
 class LanguageOption {
   final String code;
   final String label;
@@ -941,6 +953,7 @@ class LanguageOption {
   LanguageOption({required this.code, required this.label, required this.onPressed});
 }
 
+///Widget for Displaying the Data from a single bannerImage or the Elements of the BannerImage-Object
 class BannerWidget extends StatelessWidget {
   final BannerImage? bannerImage;
   const BannerWidget({
@@ -1009,7 +1022,7 @@ class BannerWidget extends StatelessWidget {
 }
 
 
-
+///Considerations when choosing between serial-Port scanner and HID-scanner
 //HID or COM-Serial
 // Pro HID:
 //   - simple, universal, works with the cheapest scanners

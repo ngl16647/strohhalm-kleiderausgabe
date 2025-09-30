@@ -9,6 +9,7 @@ import 'package:styled_text/styled_text.dart';
 import 'generated/l10n.dart';
 import 'http_helper.dart';
 
+///Display of Customers on the main_page
 class CustomerTile extends StatefulWidget {
   final bool isListView;
   final User user;
@@ -40,8 +41,9 @@ class CustomerTileState extends State<CustomerTile>{
     super.initState();
   }
 
-  bool get visitMoreThan14Days => widget.user.lastVisit != null ? DateTime.now().difference(widget.user.lastVisit!).inDays > 13 : true;
+  bool get visitIsMoreThan14Days => widget.user.lastVisit != null ? DateTime.now().difference(widget.user.lastVisit!).inDays > 13 : true;
 
+  ///Creates the Text that displays the lastVisit status
   String _buildLastVisitStyledText() {
     if (widget.user.lastVisit == null) {
       // Never visited
@@ -56,12 +58,14 @@ class CustomerTileState extends State<CustomerTile>{
     }
   }
 
+  ///Creates the available buttons depending on the lastVisit
   Widget? _buildVisitActions() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if(!visitMoreThan14Days) Expanded(
+        //If user should be able to book anyway: if(!visitMoreThan14Days)
+        if(widget.user.lastVisit != null && Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)) Expanded(
           child:  TextButton(
             onPressed: () async {
               String? newLastTime;
@@ -85,8 +89,8 @@ class CustomerTileState extends State<CustomerTile>{
             child: Text(S.of(context).customer_tile_deleteLastEntry, textAlign: TextAlign.center,),
           ),
         ),
-        if(!visitMoreThan14Days && !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)) SizedBox(width: 5,),
-        if(widget.user.lastVisit == null || !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!))
+        //If user should be able to book anyway: if(!visitMoreThan14Days && !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)) SizedBox(width: 5,),
+        if(widget.user.lastVisit == null || visitIsMoreThan14Days) //If user should be able to book anyway: if(widget.user.lastVisit == null || !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!))
           Expanded(
             child: TextButton(
               onPressed: () async {
@@ -115,13 +119,14 @@ class CustomerTileState extends State<CustomerTile>{
                 height: 24, // kleiner als 40
                 width: 24,
                 child: CircularProgressIndicator(strokeWidth: 2),
-              ) : Text(S.of(context).customer_tile_addNewEntry(visitMoreThan14Days), textAlign: TextAlign.center,),
+              ) : Text(S.of(context).customer_tile_addNewEntry(visitIsMoreThan14Days), textAlign: TextAlign.center,),
             ),
           ),
       ],
     );
   }
 
+  ///Creates a ListItem of the customer
   Widget buildListTile(){
     return Padding(
         padding: EdgeInsets.all(_mouseIsOver ? 4 : 2),
@@ -176,13 +181,13 @@ class CustomerTileState extends State<CustomerTile>{
                   padding: EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    color: visitMoreThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
+                    color: visitIsMoreThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(visitMoreThan14Days ? Icons.check_circle : Icons.error),
+                      Icon(visitIsMoreThan14Days ? Icons.check_circle : Icons.error),
                       SizedBox(width: 5),
                       Flexible(
                         child: StyledText(
@@ -225,6 +230,7 @@ class CustomerTileState extends State<CustomerTile>{
     );
   }
 
+  ///Creates a gridTile of a customer
   Widget buildGridTile(){
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -254,14 +260,14 @@ class CustomerTileState extends State<CustomerTile>{
           padding:  EdgeInsets.all(5),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: visitMoreThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
+            color: visitIsMoreThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
           ),
           constraints: BoxConstraints(minHeight: 50),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(visitMoreThan14Days ? Icons.check_circle : Icons.error),
+              Icon(visitIsMoreThan14Days ? Icons.check_circle : Icons.error),
               SizedBox(width: 5),
               Expanded(
                 child: StyledText(
@@ -304,6 +310,7 @@ class CustomerTileState extends State<CustomerTile>{
     );
   }
 
+  ///handels display as Tile/grid depending on screenWidth/Mobile
   @override
   Widget build(BuildContext context) {
     return Padding(

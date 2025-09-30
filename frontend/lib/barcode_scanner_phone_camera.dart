@@ -5,7 +5,7 @@ import 'package:strohhalm_app/main.dart';
 
 import 'generated/l10n.dart';
 
-///QR-Code Scanner Seite
+///QR-Code Scanner for Mobile
 class BarcodeScannerSmartPhoneCamera extends StatefulWidget {
 
   const BarcodeScannerSmartPhoneCamera({
@@ -28,6 +28,7 @@ class _BarcodeScannerSmartPhoneCameraState extends State<BarcodeScannerSmartPhon
   Barcode? _barcode;
   bool _codeFound = false;
 
+  ///Shows if scanning was success or fail
   Widget _buildBarcode(Barcode? value) {
     if (value == null) {
       return Text(
@@ -42,7 +43,7 @@ class _BarcodeScannerSmartPhoneCameraState extends State<BarcodeScannerSmartPhon
     );
   }
 
-
+  ///handles correct scans
   Future<void> _handleBarcode(BarcodeCapture barcodes) async {
     if (mounted && !_codeFound) {
         _codeFound = true; //Here so code isn't scanned multiple times and throws a error
@@ -51,13 +52,10 @@ class _BarcodeScannerSmartPhoneCameraState extends State<BarcodeScannerSmartPhon
           _barcode;
         });
         await Future.delayed(const Duration(seconds: 1)); //Wait a second to show feedback
-        returnToPage();
+        if (mounted) Navigator.of(context).pop(_barcode!.displayValue!);
     }
   }
 
-  void returnToPage(){
-    if (mounted) Navigator.of(context).pop(_barcode!.displayValue!);
-  }
 
   @override
   void dispose() {

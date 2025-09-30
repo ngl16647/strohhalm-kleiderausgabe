@@ -16,6 +16,7 @@ import 'check_connection.dart';
 import 'database_helper.dart';
 import 'generated/l10n.dart';
 
+///Settings Page
 class SettingsPage extends StatefulWidget {
   final Function(Color color) changeColor;
 
@@ -66,6 +67,7 @@ class _SettingsPageState extends State<SettingsPage> {
     super.initState();
   }
 
+  ///Gets all Settings from the singleton and applies relevant ones
   Future<void> loadSettings() async {
     final settings = AppSettingsManager.instance.settings;
 
@@ -95,6 +97,7 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {});
   }
 
+  ///Saves all settings
   Future<void> saveSettings() async {
 
     final manager = AppSettingsManager.instance;
@@ -109,6 +112,7 @@ class _SettingsPageState extends State<SettingsPage> {
     if(mounted) Navigator.of(context).pop(true);
   }
 
+  ///Creates the Header/Headline for the Divided Options
   Widget createTitleWidget({
     required String title,
     required String toolTipDescription,
@@ -158,6 +162,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return titleRow;
   }
 
+  ///Opens a colorPicker and sets the selectedColor. (Doesn't get saved yet)
   Future<void> _pickColor(BuildContext context) async {
     final picked = await showDialog<Color>(
       context: context,
@@ -200,6 +205,7 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  ///Displays Settings as page or Dialog depending on device
   @override
   Widget build(BuildContext context) {
     return !_isMobile
@@ -613,6 +619,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  ///Saves only the Server-Settings when turning on the useServer-Option
   Future<void> saveSettingsForServerRequests() async {
     setState(() => _onlineIsLoading = true);
     var manager = AppSettingsManager.instance;
@@ -633,6 +640,7 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _onlineIsLoading = false);
   }
 
+  ///Checks if Server-Settings have been changed before taking actions
   void checkServerSettings() {
     bool settingsHaveChanged = false;
     bool settingsWereSet = AppSettingsManager.instance.settings.url != null

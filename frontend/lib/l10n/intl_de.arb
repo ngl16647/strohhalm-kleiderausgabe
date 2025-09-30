@@ -86,7 +86,7 @@
   "settings_saveServerSettings": "Server-Einstellungen speichern, um Verbindung zu prüfen",
   "settings_downloadFromServer": "Vom Server herunterladen",
   "settings_noConnection": "Keine Verbindung!",
-  "settings_exportCsvFile": "CSV-Datei exportieren",
+  "settings_exportCsvFile": "CSV-Import/-Export",
   "settings_exportCsvDescription": "Exportiere oder Importiere eine CSV-Datei\nDaten können nur importiert werden, wenn die Zieldatenbank leer ist!",
   "settings_exportCsvLocal": "CSV lokal exportieren",
   "settings_exportLessDetailsToolTip":  "Exportiert eine CSV mit:\nid\nVorname\nNachname\nLand als Code\nNotizen\nBesuchen",
@@ -170,5 +170,6 @@
 
   "window_title": "Besucher Check-In",
   "reset": "Zurücksetzen",
-  "server_display_toolTip": "Zeigt ob die lokale oder online-Datenbank verwendet wird"
+  "server_display_toolTip": "Zeigt ob die lokale oder online-Datenbank verwendet wird",
+  "saved": "gespeichert"
 }

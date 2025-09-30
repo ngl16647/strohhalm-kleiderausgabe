@@ -172,5 +172,6 @@
 
   "window_title": "Visitor Check-In",
   "reset": "Reset",
-  "server_display_toolTip": "Shows you if the local or online-Database is used"
+  "server_display_toolTip": "Shows you if the local or online-Database is used",
+  "saved": "saved"
 }

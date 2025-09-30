@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:strohhalm_app/banner_designer.dart';
 import 'package:toastification/toastification.dart';
 
+///AppSettings Object
 class AppSettings{
   File? bannerSingleImage;
   Color? selectedColor;
@@ -47,12 +48,13 @@ class AppSettings{
   }
 }
 
+///Singleton-Instanz of Settings to be available throughout the Application
 class AppSettingsManager {
   AppSettingsManager._privateConstructor();
   static final AppSettingsManager instance = AppSettingsManager._privateConstructor();
 
   AppSettings? _settings;
-  String? _cachedToken;
+  String? _cachedToken; //Api-token gets only cached not saved
 
   Future<void> load() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
@@ -179,14 +181,5 @@ class AppSettingsManager {
       _settings?.bannerDesignerImageContainer = bannerImage; //Map in Settings with fullPath
     }
 
-  }
-
-  Future<Map<String, String>> bannerNameMapToPathMap(Map<String, String> bannerMap) async {
-    final appDir = await getApplicationDocumentsDirectory();
-    final bannerDir = join(appDir.path, "bannerImages");
-    if(bannerMap["imageLeft"] != null && bannerMap["imageLeft"]!.isNotEmpty) bannerMap["imageLeft"] = join(bannerDir, bannerMap["imageLeft"]);
-    if(bannerMap["imageRight"] != null && bannerMap["imageRight"]!.isNotEmpty) bannerMap["imageRight"] = join(bannerDir, bannerMap["imageRight"]);
-
-    return bannerMap;
   }
 }

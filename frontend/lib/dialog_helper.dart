@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:styled_text/styled_text.dart';
 import 'generated/l10n.dart';
 
+///Helper Class for Display of recurring dialogs
 class DialogHelper{
   static Future<bool?> dialogConfirmation({
     required BuildContext context,

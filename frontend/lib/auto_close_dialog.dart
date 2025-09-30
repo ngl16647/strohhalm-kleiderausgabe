@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import 'generated/l10n.dart';
 
+///Dialog that closes automatically
 class AutoCloseDialog extends StatefulWidget {
   final int? durationInSeconds;
   final Widget child;

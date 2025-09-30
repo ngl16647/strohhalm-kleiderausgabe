@@ -5,14 +5,15 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:strohhalm_app/app_settings.dart';
-import 'package:strohhalm_app/banner_designer.dart';
 import 'package:strohhalm_app/check_connection.dart';
 import 'package:strohhalm_app/database_helper.dart';
 import 'package:strohhalm_app/utilities.dart';
+import 'custom_tab_widget.dart';
 import 'generated/l10n.dart';
 import 'http_helper.dart';
 import 'main.dart';
 
+///Shows Statistics
 class StatisticPage extends StatefulWidget {
 
   const StatisticPage({
@@ -61,6 +62,7 @@ class StatisticPageState extends State<StatisticPage> {
 
   bool showTest = false;
 
+  ///Technically turns a country-Name to a color
   Color colorFromCountry(String country) {
     final hash = country.hashCode;
 
@@ -82,6 +84,7 @@ class StatisticPageState extends State<StatisticPage> {
     super.initState();
   }
 
+  ///Gets called when internet/Server gets reconnected after disconnect
   void _onProviderChanged() {
     if (provider.status == ConnectionStatus.connected) {
       getData();
@@ -96,6 +99,7 @@ class StatisticPageState extends State<StatisticPage> {
     super.dispose();
   }
 
+  ///Gets the data for PieChart and Visits in Period
   Future<void> getData() async {
     if(!mounted) return; //to avoid state errors
     await limitCountryNumber();
@@ -103,24 +107,33 @@ class StatisticPageState extends State<StatisticPage> {
     if(!mounted) return; //to avoid state errors
   }
 
+  ///Gets Visit in a month/year-Period depending on a int offset
   Future<void> getVisits() async {
     _useServer
       ? _visitsInPeriod  = await HttpHelper().getAllVisitsInPeriod(_monthBackNumber,_showYear)
       : _visitsInPeriod = await DatabaseHelper().getAllVisitsInPeriod(_monthBackNumber,_showYear);
-    if(_visitsInPeriod != null) {
+
       setState(() {
         _visitsInPeriod;
        });
-      return;
-    }
+
   }
 
+  ///Limits the countries that get displayed in the pieChart
   Future<void> limitCountryNumber() async {
     Map<String, dynamic> countryDataLong;
     if(_useServer){
-      var result = await HttpHelper().getStats();
+      var result = await HttpHelper().getCountryStats();
       if (result == null) {
-        _countryData = {};
+        setState(() {
+          _countryData = {};
+        });
+        return;
+      }
+      if(result["customersByCountry"] == null){
+        setState(() {
+          _countryData = {};
+        });
         return;
       }
       List<dynamic> stats = result["customersByCountry"];
@@ -168,6 +181,7 @@ class StatisticPageState extends State<StatisticPage> {
   }
 
 
+  ///Turns country-data into data for the PieChart
   PieChartSectionData chartData(double value, String title, int index, BoxConstraints constrains){
     double normalRadius = _isMobile ? constrains.maxWidth*0.16 : constrains.maxWidth*0.09; //0.12
     final isTouched = index == _touchedIndex;
@@ -188,7 +202,8 @@ class StatisticPageState extends State<StatisticPage> {
       ),
     );
   }
-  
+
+  ///Widgets for Displaying PieChart and Legend
   List<Widget> getPieChartChildren(BoxConstraints constrains){
     if(_countryData == null) return [];
     ScrollController legendScrollController = ScrollController();
@@ -356,17 +371,18 @@ class StatisticPageState extends State<StatisticPage> {
 
   @override
   Widget build(BuildContext context) {
-    //TODO: Mobile would be better to add a pageView and have PieChart and Flowcharts on separate pages
-    //whole page on Mobile
-    return !_isMobile ? Dialog(
-        shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-        ),
-      child: pageContent()
-    ).animate().slideX(duration: 300.ms, begin: 0.2).fadeIn(duration: 300.ms) : Scaffold(
-      appBar: AppBar(),
-      body: pageContent(),
-    );
+    ///whole page on Mobile, Dialog on Desktop
+    return !_isMobile
+        ? Dialog(
+              shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+              ),
+            child: pageContent()
+          ).animate().slideX(duration: 300.ms, begin: 0.2).fadeIn(duration: 300.ms)
+        : Scaffold(
+          appBar: AppBar(),
+          body: pageContent(),
+        );
   }
 
   Widget pageContent(){
@@ -393,7 +409,7 @@ class StatisticPageState extends State<StatisticPage> {
                               )
                             : _countryData!.isEmpty || context.watch<ConnectionProvider>().status != ConnectionStatus.connected
                                 ? Center(
-                                  child: Text(S.of(context).statistic_page_noData)
+                                  child: Text(S.of(context).statistic_page_noData, textAlign: TextAlign.center,)
                                   )
                                 : _isMobile ? Column(
                                     mainAxisAlignment: MainAxisAlignment.start,
@@ -598,6 +614,7 @@ class StatisticPageState extends State<StatisticPage> {
     );
   }
 
+  ///Label for month/year display with controls
   String _buildPeriodLabel(BuildContext context) {
     int overAllInPeriod = _visitsInPeriod!.entries.toList().fold(0, (sum, element) => sum + element.value);
     String visits =  S.of(context).statistic_page_visits(overAllInPeriod);
@@ -613,8 +630,8 @@ class StatisticPageState extends State<StatisticPage> {
     return "$monthName ${targetDate.year}: $overAllInPeriod $visits";
   }
 
+  ///Data-Display for the month/year Display of Visits
   LineChartData lineData(BoxConstraints constraints) {
-
     var visitList = _visitsInPeriod!.entries.toList();
     int maxVisits = _visitsInPeriod!.values.reduce((a, b) => a > b ? a : b);
     int yAxisInterval = switch (maxVisits) {
@@ -745,6 +762,7 @@ class StatisticPageState extends State<StatisticPage> {
   }
 
   //since state gets set before data changes this stops a parsing error
+  ///parses Strings to dates for month/Year display
   DateTime tryParseForCalendar(String dateString){
       try{
         DateFormat("dd.MM.yyyy").parse(dateString);
