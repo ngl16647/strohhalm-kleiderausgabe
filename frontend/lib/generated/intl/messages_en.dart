@@ -90,7 +90,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "admin_login": m0,
     "allow_Adding": MessageLookupByLibrary.simpleMessage(
-      "Allow adding\nanyway?",
+      "Allow adding despite day limit?",
     ),
     "allow_Deleting": MessageLookupByLibrary.simpleMessage("Allow deleting?"),
     "application_name": MessageLookupByLibrary.simpleMessage(
@@ -259,6 +259,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Accent color for the application",
     ),
     "settings_color_title": MessageLookupByLibrary.simpleMessage("Color"),
+    "settings_controlTitle": MessageLookupByLibrary.simpleMessage(
+      "Control-Variables",
+    ),
+    "settings_controlToolTip": MessageLookupByLibrary.simpleMessage(
+      "Variables for control of the rules",
+    ),
     "settings_downloadCSVFromServer": MessageLookupByLibrary.simpleMessage(
       "Download a CSV file (Excel)",
     ),
