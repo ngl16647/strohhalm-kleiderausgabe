@@ -340,9 +340,12 @@ class MainPageState extends State<MainPage> {
 
   ///creates a Customer-Tile and handles actions
   Widget _buildUserTile(User user, int index, bool isList) {
+    var settings = AppSettingsManager.instance.settings;
+
+
     return CustomerTile(
         isListView: isList,
-        key: ObjectKey(user),
+        key: ValueKey("${user.hashCode}-${settings.allowDeleting.hashCode}-${settings.allowAdding.hashCode}-${settings.cutOffDayNumber.hashCode}-${user.uuId}" ),
         user: user,
         click: () =>  openStatPage(user), //openUserFromUuId(user.uuId),
         updatedVisit: (){
@@ -583,6 +586,13 @@ class MainPageState extends State<MainPage> {
                                  );
                                }
                                loadPage(); //load page anyway to make sure Settings stay consistent
+                               //if(_userList.isNotEmpty){
+                               //  List<User> tempList = List.from(_userList);
+                               //  setState(() {_userList.clear();});
+                               //  //await Future.delayed(Duration(milliseconds:100));
+                               //  setState(() {_userList.addAll(tempList);
+                               //  });
+                               //}
                                setState(() {
                                  _selectedColor = AppSettingsManager.instance.settings.selectedColor ?? _selectedColor;
                                  MyApp.of(context).changeSeedColor(_selectedColor);
@@ -793,7 +803,7 @@ class MainPageState extends State<MainPage> {
                   Expanded(
                     child: _userList.isEmpty
                         ? Center(
-                            child: Text(_searchController.text.length > 3 ? "Keine nutzer gefunden" : S.of(context).main_page_emptyUserListText , textAlign: TextAlign.center,),
+                            child: Text(_searchController.text.length > 3 ? S.of(context).no_users_found : S.of(context).main_page_emptyUserListText , textAlign: TextAlign.center,),
                           )
                         : LayoutBuilder(
                             builder: (context, constraints) {

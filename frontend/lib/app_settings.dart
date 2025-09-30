@@ -21,6 +21,10 @@ class AppSettings{
   BannerImage? bannerDesignerImageContainer; //Here with full-Path
   bool? useBannerDesigner;
 
+  bool? allowAdding;
+  bool? allowDeleting;
+  int?  cutOffDayNumber;
+
   AppSettings({
     this.bannerSingleImage,
     this.selectedColor,
@@ -30,7 +34,10 @@ class AppSettings{
     this.useServer,
     this.languageCode,
     this.bannerDesignerImageContainer,
-    this.useBannerDesigner
+    this.useBannerDesigner,
+    this.allowAdding,
+    this.allowDeleting,
+    this.cutOffDayNumber
   });
 
   @override
@@ -98,7 +105,10 @@ class AppSettingsManager {
         useServer: pref.getBool("useServer"),
         languageCode: pref.getString("languageCode"),
         bannerDesignerImageContainer: bannerImage,
-        useBannerDesigner: pref.getBool("useBannerDesigner")
+        useBannerDesigner: pref.getBool("useBannerDesigner"),
+        allowAdding:  pref.getBool("allowAdding"),
+        allowDeleting:  pref.getBool("allowDeleting"),
+        cutOffDayNumber: pref.getInt("cutOffDayNumber")
     );
   }
 
@@ -109,6 +119,24 @@ class AppSettingsManager {
 
   String? get authToken {
     return _cachedToken;
+  }
+
+  Future<void> setAllowDeleting(bool value) async {
+    _settings?.allowDeleting = value;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    await pref.setBool("allowDeleting", value);
+  }
+
+  Future<void> setAllowAdding(bool value) async {
+    _settings?.allowAdding = value;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    await pref.setBool("allowAdding", value);
+  }
+
+  Future<void> setCutOffDays(int value) async {
+    _settings?.cutOffDayNumber = value;
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    await pref.setInt("cutOffDayNumber", value);
   }
 
   Future<void> setUseServer(bool value) async {

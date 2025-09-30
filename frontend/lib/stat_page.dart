@@ -45,12 +45,22 @@ class StatPageState extends State<StatPage>{
   TextEditingController noteEditController = TextEditingController();
   ScrollController noteScrollController = ScrollController();
 
-  bool get visitIsMoreThan14Days => widget.user.lastVisit != null ?  DateTime.now().difference(widget.user.lastVisit!) > Duration(days: 13) : true;
+  bool _allowAdding = false;
+  bool _allowDeleting = false;
+  int _cutOffNumber = 14;
+
+  bool get visitIsMoreThan14Days => widget.user.lastVisit != null ?  DateTime.now().difference(widget.user.lastVisit!).inDays > _cutOffNumber : true;
 
   @override
   void initState() {
+    var settings = AppSettingsManager.instance.settings;
     _isMobile = MyApp().getDeviceType() == DeviceType.mobile;
-    _useServer = AppSettingsManager.instance.settings.useServer ?? false;
+    _useServer = settings.useServer ?? false;
+    _allowAdding = settings.allowAdding ?? false;
+    _allowDeleting = settings.allowDeleting ?? false;
+    _cutOffNumber = settings.cutOffDayNumber ?? 14;
+    _cutOffNumber = _cutOffNumber-1;
+
     noteEditController.text = widget.user.notes ?? "";
     getVisits();
     super.initState();
@@ -98,8 +108,10 @@ class StatPageState extends State<StatPage>{
                 ),
               ),
               //If user should be able to book anyway: _allVisits.isNotEmpty && widget.user.lastVisit != null
-              widget.user.lastVisit != null && Utilities.isSameDay(widget.user.lastVisit!, DateTime.now()) &&  _allVisits.isNotEmpty
-                  ? TextButton.icon(
+              if(_allowDeleting
+                  ? _allVisits.isNotEmpty && widget.user.lastVisit != null
+                  : widget.user.lastVisit != null && Utilities.isSameDay(widget.user.lastVisit!, DateTime.now()) &&  _allVisits.isNotEmpty)
+              TextButton.icon(
                 onPressed: () async {
                   bool? result = await DialogHelper.dialogConfirmation(
                       context: context,
@@ -120,7 +132,7 @@ class StatPageState extends State<StatPage>{
                 },
                 label: Text(_isMobile ? "" : S.of(context).stat_page_removeLastVisit, style: TextStyle(color: Colors.black87)),
                 icon: Icon(Icons.delete, color: Colors.black87,),
-              ) : SizedBox.shrink(),
+              ),
             ],
           ),
         ),
@@ -308,7 +320,7 @@ class StatPageState extends State<StatPage>{
                     children: getVisitTiles(),
                   ),
                   //If user should be able to book anyway: remove if-Statement
-                  if(visitIsMoreThan14Days) Row(
+                  if(_allowAdding ? !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit) : visitIsMoreThan14Days) Row(
                     spacing: 10,
                     children: [
                       Expanded(

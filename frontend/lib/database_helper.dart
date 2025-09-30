@@ -143,7 +143,7 @@ class DatabaseHelper {
       ) async {
     final db = await database;
 
-    DateTime createdOn = time ?? DateTime.now(); //.subtract(Duration(days: 7));
+    DateTime createdOn = time ?? DateTime.now(); //.subtract(Duration(days: 5));
 
     int itemId = await db.insert(
       "visits",

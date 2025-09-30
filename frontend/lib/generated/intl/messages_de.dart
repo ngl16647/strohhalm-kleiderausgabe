@@ -92,6 +92,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "* Pflicht Felder",
     ),
     "admin_login": m0,
+    "allow_Adding": MessageLookupByLibrary.simpleMessage(
+      "Hinzufügen\ntrotzdem erlauben?",
+    ),
+    "allow_Deleting": MessageLookupByLibrary.simpleMessage("Löschen erlauben?"),
     "application_name": MessageLookupByLibrary.simpleMessage(
       "Strohhalm Kleiderausgabe",
     ),
@@ -161,6 +165,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "War <bold>heute</bold> da",
     ),
     "dark_mode": MessageLookupByLibrary.simpleMessage("Dunkler Modus"),
+    "day_cutoff": MessageLookupByLibrary.simpleMessage(
+      "Tage bis zu neuem Besuch",
+    ),
+    "days": MessageLookupByLibrary.simpleMessage("Tage"),
     "delete": MessageLookupByLibrary.simpleMessage("Löschen"),
     "deletionRequest_buttonTitle": MessageLookupByLibrary.simpleMessage(
       "Löschungs Anträge",
@@ -221,6 +229,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "no_server": MessageLookupByLibrary.simpleMessage(
       "Keine Verbindung zum Server",
+    ),
+    "no_users_found": MessageLookupByLibrary.simpleMessage(
+      "Keine Besucher gefunden",
     ),
     "number_fail": MessageLookupByLibrary.simpleMessage(
       "Keine erlaubte Zahl!\nBitte gib eine korrekte Zahl ein",
