@@ -224,6 +224,7 @@ class StatisticPageState extends State<StatisticPage> {
                     return;
                   }
                   _touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                  if(_touchedIndex != -1)legendScrollController.animateTo(_touchedIndex*40, duration: 300.ms, curve: Curves.easeInOut);
                 });
               },
             ),
@@ -303,7 +304,7 @@ class StatisticPageState extends State<StatisticPage> {
                         ).createShader(bounds);
                       },
                       blendMode: BlendMode.dstIn,
-                      child:ListView.builder(
+                      child: ListView.builder(
                         controller: legendScrollController,
                         shrinkWrap: true,
                         itemCount: _countryData!.length,
@@ -312,10 +313,11 @@ class StatisticPageState extends State<StatisticPage> {
                             padding: EdgeInsets.only(top: 5, bottom: 5, right: 15),
                             child: MouseRegion(
                               child: Container(
+                                height: _touchedIndex == i ? 45 : 40,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.fromBorderSide(BorderSide(width: 1)),
-                                  color: Theme.of(context).listTileTheme.tileColor!.withAlpha(_touchedIndex == i ? 255 : 190),
+                                  color: _touchedIndex == i ? Theme.of(context).colorScheme.surfaceDim : Theme.of(context).listTileTheme.tileColor!.withAlpha(190),
                                 ),
                                 constraints: BoxConstraints(
                                     minWidth: double.infinity

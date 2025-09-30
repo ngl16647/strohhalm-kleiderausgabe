@@ -54,6 +54,10 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _useServer = false;
   bool _isMobile = false;
 
+  //bool _allowDeleting = false;
+  //bool _allowAdding = false;
+  //TextEditingController checkNumberField = TextEditingController();
+
   bool _serverSettingsAreSetAndSame = false;
   bool _localDbIsEmpty = false;
   bool _onlineDbIsEmpty = false;
@@ -253,6 +257,57 @@ class _SettingsPageState extends State<SettingsPage> {
                     controller: _scrollController,
                     padding: EdgeInsets.only(right: 15, left: 15),
                     children: [
+                      /*createTitleWidget(
+                        title :  "kontroll-Variabeln",
+                        toolTipDescription :  "Variabeln für die steuerung der Kontrollen",
+                        context :context),
+                      SizedBox(height: 8),
+                      Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).listTileTheme.tileColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(5),
+                            child: Row(
+                              children: [
+                                SizedBox(width: 150,child: TextField(
+                                  controller: checkNumberField,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                    labelText: "Number of Days",
+                                    suffixText: "Days",
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                                  ],
+                                ),),
+                                Spacer(),
+                                Text("Allow deleting\nof Visits"),
+                                Switch(
+                                    value: _allowDeleting,
+                                    onChanged: (ev){
+                                      setState(() {
+                                        _allowDeleting = ev;
+                                      });
+                                    }),
+                                SizedBox(width: 8,),
+                                Text("Allow adding\nVisits anyway"),
+                                Switch(
+                                    value: _allowAdding,
+                                    onChanged: (ev){
+                                      setState(() {
+                                        _allowAdding = ev;
+                                      });
+                                    })
+                              ],
+                            ),
+                          )
+                      ),
+                      Divider(),*/
                       createTitleWidget(
                           title :  S.of(context).settings_themeMode_Title,
                           toolTipDescription :  S.of(context).settings_themeMode_desc,

@@ -24,6 +24,8 @@ class DataBaseExportFunctions{
     "Datum": ["Besuche", "Datum", "Besuch", "visits"]
   };
 
+  DateTime normalize(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
+
   ///Save a CSV in a chosen place
   static Future<void> saveCsv({
     required BuildContext context,
@@ -215,42 +217,39 @@ class DataBaseExportFunctions{
         notes: row[colIndex["Notizen"]!] ?? "",
         lastVisit: null,
       );
+      AddUpdateUserReturnType? result = await DatabaseHelper().addUser(
+          user: userWithoutValidId
+      );
+      if(result != null){
+        int firstDatumIndex = header.indexWhere((colTitle) => colTitle.startsWith("Datum"));
+        List<String> visits = [];
+        for (int i = firstDatumIndex; i < row.length; i++) {
+          if (row[i] != null && row[i].toString().isNotEmpty) {
+            visits.add(row[i].toString());
+          }
+        }
 
-         AddUpdateUserReturnType? result = await DatabaseHelper().addUser(
-             user: userWithoutValidId
-         );
-         if(result != null && !result.existed){
-            User user = userWithoutValidId.copyWith(newId: result.id);
+        List<DateTime> dateTimeVisits = visits.map((v) => tryParseDate(v)).where((d) => d != null).map((d) => d!).toList();
+        dateTimeVisits.sort((a, b) => a.compareTo(b));
 
-           int firstDatumIndex = header.indexWhere((colTitle) => colTitle.startsWith("Datum"));
-           List<String> visits = [];
-           for (int i = firstDatumIndex; i < row.length; i++) {
-             if (row[i] != null && row[i].toString().isNotEmpty) {
-               visits.add(row[i].toString());
-             }
-           }
+        if(result.existed){
+          //Its possible to import even into a full database, new Visits get checked against old
+          User user = await DatabaseHelper().getUsers(id: result.id).then((item) => item.first);
 
-
-           visits = visits
-               .map((v) => tryParseDate(v))
-               .where((d) => d != null)
-               .map((d) => d!.toIso8601String().substring(0, 10))
-               .toList();
-
-           visits.sort((a, b) => a.compareTo(b));
-
-             var existingVisits = await DatabaseHelper().getVisits(user.id);
-             var existingSet = existingVisits.map((item) => item.tookTime.toIso8601String().substring(0, 10)).toSet();
-             for (String v in visits) {
-               if(existingSet.contains(v)) continue;
-               DateTime? visitTime = tryParseDate(v);
-               if (visitTime != null) {
-                 Visit? visit = await DatabaseHelper().addVisit(user, visitTime);
-                 if (visit != null && (user.lastVisit == null || user.lastVisit!.isBefore(visit.tookTime))) {
-                   user.lastVisit = visit.tookTime;
-                 }
-               }
-             }
+          var existingVisits = await DatabaseHelper().getVisits(user.id);
+          var existingSet = existingVisits.map((item) => normalize(item.tookTime)).toSet();
+          for (DateTime d in dateTimeVisits) {
+            if(existingSet.contains(normalize(d))) continue;
+              Visit? visit = await DatabaseHelper().addVisit(user, d);
+              if (visit != null && (user.lastVisit == null || user.lastVisit!.isBefore(visit.tookTime))) {
+                user.lastVisit = visit.tookTime;
+              }
+          }
+        } else {
+          //If only importing into empty db
+          User user = userWithoutValidId.copyWith(newId: result.id);
+          await DatabaseHelper().addVisits(user, dateTimeVisits);
+        }
       }
       if(done != null) done((count/total*100));
     }

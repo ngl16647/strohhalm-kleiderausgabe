@@ -167,6 +167,23 @@ class DatabaseHelper {
     }
   }
 
+  Future<void> addVisits(User user, List<DateTime> visits) async {
+    final db = await database;
+    await updateUserLastVisit(user.id, visits.last);
+    await db.transaction((txn) async {
+      for (DateTime t in visits) {
+        await txn.insert(
+          "visits",
+          {
+            "customerId": user.id,
+            "visitDate": t.toIso8601String(),
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    });
+  }
+
   ///Updates the lastVisit in the Customer-Table
   Future<void> updateUserLastVisit(int userId, DateTime? visitDate) async {
     final db = await database;
@@ -265,6 +282,7 @@ class DatabaseHelper {
   Future<List<User>> getUsers({
     String? search,
     String? uuid,
+    int? id,
     int? page,
     int? size,
     DateTime? lastVisitBefore,
@@ -276,6 +294,10 @@ class DatabaseHelper {
       if (search != null && search.isNotEmpty) {
         conditions.add("LOWER(firstName || ' ' || lastName) LIKE ?");
         whereArgs.add("%${search.toLowerCase()}%");
+      }
+      if (id != null) {
+        conditions.add("id = ?");
+        whereArgs.add(id);
       }
       if (uuid != null && uuid.isNotEmpty) {
         conditions.add("LOWER(uuid) = ?");
