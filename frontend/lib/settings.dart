@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -54,9 +55,9 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _useServer = false;
   bool _isMobile = false;
 
-  //bool _allowDeleting = false;
-  //bool _allowAdding = false;
-  //TextEditingController checkNumberField = TextEditingController();
+  bool _allowDeleting = false;
+  bool _allowAdding = false;
+  TextEditingController daysCheckTextController = TextEditingController();
 
   bool _serverSettingsAreSetAndSame = false;
   bool _localDbIsEmpty = false;
@@ -98,7 +99,11 @@ class _SettingsPageState extends State<SettingsPage> {
          bannerDesignerImage: bannerDesignerImage,
          wholeBannerImage: bannerWholeImage,
      );
-    setState(() {});
+
+     _allowAdding = settings.allowAdding ?? false;
+     _allowDeleting = settings.allowDeleting ?? false;
+     daysCheckTextController.text = settings.cutOffDayNumber?.toString() ?? "14";
+      setState(() {});
   }
 
   ///Saves all settings
@@ -110,6 +115,10 @@ class _SettingsPageState extends State<SettingsPage> {
     await manager.setToken(_tokenController.text);
     manager.setDarkMode(_darkMode);
     manager.setUseServer(_useServer);
+
+    manager.setAllowAdding(_allowAdding);
+    manager.setAllowDeleting(_allowDeleting);
+    manager.setCutOffDays(int.parse(daysCheckTextController.text));
 
     _bannerDesignerKey.currentState?.saveBanner();
 
@@ -267,42 +276,58 @@ class _SettingsPageState extends State<SettingsPage> {
                             color: Theme.of(context).listTileTheme.tileColor,
                             borderRadius: BorderRadius.circular(12),
                           ),
+                          width: 1000,
                           child: Padding(
                             padding: EdgeInsets.all(5),
                             child: Row(
                               children: [
-                                SizedBox(width: 150,child: TextField(
-                                  controller: checkNumberField,
-                                  keyboardType: TextInputType.number,
-                                  decoration: InputDecoration(
-                                    labelText: "Number of Days",
-                                    suffixText: "Days",
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(6),
+                                Expanded(
+                                  flex: 2,
+                                  child: TextField(
+                                    controller: daysCheckTextController,
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      labelText: S.of(context).day_cutoff,
+                                      suffixText: S.of(context).days,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
                                     ),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                                    ],
                                   ),
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                                  ],
-                                ),),
+                                ),
                                 Spacer(),
-                                Text("Allow deleting\nof Visits"),
-                                Switch(
-                                    value: _allowDeleting,
-                                    onChanged: (ev){
-                                      setState(() {
-                                        _allowDeleting = ev;
-                                      });
-                                    }),
+                                Expanded(
+                                  flex: 2,
+                                    child: Row(
+                                  children: [
+                                    Text(S.of(context).allow_Deleting, softWrap: true,),
+                                    Switch(
+                                        value: _allowDeleting,
+                                        onChanged: (ev){
+                                          setState(() {
+                                            _allowDeleting = ev;
+                                          });
+                                        }),
+                                  ],
+                                )),
                                 SizedBox(width: 8,),
-                                Text("Allow adding\nVisits anyway"),
-                                Switch(
-                                    value: _allowAdding,
-                                    onChanged: (ev){
-                                      setState(() {
-                                        _allowAdding = ev;
-                                      });
-                                    })
+                                Expanded(
+                                    flex: 2,
+                                    child: Row(
+                                  children: [
+                                    Text(S.of(context).allow_Adding, softWrap: true,),
+                                    Switch(
+                                        value: _allowAdding,
+                                        onChanged: (ev){
+                                          setState(() {
+                                            _allowAdding = ev;
+                                          });
+                                        })
+                                  ],
+                                ))
                               ],
                             ),
                           )

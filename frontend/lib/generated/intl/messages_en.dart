@@ -89,6 +89,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "* Required fields",
     ),
     "admin_login": m0,
+    "allow_Adding": MessageLookupByLibrary.simpleMessage(
+      "Allow adding\nanyway?",
+    ),
+    "allow_Deleting": MessageLookupByLibrary.simpleMessage("Allow deleting?"),
     "application_name": MessageLookupByLibrary.simpleMessage(
       "Strohhalm Clothing Distribution",
     ),
@@ -156,6 +160,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "Visited <bold>today</bold>",
     ),
     "dark_mode": MessageLookupByLibrary.simpleMessage("Dark Mode"),
+    "day_cutoff": MessageLookupByLibrary.simpleMessage("Days until new visit"),
+    "days": MessageLookupByLibrary.simpleMessage("Days"),
     "delete": MessageLookupByLibrary.simpleMessage("Delete"),
     "deletionRequest_buttonTitle": MessageLookupByLibrary.simpleMessage(
       "Deletion\nRequests",
@@ -212,6 +218,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "no_server": MessageLookupByLibrary.simpleMessage(
       "No Connection to Server",
+    ),
+    "no_users_found": MessageLookupByLibrary.simpleMessage(
+      "Didn\'t find anything",
     ),
     "number_fail": MessageLookupByLibrary.simpleMessage(
       "Invalid number!\nPlease enter a correct number",

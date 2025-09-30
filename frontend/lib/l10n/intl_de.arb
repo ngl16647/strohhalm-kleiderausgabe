@@ -171,5 +171,12 @@
   "window_title": "Besucher Check-In",
   "reset": "Zurücksetzen",
   "server_display_toolTip": "Zeigt ob die lokale oder online-Datenbank verwendet wird",
-  "saved": "gespeichert"
+  "saved": "gespeichert",
+
+  "allow_Adding": "Hinzufügen\ntrotzdem erlauben?",
+  "allow_Deleting": "Löschen erlauben?",
+  "day_cutoff": "Tage bis zu neuem Besuch",
+  "days": "Tage",
+  "no_users_found": "Keine Besucher gefunden"
+
 }

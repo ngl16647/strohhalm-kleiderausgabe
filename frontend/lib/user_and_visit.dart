@@ -60,12 +60,13 @@ class User{
       return null;
     }
 
+
     return User(
       id: map["id"],
       uuId: map["uuid"],
       firstName: map["firstName"],
       lastName: map["lastName"],
-      birthDay: DateTime.parse(map["birthday"]),
+      birthDay: map["birthday"] != null && (map["birthday"] as String).isNotEmpty ? DateTime.parse(map["birthday"]) : DateTime(1970,01,01),
       country: map["country"] ?? "DE",
       notes: map["notes"] ?? "",
       lastVisit: map["lastVisit"] != null && (map["lastVisit"] as String).isNotEmpty ? tryParseIso(map["lastVisit"]) : null
