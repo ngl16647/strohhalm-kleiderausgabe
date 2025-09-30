@@ -120,7 +120,7 @@ class _SettingsPageState extends State<SettingsPage> {
     manager.setAllowDeleting(_allowDeleting);
     int days = daysCheckTextController.text.trim().isNotEmpty ? int.parse(daysCheckTextController.text) : 14;
     if(days < 1) days = 1;
-    manager.setCutOffDays(1);
+    manager.setCutOffDays(days);
 
     _bannerDesignerKey.currentState?.saveBanner();
 

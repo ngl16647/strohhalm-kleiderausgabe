@@ -164,7 +164,7 @@
   "load_more": "{isLoading, select, true{loading...} false{Load more...} other{Everything loaded!}}",
   "closesIn": "Closes in {countDown} seconds",
   "visit_added_success": "Visit added successfully!",
-  "visit_added_error": "{isBefore14Days, select, true{Error while adding\nVisitor was here in the last 14 days} false{Error while adding\nNo connection to Server} other{ }}",
+  "visit_added_error": "Error adding visit\nVisitor was already here {difference, plural, =0{today} =1{1 day} other{{difference} days}} ago",
   "online_Database": "online Database",
   "offline_Database": "offline Database",
   "countryErrorMessage": "We couldn’t detect your country automatically.\nPlease select a country from the following list.\n\nIf you don’t want to provide details, choose <bold>Worldwide</bold>.",
