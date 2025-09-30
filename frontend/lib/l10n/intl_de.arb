@@ -173,10 +173,11 @@
   "server_display_toolTip": "Zeigt ob die lokale oder online-Datenbank verwendet wird",
   "saved": "gespeichert",
 
-  "allow_Adding": "Hinzufügen\ntrotzdem erlauben?",
+  "allow_Adding": "Hinzufügen trotz Tagesgrenze erlauben?",
   "allow_Deleting": "Löschen erlauben?",
-  "day_cutoff": "Tage bis zu neuem Besuch",
+  "day_cutoff": "Tage bis zu neuem Besuch (mind. 1)",
   "days": "Tage",
-  "no_users_found": "Keine Besucher gefunden"
-
+  "no_users_found": "Keine Besucher gefunden",
+  "settings_controlTitle": "Kontroll-Variablen",
+  "settings_controlToolTip": "Variablen für die steuerung von Tageslimit und der Möglichkeit zu Löschen/Hinzuzufügen"
 }

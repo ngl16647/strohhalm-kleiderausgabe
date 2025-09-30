@@ -118,8 +118,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
     manager.setAllowAdding(_allowAdding);
     manager.setAllowDeleting(_allowDeleting);
-
-    manager.setCutOffDays(daysCheckTextController.text.trim().isNotEmpty ? int.parse(daysCheckTextController.text) : 14);
+    int days = daysCheckTextController.text.trim().isNotEmpty ? int.parse(daysCheckTextController.text) : 14;
+    if(days < 1) days = 1;
+    manager.setCutOffDays(1);
 
     _bannerDesignerKey.currentState?.saveBanner();
 
@@ -267,9 +268,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     controller: _scrollController,
                     padding: EdgeInsets.only(right: 15, left: 15),
                     children: [
-                      /* createTitleWidget(
-                        title :  "kontroll-Variabeln",
-                        toolTipDescription :  "Variabeln für die steuerung der Kontrollen",
+                      createTitleWidget(
+                        title :  S.of(context).settings_controlTitle,
+                        toolTipDescription :  S.of(context).settings_controlToolTip,
                         context :context),
                       SizedBox(height: 8),
                       Container(
@@ -320,7 +321,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ],
                         ),
                       ),
-                      Divider(),*/
+                      Divider(),
                       createTitleWidget(
                           title :  S.of(context).settings_themeMode_Title,
                           toolTipDescription :  S.of(context).settings_themeMode_desc,

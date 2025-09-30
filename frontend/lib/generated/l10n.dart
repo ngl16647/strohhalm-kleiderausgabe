@@ -1458,10 +1458,10 @@ class S {
     return Intl.message('saved', name: 'saved', desc: '', args: []);
   }
 
-  /// `Allow adding\nanyway?`
+  /// `Allow adding despite day limit?`
   String get allow_Adding {
     return Intl.message(
-      'Allow adding\nanyway?',
+      'Allow adding despite day limit?',
       name: 'allow_Adding',
       desc: '',
       args: [],
@@ -1498,6 +1498,26 @@ class S {
     return Intl.message(
       'Didn\'t find anything',
       name: 'no_users_found',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Control-Variables`
+  String get settings_controlTitle {
+    return Intl.message(
+      'Control-Variables',
+      name: 'settings_controlTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Variables for control of the rules`
+  String get settings_controlToolTip {
+    return Intl.message(
+      'Variables for control of the rules',
+      name: 'settings_controlToolTip',
       desc: '',
       args: [],
     );
