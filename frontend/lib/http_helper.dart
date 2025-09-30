@@ -9,6 +9,7 @@ import 'package:strohhalm_app/main.dart';
 import 'package:strohhalm_app/user_and_visit.dart';
 import 'app_settings.dart';
 
+///Helper Class for Http-Requests to the server. On fails starts connectivity-Checks
 class HttpHelper {
   static const String defaultPort = "8080";
   static const String defaultScheme = "http";
@@ -17,8 +18,7 @@ class HttpHelper {
   String get baseUrl => AppSettingsManager.instance.settings.url!;
   String? get key => AppSettingsManager.instance.authToken;
 
-
-
+  ///Checks if there is a internet-Connection
   Future<bool> hasInternet() async {
     try {
       final result = await InternetAddress.lookup("example.com").timeout(Duration(seconds: 3));
@@ -31,6 +31,7 @@ class HttpHelper {
     return false;
   }
 
+  ///Checks for a response from server
   Future<bool> isServerOnline() async {
     try {
       final socket = await Socket.connect(baseUrl, int.parse(defaultPort), timeout: Duration(seconds: 3));
@@ -41,6 +42,7 @@ class HttpHelper {
     }
   }
 
+  ///Adds a customer to the server Database
   Future<int?> addCustomer({
     required User user
   }) async {
@@ -83,6 +85,7 @@ class HttpHelper {
     }
   }
 
+  ///Deletes a Customer on the Server
   Future<bool> deleteCustomer({
     required int id,
   }) async {
@@ -114,6 +117,7 @@ class HttpHelper {
     }
   }
 
+  ///Searches the customers on the server and limits results to size, offset by the page*size
   Future<List<User>?> searchCustomers({
     String? query,
     int? page,
@@ -158,6 +162,7 @@ class HttpHelper {
     }
   }
 
+  ///Gets customers by their uuid from the server
   Future<User?> getCustomerByUUID(String uuid) async {
     if(!useServer || baseUrl.isEmpty) return null;
     final uri = buildUri(
@@ -187,6 +192,7 @@ class HttpHelper {
     }
   }
 
+  ///Updates a customer on the server
   Future<bool?> updateCustomer(User user) async {
     if(!useServer || baseUrl.isEmpty) return null;
 
@@ -225,6 +231,7 @@ class HttpHelper {
     }
   }
 
+  ///Adds a visit to a customer, optional with visitTime
   Future<Visit?> addVisit({
     required int userId,
     String? visitTime,
@@ -236,7 +243,6 @@ class HttpHelper {
         path: "/customers/$userId/visits"
     );
 
-    //visitTime = DateFormat("yyyy-MM-dd").format(DateTime.now().subtract(Duration(days: 375)));
     final body = jsonEncode({
       if(visitTime != null) "visitDate" : visitTime,
       if (notes != null) "notes": notes,
@@ -267,6 +273,7 @@ class HttpHelper {
     }
   }
 
+  ///Gets all visits from a user on the server
   Future<List<Visit>> getALlVisitsFromUser({required int id}) async {
     if(!useServer || baseUrl.isEmpty) return [];
 
@@ -293,6 +300,7 @@ class HttpHelper {
     return [];
   }
 
+  ///Deletes a visit on the server. Sets customerId to null, so cant be distinguished after deletion
   Future<String?> deleteVisit({
     required int customerId,
   }) async {
@@ -325,6 +333,7 @@ class HttpHelper {
     }
   }
 
+  ///Turns a request from the server into a usable Map with visits in a specified month/year period
   Future<Map<String, int>?> getAllVisitsInPeriod(int monthsBack, bool year) async {
     final now = DateTime.now();
     final startDate = year
@@ -370,6 +379,7 @@ class HttpHelper {
     return map == null ? null : dateMap;
   }
 
+  ///Gets visits in a specified timeframe from the server
   Future<dynamic> _fetchVisitsInPeriod({String? begin, String? end}) async {
     if(!useServer || baseUrl.isEmpty) return;
 
@@ -404,7 +414,8 @@ class HttpHelper {
     }
   }
 
-  Future<Map<String,dynamic>?> getStats() async {
+  ///Gets country-Stats from the Server
+  Future<Map<String,dynamic>?> getCountryStats() async {
     if(!useServer || baseUrl.isEmpty) return null;
 
     final uri = buildUri(
@@ -432,6 +443,7 @@ class HttpHelper {
     }
   }
 
+  ///Upload a compatible CSV to the server. Helps syncing offline/online Database
   Future<bool?> uploadCsv(File csvFile) async {
     if(!useServer || baseUrl.isEmpty) return null;
 
@@ -478,6 +490,7 @@ class HttpHelper {
     return null;
   }
 
+  ///Exports the Data from the Server into a CSV-File
   Future<String?> getCsv() async {
     if(baseUrl.isEmpty) return null;
 
@@ -507,6 +520,7 @@ class HttpHelper {
     }
   }
 
+  ///Checks the saves uri and tries to make it usable no matter the input (e.g. localhost works same as http://localhost:8080/)
   Uri buildUri({
     required String path,
     Map<String, String>? queryParams,

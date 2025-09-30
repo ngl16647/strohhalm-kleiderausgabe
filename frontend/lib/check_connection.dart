@@ -6,12 +6,14 @@ import 'package:strohhalm_app/utilities.dart';
 import 'generated/l10n.dart';
 import 'http_helper.dart';
 
+///The connection states
 enum ConnectionStatus {
   connected,
   noInternet,
   noServer,
 }
 
+///Provider that contains and checks the ConnectionStatus
 class ConnectionProvider extends ChangeNotifier {
   ConnectionStatus _connectionStatus = ConnectionStatus.connected;
   ConnectionStatus get status => _connectionStatus;
@@ -19,8 +21,8 @@ class ConnectionProvider extends ChangeNotifier {
   Timer? timerSub;
 
 
+  ///Sets the Status manually
   void setStatus(ConnectionStatus newStatus) {
-
       _connectionStatus = newStatus;
       notifyListeners();
 
@@ -30,6 +32,7 @@ class ConnectionProvider extends ChangeNotifier {
 
   }
 
+  ///Checks server/Network connection
   Future<ConnectionStatus> checkConnection() async {
     debugPrint("Checking Connection");
     ConnectionStatus newStatus;
@@ -57,14 +60,14 @@ class ConnectionProvider extends ChangeNotifier {
     }
   }
 
+  ///Cancels check
   void cancelCheck(){
     timerSub?.cancel();
     timerSub = null;
     _connectionStatus = ConnectionStatus.connected;
   }
 
-
-
+  ///Checks the connection in intervals of 5Seconds and cancels if connected
   Future<void> periodicCheckConnection() async {
     if (timerSub != null && timerSub!.isActive) return;
     timerSub?.cancel();
@@ -79,6 +82,7 @@ class ConnectionProvider extends ChangeNotifier {
   }
 }
 
+///Shows a toast if connection-Status changes
 class ConnectionToastListener extends StatefulWidget {
   final Widget child;
   const ConnectionToastListener({super.key, required this.child});

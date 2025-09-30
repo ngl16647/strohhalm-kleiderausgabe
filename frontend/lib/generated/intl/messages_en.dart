@@ -235,6 +235,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "User with same Data already existed!",
     ),
     "save": MessageLookupByLibrary.simpleMessage("Save"),
+    "saved": MessageLookupByLibrary.simpleMessage("saved"),
     "server_display_toolTip": MessageLookupByLibrary.simpleMessage(
       "Shows you if the local or online-Database is used",
     ),

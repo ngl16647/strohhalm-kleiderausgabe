@@ -1,5 +1,3 @@
-// ignore_for_file: dead_code
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:strohhalm_app/app_settings.dart';
@@ -11,6 +9,7 @@ import 'package:strohhalm_app/utilities.dart';
 import 'database_helper.dart';
 import 'generated/l10n.dart';
 
+///Returns the actual deleted/reset Users to the main_page
 class DeleteRequestReturn{
   final List<int> resetUsersId;
   final Set<int> deletedUsersId;
@@ -21,6 +20,7 @@ class DeleteRequestReturn{
       );
 }
 
+///Shows a Dialog with all Customers which last visited more than a year ago and gives options to delete individual or all at once
 class DeleteDialog extends StatefulWidget{
   final List<User> oldUserList;
 
@@ -56,6 +56,7 @@ class DeleteDialogState extends State<DeleteDialog>{
     super.initState();
   }
 
+  ///Builds the ListItems depending on desktop or mobile
   List<Widget> buildListViewItems(User u, int index){
     return [
       Row(
@@ -79,7 +80,7 @@ class DeleteDialogState extends State<DeleteDialog>{
           ),
         ],
       ),
-      if(_isMobile)Spacer(),
+      if(!_isMobile)Spacer(),
       //if(onDeleteList) Text("Will be Deleted!", style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.redAccent.shade400.withAlpha(200)),),
       //if(onDeleteList)SizedBox(width: 40,),
       Text(
@@ -93,24 +94,25 @@ class DeleteDialogState extends State<DeleteDialog>{
     ];
   }
 
+  ///The reset or delete Buttons
   List<Widget> actionButtons(User u, int index){
     return [
-      Tooltip(
-        message: S.of(context).deletion_request_page_resetUser,
-        child: ElevatedButton.icon(
-          icon: const Icon(Icons.autorenew),
-          label: Text(S.of(context).reset),
-          onPressed: () async {
-            _useServer
-                ? await HttpHelper().addVisit(userId: u.id, visitTime: DateTime.now().subtract(Duration(days: 14)).toIso8601String())
-                : await DatabaseHelper().updateUserLastVisit(u.id, null);
-            deletionReturnResult.resetUsersId.add(u.id);
-            setState(() {
-              oldUserList.removeAt(index);
-            });
-          },
-        ),
-      ),
+      //Tooltip(
+      //  message: S.of(context).deletion_request_page_resetUser,
+      //  child: ElevatedButton.icon(
+      //    icon: const Icon(Icons.autorenew),
+      //    label: Text(S.of(context).reset),
+      //    onPressed: () async {
+      //      _useServer
+      //          ? await HttpHelper().addVisit(userId: u.id, visitTime: DateTime.now().subtract(Duration(days: 14)).toIso8601String())
+      //          : await DatabaseHelper().updateUserLastVisit(u.id, null);
+      //      deletionReturnResult.resetUsersId.add(u.id);
+      //      setState(() {
+      //        oldUserList.removeAt(index);
+      //      });
+      //    },
+      //  ),
+      //),
       Tooltip(
         message: S.of(context).deletion_request_page_delete,
         child: ElevatedButton.icon(
@@ -129,7 +131,6 @@ class DeleteDialogState extends State<DeleteDialog>{
                 oldUserList.removeAt(index);
               });
             }
-            //setState(()=> actuallyDeleted.add(u.id));
           },
           icon: Icon(Icons.delete),
         ),
@@ -139,7 +140,6 @@ class DeleteDialogState extends State<DeleteDialog>{
 
   @override
   Widget build(BuildContext context) {
-      //Set<int> deletedIds = {};
       return Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),

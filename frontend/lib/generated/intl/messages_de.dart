@@ -246,6 +246,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Benutzer mit gleichen Daten existiert schon!",
     ),
     "save": MessageLookupByLibrary.simpleMessage("Speichern"),
+    "saved": MessageLookupByLibrary.simpleMessage("gespeichert"),
     "server_display_toolTip": MessageLookupByLibrary.simpleMessage(
       "Zeigt ob die lokale oder online-Datenbank verwendet wird",
     ),
@@ -273,7 +274,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Daten als CSV exportieren",
     ),
     "settings_exportCsvFile": MessageLookupByLibrary.simpleMessage(
-      "CSV-Datei exportieren",
+      "CSV-Import/-Export",
     ),
     "settings_exportCsvFromServer": MessageLookupByLibrary.simpleMessage(
       "CSV vom Server exportieren",

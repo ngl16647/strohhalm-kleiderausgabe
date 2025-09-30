@@ -4,6 +4,8 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:strohhalm_app/user_and_visit.dart';
 
+
+///Handles local Database interactions
 class DatabaseHelper {
   static Database? _database;
 
@@ -13,6 +15,7 @@ class DatabaseHelper {
     return _database!;
   }
 
+  ///Initializes the Database
   Future<Database> initDatabase() async {
     String path = await getDatabasesPath();
     return openDatabase(
@@ -44,6 +47,7 @@ class DatabaseHelper {
     );
   }
 
+  ///Gets the distribution of visits (How many customers visited how many times)
   Future<List<Map<String, dynamic>>> getVisitDistribution() async {
     final db = await database;
 
@@ -61,7 +65,7 @@ class DatabaseHelper {
     return result;
   }
 
-
+ ///Gets all the Countries with the percentage as a whole and total Number
  Future<Map<String, dynamic>> getBirthCountries() async {
     final db = await database;
 
@@ -79,7 +83,7 @@ class DatabaseHelper {
     return countryCounts;
   }
 
-
+  ///Gets all Visits in a specified time-period of a month or year
   Future<Map<String, int>> getAllVisitsInPeriod(int monthsBack, bool year) async {
     final db = await database;
     final now = DateTime.now();
@@ -132,14 +136,14 @@ class DatabaseHelper {
     return dateMap;
   }
 
-
+  ///adds a Visit to the Database
   Future<Visit?> addVisit(
       User user,
       [DateTime? time]
       ) async {
     final db = await database;
 
-    DateTime createdOn = time ?? DateTime.now(); //.subtract(Duration(days: 400));
+    DateTime createdOn = time ?? DateTime.now(); //.subtract(Duration(days: 7));
 
     int itemId = await db.insert(
       "visits",
@@ -163,6 +167,7 @@ class DatabaseHelper {
     }
   }
 
+  ///Updates the lastVisit in the Customer-Table
   Future<void> updateUserLastVisit(int userId, DateTime? visitDate) async {
     final db = await database;
     await db.update(
@@ -219,6 +224,7 @@ class DatabaseHelper {
     return result.isNotEmpty ? result.first["id"] as int : -1;
   }
 
+  ///Adds a User and returns a special Object with id andOr if it already existed
   Future<AddUpdateUserReturnType?> addUser({
     required User user
   }) async {
@@ -255,6 +261,7 @@ class DatabaseHelper {
         }
   }
 
+  ///Gets Users depending on several variables like name, uuid or visitTime. Limit/Offset provide pagination
   Future<List<User>> getUsers({
     String? search,
     String? uuid,
@@ -299,12 +306,14 @@ class DatabaseHelper {
       return users;
   }
 
+  ///Gives back the total Number of users
   Future<int> countAllUsers() async{
     final db = await database;
     int result = Sqflite.firstIntValue(await db.rawQuery("SELECT COUNT(*) as count FROM customers")) ?? 0;
     return result;
   }
 
+  ///Gives back all Visits of a specified Customer
   Future<List<Visit>> getVisits(int userId) async {
     final db = await database;
     List<Map<String, dynamic>> maps = await db.query(
@@ -316,6 +325,7 @@ class DatabaseHelper {
     return maps.map((mapRow) => Visit.fromMap(mapRow)).toList();
   }
 
+  ///Updates a user and checks if it already exists
   Future<bool?> updateUser(User user) async {
     final db = await database;
     int exists = await checkIfUserExists(
@@ -345,6 +355,7 @@ class DatabaseHelper {
     }
   }
 
+  ///Deletes the last Visit and returns the previous one if available
   Future<String?> deleteLatestAndReturnPrevious(User user) async {
     final db = await database;
     int id = user.id;
@@ -382,6 +393,7 @@ class DatabaseHelper {
     return newLastVisit?.toIso8601String();
   }
 
+  ///Deletes a Customer and sets all its visits to -id so it can still be referenced for statistics
   Future<bool> deleteUser(int id) async {
     final db = await database;
 
@@ -405,6 +417,7 @@ class DatabaseHelper {
     });
   }
 
+  ///Starts a transaction that deletes several users at once
   Future<List<int>> deleteUsers(List<int> ids) async {
     final db = await database;
     List<int> deletedIds = [];
@@ -435,6 +448,7 @@ class DatabaseHelper {
   }
 }
 
+///Return type for adding/updating users
 class AddUpdateUserReturnType{
   int id;
   bool existed;

@@ -10,6 +10,7 @@ import 'package:window_manager/window_manager.dart';
 import 'check_connection.dart';
 import 'generated/l10n.dart';
 
+///Main with system-variables, themes, etc.
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 late final ConnectionProvider connectionProvider;
 enum DeviceType { mobile, desktop, web }
@@ -195,12 +196,14 @@ class MyAppState extends State<MyApp> {
     );
   }
 
+  ///Changes the overall accentColor of the Application
   void changeSeedColor(Color color){
     setState(() {
       seedColor = color;
     });
   }
 
+  ///Sets the dark/lightMode
   void changeTheme(ThemeMode theme) {
     setState(() {
       themeMode = theme;

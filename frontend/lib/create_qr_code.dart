@@ -13,6 +13,8 @@ import 'package:image/image.dart' as img;
 import 'package:strohhalm_app/utilities.dart';
 import 'generated/l10n.dart';
 
+
+///Class for creating and printing QR-Codes
 class CreateQRCode{
   TextEditingController heightController = TextEditingController(text: "54");
   TextEditingController widthController = TextEditingController(text: "85");
@@ -21,6 +23,7 @@ class CreateQRCode{
 
   CreateQRCode();
 
+  ///Turns the bannerImages into grayscale
   static Future<wg.MemoryImage> fileToGrayScaleImage(File file) async {
     final imageData = await file.readAsBytes();
 
@@ -30,6 +33,7 @@ class CreateQRCode{
     return wg.MemoryImage(bwBytes);
   }
 
+  ///Builds the pdf to be printed with the specified dimensions
   static Future<Uint8List> buildPdf(User user, PdfPageFormat format) async {
     final doc = wg.Document();
     var settings = AppSettingsManager.instance.settings;
@@ -64,7 +68,7 @@ class CreateQRCode{
                   crossAxisAlignment: wg.CrossAxisAlignment.center,
                   children: [
                     if(pdfImageLeft != null)wg.Image(pdfImageLeft),
-                    wg.Text("  ${bannerImage.title}", style: wg.TextStyle(fontSize: qrSize*0.1)),
+                    if(bannerImage.title != null)wg.Text("  ${bannerImage.title}", style: wg.TextStyle(fontSize: qrSize*0.1)),
                     wg.Spacer(),
                     if(pdfImageRight != null)wg.Image(pdfImageRight),
                   ]
@@ -78,7 +82,6 @@ class CreateQRCode{
         );
       }
     }
-
 
     doc.addPage(
       wg.Page(
@@ -149,9 +152,10 @@ class CreateQRCode{
       context: context,
       builder: (context) => Dialog(
         constraints: BoxConstraints(
-          minWidth: MediaQuery.of(context).size.width* (isMobile ? 0.9 : 0.6),
-          minHeight: MediaQuery.of(context).size.width * (isMobile ? 0.8 : 0.6),
-          maxHeight: MediaQuery.of(context).size.width * 0.8
+          minWidth: isMobile ? MediaQuery.of(context).size.width * 0.9 : 400,
+          maxWidth: isMobile ? MediaQuery.of(context).size.width * 0.9 : 1200,
+          minHeight: isMobile ? MediaQuery.of(context).size.height * 0.8 : 400,
+          maxHeight: isMobile ? MediaQuery.of(context).size.height * 0.8 : 700
         ),
         child: StatefulBuilder(builder: (context, setState){
           return Padding(
@@ -164,7 +168,7 @@ class CreateQRCode{
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Expanded(
-                        flex: isMobile || useRow ? 3 : 6,
+                        flex: isMobile  ? 3 : useRow ? 4 : 9,
                         child: PdfPreview(
                           build: (format) async => buildPdf(user, pdfPageFormat),
                           allowPrinting: false,
@@ -204,9 +208,8 @@ class CreateQRCode{
     }
   }
 
+  ///List of the controls to be used in a Row or Column depending on screen size
   List<Widget> printControls(BuildContext context, setState, User user){
-
-
     return [
       Expanded(
         flex: 2,

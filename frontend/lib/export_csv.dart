@@ -11,6 +11,7 @@ import 'package:strohhalm_app/utilities.dart';
 import 'package:uuid/uuid.dart';
 import 'generated/l10n.dart';
 
+///Class for Handling of CSV-Operations
 class DataBaseExportFunctions{
 
 
@@ -51,6 +52,7 @@ class DataBaseExportFunctions{
     }
   }
 
+  ///Generates a detailed CSV from the local-Database
   static Future<String?> exportToCsv(BuildContext context) async {
     if(!context.mounted) return null;
       final db = await DatabaseHelper().database;
@@ -106,7 +108,7 @@ class DataBaseExportFunctions{
 
 
 
-  ///Generate a CSV-String for upload on the Server
+  ///Generate a less detailed CSV-String for upload on the Server
   static Future<String?> generateCSVForExportToServer(BuildContext context) async {
     if (!context.mounted) return null;
     final db = await DatabaseHelper().database;
@@ -235,14 +237,19 @@ class DataBaseExportFunctions{
                .map((d) => d!.toIso8601String().substring(0, 10))
                .toList();
 
-           visits.sort((a, b) => b.compareTo(a));
+           visits.sort((a, b) => a.compareTo(b));
 
              var existingVisits = await DatabaseHelper().getVisits(user.id);
              var existingSet = existingVisits.map((item) => item.tookTime.toIso8601String().substring(0, 10)).toSet();
              for (String v in visits) {
                if(existingSet.contains(v)) continue;
                DateTime? visitTime = tryParseDate(v);
-               if(visitTime != null) await DatabaseHelper().addVisit(user, visitTime);
+               if (visitTime != null) {
+                 Visit? visit = await DatabaseHelper().addVisit(user, visitTime);
+                 if (visit != null && (user.lastVisit == null || user.lastVisit!.isBefore(visit.tookTime))) {
+                   user.lastVisit = visit.tookTime;
+                 }
+               }
              }
       }
       if(done != null) done((count/total*100));
@@ -283,7 +290,6 @@ class DataBaseExportFunctions{
 
     rows.removeAt(0);
 
-    //TODO: Testen
     int firstDatumIndex = header.indexWhere((colTitle) => colTitle.startsWith("Datum"));
     for(var row in rows){
       if(row[colIndex["Herkunftsland"]!] != null && row[colIndex["Herkunftsland"]!].toString().isNotEmpty){
@@ -308,6 +314,7 @@ class DataBaseExportFunctions{
     return ListToCsvConverter().convert(rows);
   }
 
+  ///Tries to parse a country and returns the original String if not successful
   String tryParseCountry(String s){
     if(s == "Keine Angabe" || s == "Not specified"){
       return "WW";
@@ -317,6 +324,7 @@ class DataBaseExportFunctions{
     return s;
   }
 
+  ///tries to parse date in several formats to increase data-Integrity
   DateTime? tryParseDate(String s) {
     s = s.trim();
     if (s.isEmpty) return null;

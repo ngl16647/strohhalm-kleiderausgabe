@@ -13,6 +13,8 @@ import 'database_helper.dart';
 import 'dialog_helper.dart';
 import 'generated/l10n.dart';
 
+
+///Return type for the user-update/create dialog
 class AddUserReturn{
   final User user;
   final bool deleted;
@@ -23,6 +25,7 @@ class AddUserReturn{
   });
 }
 
+///Add/update-user dialog
 class AddUserDialog extends StatefulWidget {
   final User? user;
 
@@ -53,7 +56,9 @@ class AddUserDialogState extends State<AddUserDialog> {
   final _noteController = TextEditingController();
   DateTime? _selectedDate;
   Country? _selectedCountry;
+  ///if set to true, shows loadingCircle
   bool uploading = false;
+  ///offline or online-mode
   bool _useServer = false;
 
   @override
@@ -73,6 +78,7 @@ class AddUserDialogState extends State<AddUserDialog> {
     }
   }
 
+  ///Checks if the country can be parsed and opens the countryList if not
   void checkIntegrity(){
     if(_selectedCountry != null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -90,6 +96,7 @@ class AddUserDialogState extends State<AddUserDialog> {
 
   }
 
+  ///opens the countryPicker-Dialog
   void pickCountry(){
     showCountryPicker(
       context: context,
@@ -103,6 +110,7 @@ class AddUserDialogState extends State<AddUserDialog> {
     );
   }
 
+  ///Opens the Date-Dialog
   Future<void> _pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,

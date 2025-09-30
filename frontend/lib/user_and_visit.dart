@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 
+///Customer-Object
 class User{
   final int id;
   final String uuId;
@@ -21,6 +22,7 @@ class User{
     required this.lastVisit,
   });
 
+  ///Copies a Customer with the new specified values
   User copyWith({
     int? newId,
     String? newUuId,
@@ -45,6 +47,7 @@ class User{
     );
   }
 
+  ///turns a Map from the Database into a user
   factory User.fromMap(Map<String, dynamic> map){
     DateTime? tryParseIso(String s){
       try {
@@ -85,6 +88,7 @@ class User{
   }
 }
 
+///Visit-Object
 class Visit{
   final int id;
   final int? userId; //gets set to -id if user is deleted
@@ -96,6 +100,7 @@ class Visit{
     required this.tookTime,
   });
 
+  ///Turns a Map from the Database into a Visit-Object
   static Visit fromMap(Map map){
     //A litte hacky
     return Visit(

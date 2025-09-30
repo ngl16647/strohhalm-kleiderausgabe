@@ -9,8 +9,8 @@ import 'database_helper.dart';
 import 'generated/l10n.dart';
 import 'http_helper.dart';
 
+///Class for functions needed across the application
 class Utilities{
-
   static Future<Visit?> addVisit(User user, BuildContext context, bool showToast) async {
     bool? useServer = AppSettingsManager.instance.settings.useServer;
     if(useServer == null) return null;
@@ -32,12 +32,14 @@ class Utilities{
     return newLastVisit;
   }
 
+  ///Checks if two Dates(with different times) are the same Day
   static bool isSameDay(DateTime dateTimeOne, DateTime dateTimeTwo){
     DateFormat dateFormat = DateFormat("dd.MM.yyyy");
     if(dateFormat.format(dateTimeOne) == dateFormat.format(dateTimeTwo)) return true;
     return false;
   }
 
+  ///Turns a country-code into a localized String
   static String getLocalizedCountryNameFromCode(BuildContext context, String countryCode) {
     if (countryCode == "WW") {
       return S.of(context).country_Name_worldWideReplacement;
@@ -48,6 +50,7 @@ class Utilities{
         ?? countryCode;
   }
 
+  ///Shows a toast at the top of the screen
   static void showToast({
      required BuildContext context,
      required String title,

@@ -2,14 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:strohhalm_app/main.dart';
 import 'package:strohhalm_app/utilities.dart';
 import 'app_settings.dart';
+import 'custom_tab_widget.dart';
 import 'generated/l10n.dart';
 
+///Object which saves left/right-Image
 class BannerImage{
   File? leftImage;
   File? rightImage;
@@ -28,6 +29,7 @@ class BannerImage{
       rightImage == null &&
       (title?.isEmpty ?? true);
 
+  ///Turns a bannerImage-Objekt into a json-String to be saved in sharedPreferences
   String toJsonString(){
     Map<String, String> bannerMap = {
       "imageLeft": leftImage == null ? "" : leftImage!.uri.pathSegments.last,
@@ -37,6 +39,7 @@ class BannerImage{
     return jsonEncode(bannerMap);
   }
 
+  ///turns the saved jsonString (with only left/right-image-names) into a Objekt with full path
   static Future<BannerImage> fromJsonString(String jsonString) async {
     Map<String, dynamic> bannerMap = jsonDecode(jsonString);
     final appDir = await getApplicationDocumentsDirectory();
@@ -56,6 +59,7 @@ class BannerImage{
   }
 }
 
+///Widget for setting the individual bannerImage-Elements or a full banner
 class BannerDesigner extends StatefulWidget{
   final bool useDesigner;
   final BannerImage? bannerDesignerImage;
@@ -96,6 +100,7 @@ class BannerDesignerState extends State<BannerDesigner>{
     super.dispose();
   }
 
+  ///Saves banner-required variables in sharedPreferences/Settings-Singleton
   void saveBanner(){
     var manager = AppSettingsManager.instance;
     manager.setBannerType(_useBannerDesigner);
@@ -103,6 +108,7 @@ class BannerDesignerState extends State<BannerDesigner>{
     manager.setDynamicBanner(bannerDesignerImage);
   }
 
+  ///opens the native File-Picker and sets the right image
   Future<void> _pickImage(BuildContext context, bool? left) async {
     final result = await FilePicker.platform.pickFiles(type: FileType.image);
     if (result != null && result.files.single.path != null) {
@@ -141,6 +147,7 @@ class BannerDesignerState extends State<BannerDesigner>{
     }
   }
 
+  ///Filters images by aspectRatio for single bannerImages  and the bannerDesigner
   Future<List<File>> filterFilesByAspectRatio(List<File> files, int? bannerAspectRatio) async {
     final result = <File>[];
     for (final file in files) {
@@ -158,6 +165,7 @@ class BannerDesignerState extends State<BannerDesigner>{
     return result;
   }
 
+  ///Opens a Dialog that shows previously used images, optional with aspect ratio
   Future<File?> showExistingImagePicker(BuildContext context, int? aspectRatio) async {
     final appDir = await getApplicationDocumentsDirectory();
     final bannerDir = Directory(join(appDir.path,"bannerImages"));
@@ -270,6 +278,7 @@ class BannerDesignerState extends State<BannerDesigner>{
     return null;
   }
 
+  ///Creates the Buttons for the Designer above the used image
   Widget buildDynamicBannerButtons({
     required BuildContext context,
     required File? dynBannerImage,
@@ -507,126 +516,6 @@ class BannerDesignerState extends State<BannerDesigner>{
             ],
           ),
         ),
-      ],
-    );
-  }
-}
-
-//Tab-Widget
-class CustomTabData {
-  final String title;
-  final Widget child;
-
-  CustomTabData({required this.title, required this.child});
-}
-
-class CustomTabs extends StatefulWidget {
-  final int selectedIndex;
-  final List<CustomTabData> tabs;
-  final Function(int) switchTab;
-  final bool showSelected;
-
-  const CustomTabs({
-    super.key,
-    required this.selectedIndex,
-    required this.tabs,
-    required this.switchTab,
-    required this.showSelected,
-  });
-
-  @override
-  State<CustomTabs> createState() => _CustomTabsState();
-}
-
-class _CustomTabsState extends State<CustomTabs> {
-  int selectedIndex = 0;
-
-  @override
-  void initState() {
-    selectedIndex = widget.selectedIndex;
-    super.initState();
-  }
-
-  Widget _buildTabHeader(BuildContext context, int index, String title) {
-    final bool isSelected = selectedIndex == index;
-    return GestureDetector(
-      onTap: () {
-        setState((){ selectedIndex = index;});
-        widget.switchTab(index);
-      },
-      child: Row(
-        children: [
-          Expanded(
-              child: Material(
-                elevation: 10,
-                color: Theme.of(context).listTileTheme.tileColor!.withAlpha(isSelected ? 255 : 150),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(12)
-                  ),
-                ),
-                child: AnimatedContainer(
-                  duration: Duration(milliseconds: 200),
-                  height: isSelected ? 35 : 30,
-                  child: Row(
-                    spacing: 10,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if(isSelected && widget.tabs.length > 1 && widget.showSelected) Icon(Icons.check),
-                      Text(
-                        title,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        //Tab-Header
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            for (int i = 0; i < widget.tabs.length; i++) ...[
-              Expanded(child: _buildTabHeader(context, i, widget.tabs[i].title)),
-            ],
-          ],
-        ),
-        //Tab-Body
-        Expanded(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                  minHeight: 160
-              ),
-              child:Material(
-                elevation: 10,
-                color: Theme.of(context).listTileTheme.tileColor ?? Colors.blueGrey,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(
-                      bottom: Radius.circular(12)
-                  ),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: widget.tabs.isNotEmpty ? widget.tabs[selectedIndex].child
-                      .animate(key: ValueKey(selectedIndex))
-                      .fade(duration: 300.ms)
-                      .slide(begin: Offset(0, 0.2)) : SizedBox.expand(),
-                ),
-              ),
-            )
-        )
       ],
     );
   }
