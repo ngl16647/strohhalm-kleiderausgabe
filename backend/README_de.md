@@ -10,16 +10,26 @@ mkdir -p strohhalm-kleiderausgabe && cd strohhalm-kleiderausgabe
 
 Es gibt danach zwei Möglichkeiten, die Anwendung bereitzustellen:
 
-- **Mit einer nativen Binary (empfohlen unter Ubuntu):**
+### Option 1: Mit einer nativen Binary
+
+Diese Methode ist schneller, verwende sie jedoch nicht, wenn du mit der Systemadministration nicht vertraut bist.
 
 ```bash
 curl -L -o server \
     https://github.com/ngl16647/strohhalm-kleiderausgabe/releases/latest/download/backend-ubuntu && \
     chmod +x server && \
-    ./server
+    ./server > server.log 2>&1 &
 ```
 
-- **Mit Docker:**
+Nach der Bereitstellung kannst du jederzeit
+
+```bash
+./server > server.log 2>&1 &
+```
+
+ausführen, um das Backend erneut zu starten. Stelle sicher, dass die vorherige Instanz gestoppt ist, bevor du eine neue startest.
+
+### Option 2: Mit Docker
 
 ```bash
 touch data.db config.yml && \
@@ -33,13 +43,15 @@ touch data.db config.yml && \
         royjxu/strohhalm-kleiderausgabe:latest
 ```
 
+### Nach der Bereitstellung
+
 Beim ersten Start erzeugt der Server automatisch einen API-Key, z. B. `1BLK-XVGG-56OW-H29T`.
 Notiere dir den Schlüssel und trage ihn im Frontend ein. Falls du ihn vergisst, kannst du ihn in der Datei `config.yml` nachsehen.
 
 Optional kannst du die Zugriffsrechte für wichtige Dateien einschränken:
 
 ```bash
-chmod 600 config.yml data.db
+chmod 600 config.yml data.db server.log
 ```
 
 ## HTTPS
@@ -57,6 +69,8 @@ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 3
 
 ## Wartung
 
+### Daten
+
 Alle Daten werden in der Datei `data.db` gespeichert und können intern mit `sqlite3` abgerufen werden. `sqlite3` kann mit den meisten Paketmanagern installiert werden, z. B.:
 
 ```bash
@@ -70,6 +84,16 @@ sqlite3 data.db
 ``` 
 
 Ein Backup der Daten erstellst du, indem du die Datei `data.db` kopierst.
+
+### Log
+
+Bei der Bereitstellung mit nativer Binärdatei wird das Log in der Datei `server.log` gespeichert.
+
+Bei der Bereitstellung mit Docker kannst du das Log mit folgendem Befehl überprüfen:
+
+```bash
+docker logs strohhalm-kleiderausgabe-backend | less
+```
 
 ## Entwicklung
 

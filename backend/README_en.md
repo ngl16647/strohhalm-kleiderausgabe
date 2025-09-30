@@ -10,16 +10,26 @@ mkdir -p strohhalm-kleiderausgabe && cd strohhalm-kleiderausgabe
 
 You then have 2 options to deploy the app.
 
-- **Deploy with native binary (recommended when using Ubuntu):**
+### Option 1: Deploy with native binary
+
+This method is faster, but do not use it if you are not familiar with system administration.
 
 ```bash
 curl -L -o server \
     https://github.com/ngl16647/strohhalm-kleiderausgabe/releases/latest/download/backend-ubuntu && \
     chmod +x server && \
-    ./server
+    ./server > server.log 2>&1 &
 ```
 
-- **Deploy with Docker:**
+Once deployed, you can always run
+
+```bash
+./server > server.log 2>&1 &
+```
+
+to start the backend again. Make sure the previous instance is stopped before starting a new one.
+
+### Option 2: Deploy with Docker
 
 ```bash
 touch data.db config.yml && \
@@ -33,7 +43,15 @@ touch data.db config.yml && \
         royjxu/strohhalm-kleiderausgabe:latest
 ```
 
+### After deployment
+
 The server generate an API key when started for the first time, something like `1BLK-XVGG-56OW-H29T`. Note down your key and enter it to your frontend privately. Check the config file `config.yml` if you forget your key.
+
+You can optionally restrict access to important files.
+
+```bash
+chmod 600 config.yml data.db server.log
+```
 
 ## HTTPS
 
@@ -57,6 +75,8 @@ chmod 600 config.yml data.db
 
 ## Maintenance
 
+### Data
+
 All data is stored in the file `data.db` and can be accessed internally using `sqlite3`. `sqlite3` can be installed with most package managers, for example:
 
 ```bash
@@ -71,11 +91,21 @@ sqlite3 data.db
 
 You can backup your data by copying the file `data.db`.
 
+### Log
+
+When deployed with native binary, the log is store in file `server.log`.
+
+When deployed with Docker, you can check the log with 
+
+```bash
+docker logs strohhalm-kleiderausgabe-backend | less
+```
+
 ## Development
 
 ### Setup
 
-Install Go version `1.24.4` or higher from [go.dev](https://go.dev/).
+Install Go version 1.24.4 or higher from [go.dev](https://go.dev/).
 
 I recommend using VSCode for development. Use `Run and Debug` tag on the left to run the backend in development.
 
