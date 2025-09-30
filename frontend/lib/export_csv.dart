@@ -269,7 +269,6 @@ class DataBaseExportFunctions{
     return originalHeader.map(normalizeHeaderName).toList();
   }
 
-
   String convertToRight(String csvString) {
     final firstLine = csvString.split("\n").first;
 
@@ -298,6 +297,9 @@ class DataBaseExportFunctions{
       if(row[colIndex["Geburtsdatum"]!] != null && row[colIndex["Geburtsdatum"]!].toString().isNotEmpty){
           DateTime? parsedTime = tryParseDate(row[colIndex["Geburtsdatum"]!]);
           if(parsedTime != null) row[colIndex["Geburtsdatum"]!] = DateFormat("yyyy-MM-dd").format(parsedTime);
+      }
+      else{
+        row[colIndex["Geburtsdatum"]!] = "1970-01-01";
       }
 
       for (int i = firstDatumIndex; i < row.length; i++) {

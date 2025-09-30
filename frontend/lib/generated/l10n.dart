@@ -1457,6 +1457,51 @@ class S {
   String get saved {
     return Intl.message('saved', name: 'saved', desc: '', args: []);
   }
+
+  /// `Allow adding\nanyway?`
+  String get allow_Adding {
+    return Intl.message(
+      'Allow adding\nanyway?',
+      name: 'allow_Adding',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Allow deleting?`
+  String get allow_Deleting {
+    return Intl.message(
+      'Allow deleting?',
+      name: 'allow_Deleting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Days until new visit`
+  String get day_cutoff {
+    return Intl.message(
+      'Days until new visit',
+      name: 'day_cutoff',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Days`
+  String get days {
+    return Intl.message('Days', name: 'days', desc: '', args: []);
+  }
+
+  /// `Didn't find anything`
+  String get no_users_found {
+    return Intl.message(
+      'Didn\'t find anything',
+      name: 'no_users_found',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

@@ -13,11 +13,13 @@ import 'http_helper.dart';
 class Utilities{
   static Future<Visit?> addVisit(User user, BuildContext context, bool showToast) async {
     bool? useServer = AppSettingsManager.instance.settings.useServer;
+    bool allowAdding = AppSettingsManager.instance.settings.allowAdding ?? false;
+    int cutOffDays = AppSettingsManager.instance.settings.cutOffDayNumber ?? 14;
     if(useServer == null) return null;
 
     Visit? newLastVisit;
-    if(user.lastVisit == null || user.lastVisit!.isBefore(DateTime.now().subtract(Duration(days: 14)))){
-      newLastVisit= useServer
+    if(allowAdding || user.lastVisit == null || user.lastVisit!.isBefore(DateTime.now().subtract(Duration(days: cutOffDays)))){
+      newLastVisit = useServer
           ? await HttpHelper().addVisit(userId: user.id)
           : await DatabaseHelper().addVisit(user);
       if(newLastVisit != null){
@@ -33,7 +35,8 @@ class Utilities{
   }
 
   ///Checks if two Dates(with different times) are the same Day
-  static bool isSameDay(DateTime dateTimeOne, DateTime dateTimeTwo){
+  static bool isSameDay(DateTime? dateTimeOne, DateTime? dateTimeTwo){
+    if(dateTimeOne == null || dateTimeTwo == null) return false;
     DateFormat dateFormat = DateFormat("dd.MM.yyyy");
     if(dateFormat.format(dateTimeOne) == dateFormat.format(dateTimeTwo)) return true;
     return false;

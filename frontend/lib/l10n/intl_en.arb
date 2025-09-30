@@ -173,5 +173,11 @@
   "window_title": "Visitor Check-In",
   "reset": "Reset",
   "server_display_toolTip": "Shows you if the local or online-Database is used",
-  "saved": "saved"
+  "saved": "saved",
+
+  "allow_Adding": "Allow adding\nanyway?",
+  "allow_Deleting": "Allow deleting?",
+  "day_cutoff": "Days until new visit",
+  "days": "Days",
+  "no_users_found": "Didn't find anything"
 }

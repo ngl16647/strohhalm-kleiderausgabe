@@ -35,13 +35,22 @@ class CustomerTileState extends State<CustomerTile>{
   bool _uploading = false;
   bool _useServer = false;
 
+  bool _allowAdding = false;
+  bool _allowDeleting = false;
+  int _cutOffNumber = 13;
+
   @override
   void initState() {
-    _useServer = AppSettingsManager.instance.settings.useServer ?? false;
+    var settings = AppSettingsManager.instance.settings;
+    _useServer = settings.useServer ?? false;
+    _allowAdding = settings.allowAdding ?? false;
+    _allowDeleting = settings.allowDeleting ?? false;
+    _cutOffNumber = settings.cutOffDayNumber ?? 14;
+    _cutOffNumber = _cutOffNumber-1;
     super.initState();
   }
 
-  bool get visitIsMoreThan14Days => widget.user.lastVisit != null ? DateTime.now().difference(widget.user.lastVisit!).inDays > 13 : true;
+  bool get visitIsMoreThan14Days => widget.user.lastVisit != null ? DateTime.now().difference(widget.user.lastVisit!).inDays > _cutOffNumber : true;
 
   ///Creates the Text that displays the lastVisit status
   String _buildLastVisitStyledText() {
@@ -65,7 +74,9 @@ class CustomerTileState extends State<CustomerTile>{
       mainAxisSize: MainAxisSize.min,
       children: [
         //If user should be able to book anyway: if(!visitMoreThan14Days)
-        if(widget.user.lastVisit != null && Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)) Expanded(
+        if(_allowDeleting
+            ? !visitIsMoreThan14Days
+            : widget.user.lastVisit != null && Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)) Expanded(
           child:  TextButton(
             onPressed: () async {
               String? newLastTime;
@@ -89,8 +100,12 @@ class CustomerTileState extends State<CustomerTile>{
             child: Text(S.of(context).customer_tile_deleteLastEntry, textAlign: TextAlign.center,),
           ),
         ),
-        //If user should be able to book anyway: if(!visitMoreThan14Days && !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)) SizedBox(width: 5,),
-        if(widget.user.lastVisit == null || visitIsMoreThan14Days) //If user should be able to book anyway: if(widget.user.lastVisit == null || !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!))
+
+        if(_allowAdding && !visitIsMoreThan14Days && !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)) SizedBox(width: 5,),
+        //if(widget.user.lastVisit == null || visitIsMoreThan14Days) //If user should be able to book anyway: if(widget.user.lastVisit == null || !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!))
+        if(_allowAdding
+            ? widget.user.lastVisit == null || !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)
+            : widget.user.lastVisit == null || visitIsMoreThan14Days)
           Expanded(
             child: TextButton(
               onPressed: () async {
