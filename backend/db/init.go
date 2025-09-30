@@ -21,7 +21,8 @@ func InitDatabase(path string) {
 }
 
 // Wrap operations inside a single transaction.
-// When you have multiple database operations inside a same functionality,
+// When you have multiple database operations inside the same functionality,
+// and you need to return something from database afterwards,
 // use withTx to ensure atomicity
 func withTx[T any](fn func(*sqlx.Tx) (T, error)) (T, error) {
 	var nullData T
@@ -45,8 +46,9 @@ func withTx[T any](fn func(*sqlx.Tx) (T, error)) (T, error) {
 }
 
 // Wrap operations inside a single transaction.
-// When you have multiple database operations inside a same functionality,
-// use withTx to ensure atomicity
+// When you have multiple database operations inside the same functionality,
+// and you don't need to return anything from database,
+// use withTxExec to ensure atomicity
 func withTxExec(fn func(*sqlx.Tx) error) error {
 	tx, err := db.Beginx()
 	if err != nil {

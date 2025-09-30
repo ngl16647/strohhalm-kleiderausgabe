@@ -2,6 +2,7 @@ package db
 
 import "time"
 
+// Use pointer for nullable values
 type Customer struct {
 	Id          int64   `json:"id"`
 	Uuid        string  `json:"uuid"`
@@ -14,7 +15,6 @@ type Customer struct {
 	Notes       string  `json:"notes"`
 }
 
-// Use pointer for nullable values
 type Visit struct {
 	Id         int64  `json:"visitId"`
 	CustomerId *int64 `db:"customer_id" json:"customerId"`
@@ -106,4 +106,6 @@ const (
 
 var Indices = []string{
 	`PRAGMA foreign_keys = ON;`,
+	"CREATE INDEX IF NOT EXISTS idx_customers_first_name ON customers(first_name)",
+	"CREATE INDEX IF NOT EXISTS idx_customers_last_visit ON customers(last_visit)",
 }
