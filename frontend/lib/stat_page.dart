@@ -47,7 +47,7 @@ class StatPageState extends State<StatPage>{
 
   bool _allowAdding = false;
   bool _allowDeleting = false;
-  int _cutOffNumber = 13;
+  int _cutOffNumber = 14;
 
   bool get visitIsMoreThan14Days => widget.user.lastVisit != null ?  DateTime.now().difference(widget.user.lastVisit!).inDays > _cutOffNumber : true;
 

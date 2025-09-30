@@ -14,11 +14,11 @@ class Utilities{
   static Future<Visit?> addVisit(User user, BuildContext context, bool showToast) async {
     bool? useServer = AppSettingsManager.instance.settings.useServer;
     bool allowAdding = AppSettingsManager.instance.settings.allowAdding ?? false;
-    int cutOffDays = AppSettingsManager.instance.settings.cutOffDayNumber ?? 14;
+    int cutOffNumber = AppSettingsManager.instance.settings.cutOffDayNumber ?? 14;
     if(useServer == null) return null;
 
     Visit? newLastVisit;
-    if(allowAdding || user.lastVisit == null || user.lastVisit!.isBefore(DateTime.now().subtract(Duration(days: cutOffDays)))){
+    if(allowAdding || user.lastVisit == null || DateTime.now().difference(user.lastVisit!).inDays > cutOffNumber){
       newLastVisit = useServer
           ? await HttpHelper().addVisit(userId: user.id)
           : await DatabaseHelper().addVisit(user);
