@@ -93,7 +93,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "admin_login": m0,
     "allow_Adding": MessageLookupByLibrary.simpleMessage(
-      "Hinzufügen\ntrotzdem erlauben?",
+      "Hinzufügen trotz Tagesgrenze erlauben?",
     ),
     "allow_Deleting": MessageLookupByLibrary.simpleMessage("Löschen erlauben?"),
     "application_name": MessageLookupByLibrary.simpleMessage(
@@ -166,7 +166,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "dark_mode": MessageLookupByLibrary.simpleMessage("Dunkler Modus"),
     "day_cutoff": MessageLookupByLibrary.simpleMessage(
-      "Tage bis zu neuem Besuch",
+      "Tage bis zu neuem Besuch (mind. 1)",
     ),
     "days": MessageLookupByLibrary.simpleMessage("Tage"),
     "delete": MessageLookupByLibrary.simpleMessage("Löschen"),
@@ -272,6 +272,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Akzentfarbe für die Anwendung",
     ),
     "settings_color_title": MessageLookupByLibrary.simpleMessage("Farbe"),
+    "settings_controlTitle": MessageLookupByLibrary.simpleMessage(
+      "Kontroll-Variablen",
+    ),
+    "settings_controlToolTip": MessageLookupByLibrary.simpleMessage(
+      "Variablen für die steuerung von Tageslimit und der Möglichkeit zu Löschen/Hinzuzufügen",
+    ),
     "settings_downloadCSVFromServer": MessageLookupByLibrary.simpleMessage(
       "Downloade CSV-Datei (Excel)",
     ),

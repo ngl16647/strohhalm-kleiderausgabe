@@ -317,7 +317,7 @@ class DatabaseHelper {
         whereArgs: whereArgs,
         limit: size,
         offset: size * page,
-        orderBy: "lastVisit DESC",
+        orderBy: "lastVisit DESC", //firstName ASC
       );
 
       List<User> users = [];
