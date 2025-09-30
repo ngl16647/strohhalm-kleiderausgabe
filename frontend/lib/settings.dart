@@ -118,7 +118,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
     manager.setAllowAdding(_allowAdding);
     manager.setAllowDeleting(_allowDeleting);
-    manager.setCutOffDays(int.parse(daysCheckTextController.text));
+
+    manager.setCutOffDays(daysCheckTextController.text.trim().isNotEmpty ? int.parse(daysCheckTextController.text) : 14);
 
     _bannerDesignerKey.currentState?.saveBanner();
 
@@ -266,71 +267,58 @@ class _SettingsPageState extends State<SettingsPage> {
                     controller: _scrollController,
                     padding: EdgeInsets.only(right: 15, left: 15),
                     children: [
-                      /*createTitleWidget(
+                      /* createTitleWidget(
                         title :  "kontroll-Variabeln",
                         toolTipDescription :  "Variabeln für die steuerung der Kontrollen",
                         context :context),
                       SizedBox(height: 8),
                       Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).listTileTheme.tileColor,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          width: 1000,
-                          child: Padding(
-                            padding: EdgeInsets.all(5),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  flex: 2,
-                                  child: TextField(
-                                    controller: daysCheckTextController,
-                                    keyboardType: TextInputType.number,
-                                    decoration: InputDecoration(
-                                      labelText: S.of(context).day_cutoff,
-                                      suffixText: S.of(context).days,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                    ),
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                                    ],
-                                  ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).listTileTheme.tileColor,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding:  EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Titel oder Hinweis
+                            Text(
+                              S.of(context).day_cutoff,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            SizedBox(height: 8),
+                            TextField(
+                              controller: daysCheckTextController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                hintText: S.of(context).day_cutoff,
+                                suffixText: S.of(context).days,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                Spacer(),
-                                Expanded(
-                                  flex: 2,
-                                    child: Row(
-                                  children: [
-                                    Text(S.of(context).allow_Deleting, softWrap: true,),
-                                    Switch(
-                                        value: _allowDeleting,
-                                        onChanged: (ev){
-                                          setState(() {
-                                            _allowDeleting = ev;
-                                          });
-                                        }),
-                                  ],
-                                )),
-                                SizedBox(width: 8,),
-                                Expanded(
-                                    flex: 2,
-                                    child: Row(
-                                  children: [
-                                    Text(S.of(context).allow_Adding, softWrap: true,),
-                                    Switch(
-                                        value: _allowAdding,
-                                        onChanged: (ev){
-                                          setState(() {
-                                            _allowAdding = ev;
-                                          });
-                                        })
-                                  ],
-                                ))
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                               ],
                             ),
-                          )
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(S.of(context).allow_Deleting),
+                              value: _allowDeleting,
+                              onChanged: (ev) {
+                                setState(() => _allowDeleting = ev);
+                              },
+                            ),
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(S.of(context).allow_Adding),
+                              value: _allowAdding,
+                              onChanged: (ev) {
+                                setState(() => _allowAdding = ev);
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                       Divider(),*/
                       createTitleWidget(
@@ -505,11 +493,11 @@ class _SettingsPageState extends State<SettingsPage> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       SizedBox(
-                                        height: 50,
+                                        height: 30,
                                         child: Row(
                                           crossAxisAlignment: CrossAxisAlignment.stretch,
                                           children: [
-                                            if(!_localDbIsEmpty)Expanded(child: Tooltip(
+                                            if(!_localDbIsEmpty) Expanded(child: Tooltip(
                                               message: S.of(context).settings_exportToolTip,
                                               child: ElevatedButton(
                                                   onPressed: () => DataBaseExportFunctions.saveCsv(context: context,

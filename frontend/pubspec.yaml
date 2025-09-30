@@ -63,6 +63,7 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   provider: ^6.1.5+1
   csv: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -119,3 +120,11 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 flutter_intl:
   enabled: true
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  windows:
+    generate: true
+    image_path: "assets/icon/app_icon.png"
+  image_path: "assets/icon/app_icon.png"

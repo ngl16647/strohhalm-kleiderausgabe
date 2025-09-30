@@ -37,7 +37,7 @@ class CustomerTileState extends State<CustomerTile>{
 
   bool _allowAdding = false;
   bool _allowDeleting = false;
-  int _cutOffNumber = 13;
+  int _cutOffNumber = 14;
 
   @override
   void initState() {
