@@ -290,7 +290,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                         bool? result;
                         _useServer
                             ? result = await HttpHelper().updateCustomer(user)
-                            : result = await DatabaseHelper().updateUser(user);
+                            : result = await DatabaseHelper().updateUser(user, false);
 
                         if(context.mounted) {
                           Utilities.showToast(
@@ -306,7 +306,11 @@ class AddUserDialogState extends State<AddUserDialog> {
                               isError: result == null || !result
                           );
                         }
-                        if(context.mounted) navigatorKey.currentState?.pop(AddUserReturn(user: user, deleted: false));
+                        print(result);
+                        setState(() {
+                          uploading = false;
+                        });
+                        if(context.mounted && result != null && result) navigatorKey.currentState?.pop(AddUserReturn(user: user, deleted: false));
                       } else {
                         final uuId = const Uuid().v4(); //v3 would allow hashing of name, birthday => Autodetect collisions, v4 is most used and random
                         User userWithoutValidId = User(
@@ -320,6 +324,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                             lastVisit: null);
 
                         int? id;
+                        bool existed = false;
                         if(_useServer){
                           id = await HttpHelper().addCustomer(
                               user: userWithoutValidId
@@ -331,6 +336,9 @@ class AddUserDialogState extends State<AddUserDialog> {
                           if(result != null && !result.existed){
                             id = result.id;
                           }
+                          if(result != null && result.existed){
+                            existed = true;
+                          }
                         }
 
                         User? userWithId;
@@ -339,22 +347,22 @@ class AddUserDialogState extends State<AddUserDialog> {
                         }
 
                         setState(() => uploading = false);
-
+                        print(id);
                         if(context.mounted){
                           Utilities.showToast(
                               context: context,
                               title: id == null || id == -1
                                   ? S.of(context).fail
                                   : S.of(context).success,
-                              description: id == null
+                              description: id == null && !existed
                                   ? S.of(context).add_failed
-                                  : id == -1
+                                  : existed
                                     ? S.of(context).same_user_exists
                                     : S.of(context).add_success,
                               isError: id == null || id == -1,
                           );
                         }
-                        if((id == null || id == -1) && context.mounted) context.read<ConnectionProvider>().periodicCheckConnection();
+                        if((id == null || id == -1) && _useServer && context.mounted) context.read<ConnectionProvider>().periodicCheckConnection();
                         if(context.mounted && userWithId != null) navigatorKey.currentState?.pop(AddUserReturn(user: userWithId, deleted: false));
                         }
                       },

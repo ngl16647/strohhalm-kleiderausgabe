@@ -282,7 +282,7 @@ class StatPageState extends State<StatPage>{
                                               bool? result;
                                               _useServer
                                                   ? result = await HttpHelper().updateCustomer(widget.user)
-                                                  : result = await DatabaseHelper().updateUser(widget.user);
+                                                  : result = await DatabaseHelper().updateUser(widget.user, true);
                                               widget.user.notes = noteEditController.text;
                                               if(result != null) setState(() => saving = true);
                                             },

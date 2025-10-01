@@ -230,7 +230,8 @@ class DatabaseHelper {
       whereClauses.add("notes = ?");
       whereArgs.add(notes);
     }
-
+    print(notes);
+    print(whereClauses);
     final result = await db.query(
       "customers",
       where: whereClauses.isNotEmpty ? whereClauses.join(" AND ") : null,
@@ -348,14 +349,14 @@ class DatabaseHelper {
   }
 
   ///Updates a user and checks if it already exists
-  Future<bool?> updateUser(User user) async {
+  Future<bool?> updateUser(User user, bool checkNotes) async {
     final db = await database;
     int exists = await checkIfUserExists(
         firstName: user.firstName,
         lastName: user.lastName,
         birthDay: user.birthDay,
         country: user.country,
-        notes: user.notes
+        notes: checkNotes ? user.notes : null
     );
     if(exists != -1) return false;
     try{
