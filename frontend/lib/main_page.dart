@@ -276,8 +276,7 @@ class MainPageState extends State<MainPage> {
       if(!mounted) return;
       _blockScan = true;
       await AutoCloseDialog(
-        durationInSeconds: newLastVisit != null
-            ? 10 : null,
+        durationInSeconds: newLastVisit != null ? 10 : null,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           spacing: 10,
@@ -294,7 +293,7 @@ class MainPageState extends State<MainPage> {
             Text(
               newLastVisit != null
                   ? S.of(context).visit_added_success
-                  : S.of(context).visit_added_error(user.lastVisit!.isAfter(DateTime.now().subtract(Duration(days: 14)))),
+                  : S.of(context).visit_added_error(DateTime.now().difference(user.lastVisit!).inDays),
               style: TextStyle(fontSize: 20),
               textAlign: TextAlign.center,
             ),
@@ -605,7 +604,6 @@ class MainPageState extends State<MainPage> {
                           label: showOnlyIcons ? Icon(_isAdmin ? Icons.logout : Icons.login, size: 17,) :Text(S.of(context).admin_login(!_isAdmin)) ,
                           onPressed: () async {
                             if(_isAdmin){
-                              checkForOldUsers();
                               setState(() {
                                 _isAdmin = false;
                               });
@@ -668,7 +666,10 @@ class MainPageState extends State<MainPage> {
                               },
                             );
                             if(confirmed != null && confirmed){
-                              setState(() =>  _isAdmin = true);
+                              setState(() {
+                                _isAdmin = true;
+                                checkForOldUsers();
+                              });
                             }
                           }
                         ),
