@@ -50,7 +50,11 @@ class CustomerTileState extends State<CustomerTile>{
     super.initState();
   }
 
-  bool get visitIsMoreThan14Days => widget.user.lastVisit != null ? DateTime.now().difference(widget.user.lastVisit!).inHours > _cutOffNumber*24+12 : true;
+  bool get visitIsMoreThan14Days => widget.user.lastVisit != null
+      ? !_useServer
+        ?  DateTime.now().difference(widget.user.lastVisit!).inHours > _cutOffNumber*24+12
+        :  DateTime.now().difference(widget.user.lastVisit!).inDays > _cutOffNumber
+      : true;
 
   ///Creates the Text that displays the lastVisit status
   String _buildLastVisitStyledText() {

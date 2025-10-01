@@ -19,7 +19,11 @@ class Utilities{
     if(useServer == null) return null;
 
     Visit? newLastVisit;
-    if(allowAdding || user.lastVisit == null || DateTime.now().difference(user.lastVisit!).inHours >cutOffNumber*24+12){
+    if(allowAdding || user.lastVisit == null
+        || (!useServer
+        ?  DateTime.now().difference(user.lastVisit!).inHours > cutOffNumber*24+12
+        :  DateTime.now().difference(user.lastVisit!).inDays > cutOffNumber)
+    ){
       newLastVisit = useServer
           ? await HttpHelper().addVisit(userId: user.id)
           : await DatabaseHelper().addVisit(user);
