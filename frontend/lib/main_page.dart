@@ -604,7 +604,6 @@ class MainPageState extends State<MainPage> {
                           label: showOnlyIcons ? Icon(_isAdmin ? Icons.logout : Icons.login, size: 17,) :Text(S.of(context).admin_login(!_isAdmin)) ,
                           onPressed: () async {
                             if(_isAdmin){
-                              checkForOldUsers();
                               setState(() {
                                 _isAdmin = false;
                               });
@@ -667,7 +666,10 @@ class MainPageState extends State<MainPage> {
                               },
                             );
                             if(confirmed != null && confirmed){
-                              setState(() =>  _isAdmin = true);
+                              setState(() {
+                                _isAdmin = true;
+                                checkForOldUsers();
+                              });
                             }
                           }
                         ),

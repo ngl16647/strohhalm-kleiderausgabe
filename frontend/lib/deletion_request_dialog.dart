@@ -43,6 +43,7 @@ class DeleteDialog extends StatefulWidget{
 }
 
 class DeleteDialogState extends State<DeleteDialog>{
+  ScrollController scrollController = ScrollController();
   List<User> oldUserList = [];
   DeleteRequestReturn deletionReturnResult = DeleteRequestReturn([], {});
   bool _useServer = false;
@@ -173,7 +174,12 @@ class DeleteDialogState extends State<DeleteDialog>{
                               SizedBox(height: 12),
                               Expanded(
                                 child: Scrollbar(
+                                  controller: scrollController,
+                                  thumbVisibility: !_isMobile,
+                                  trackVisibility: !_isMobile,
                                   child: ListView.builder(
+                                    padding: EdgeInsets.only(right: _isMobile ? 0 : 15),
+                                    controller: scrollController,
                                     itemCount: oldUserList.length ,
                                     itemBuilder: (context, index) {
                                       final u = oldUserList[index];
