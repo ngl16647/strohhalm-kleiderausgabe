@@ -50,10 +50,13 @@ class CustomerTileState extends State<CustomerTile>{
     super.initState();
   }
 
-  bool get visitIsMoreThan14Days => widget.user.lastVisit != null ? DateTime.now().difference(widget.user.lastVisit!).inDays > _cutOffNumber : true;
+  bool get visitIsMoreThan14Days => widget.user.lastVisit != null ? DateTime.now().difference(widget.user.lastVisit!).inHours > _cutOffNumber*24+12 : true;
 
   ///Creates the Text that displays the lastVisit status
   String _buildLastVisitStyledText() {
+    //print(DateTime.now().difference(widget.user.lastVisit!).inDays);
+    //print("Cuttoff $_cutOffNumber");
+    //print("----------------");
     if (widget.user.lastVisit == null) {
       // Never visited
       return S.of(context).customer_tile_lastVisit_never;
