@@ -1373,18 +1373,13 @@ class S {
     );
   }
 
-  /// `{isBefore14Days, select, true{Error while adding\nVisitor was here in the last 14 days} false{Error while adding\nNo connection to Server} other{ }}`
-  String visit_added_error(Object isBefore14Days) {
-    return Intl.select(
-      isBefore14Days,
-      {
-        'true': 'Error while adding\nVisitor was here in the last 14 days',
-        'false': 'Error while adding\nNo connection to Server',
-        'other': ' ',
-      },
+  /// `Error adding visit\nVisitor was already here {difference, plural, =0{today} =1{1 day} other{{difference} days}} ago`
+  String visit_added_error(num difference) {
+    return Intl.message(
+      'Error adding visit\nVisitor was already here ${Intl.plural(difference, zero: 'today', one: '1 day', other: '$difference days')} ago',
       name: 'visit_added_error',
       desc: '',
-      args: [isBefore14Days],
+      args: [difference],
     );
   }
 

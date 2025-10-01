@@ -60,8 +60,8 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m13(showYear) =>
       "${Intl.select(showYear, {'true': 'Month', 'false': 'Day', 'other': ' '})}";
 
-  static String m14(isBefore14Days) =>
-      "${Intl.select(isBefore14Days, {'true': 'Error while adding\nVisitor was here in the last 14 days', 'false': 'Error while adding\nNo connection to Server', 'other': ' '})}";
+  static String m14(difference) =>
+      "Error adding visit\nVisitor was already here ${Intl.plural(difference, zero: 'today', one: '1 day', other: '${difference} days')} ago";
 
   static String m15(count) =>
       "${Intl.plural(count, one: 'Visit', other: 'Visits')}";

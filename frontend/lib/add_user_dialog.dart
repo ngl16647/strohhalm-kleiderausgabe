@@ -257,7 +257,9 @@ class AddUserDialogState extends State<AddUserDialog> {
                 Expanded(
                   child: TextButton(
                     onPressed: () async {
-                      if(_firstNameController.text.trim().isEmpty || _lastNameController.text.trim().isEmpty || _selectedDate == null){
+                      _firstNameController.text = _firstNameController.text.trim();
+                      _lastNameController.text = _lastNameController.text.trim();
+                      if(_firstNameController.text.isEmpty || _lastNameController.text.isEmpty || _selectedDate == null){
                         Utilities.showToast(context: context, title: S.of(context).fail, description: S.of(context).add_user_requiredFieldMissing, isError: true);
                         return;
                       }
@@ -314,6 +316,7 @@ class AddUserDialogState extends State<AddUserDialog> {
                             lastName: _lastNameController.text.trim(),
                             birthDay: _selectedDate!,
                             country: _selectedCountry!.countryCode,
+                            notes: _noteController.text,
                             lastVisit: null);
 
                         int? id;
