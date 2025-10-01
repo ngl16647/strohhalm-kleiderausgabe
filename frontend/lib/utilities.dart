@@ -13,16 +13,15 @@ import 'http_helper.dart';
 class Utilities{
   static Future<Visit?> addVisit(User user, BuildContext context, bool showToast) async {
     bool? useServer = AppSettingsManager.instance.settings.useServer;
-    bool allowAdding = AppSettingsManager.instance.settings.allowAdding ?? false;
     int cutOffNumber = AppSettingsManager.instance.settings.cutOffDayNumber ?? 14;
     cutOffNumber -= 1;
     if(useServer == null) return null;
 
     Visit? newLastVisit;
-    if(allowAdding || user.lastVisit == null
+    if(user.lastVisit == null
         || (!useServer
-        ?  DateTime.now().difference(user.lastVisit!).inHours > cutOffNumber*24+12
-        :  DateTime.now().difference(user.lastVisit!).inDays > cutOffNumber)
+              ?  DateTime.now().difference(user.lastVisit!).inHours > cutOffNumber*24+12
+              :  DateTime.now().difference(user.lastVisit!).inDays > cutOffNumber)
     ){
       newLastVisit = useServer
           ? await HttpHelper().addVisit(userId: user.id)
