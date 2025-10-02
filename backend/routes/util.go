@@ -103,20 +103,18 @@ func parseDateWithDefault(dateStr string, def time.Time) (time.Time, error) {
 }
 
 func writeCsvLineWithTrailingComma(w *bufio.Writer, row ...string) error {
-	for i, str := range row {
-		if i > 0 {
-			if err := w.WriteByte(','); err != nil {
-				return err
-			}
-		}
+	for _, str := range row {
 		if strings.Contains(str, ",") {
-			if _, err := w.WriteString(fmt.Sprintf(`"%s"`, str)); err != nil {
+			if _, err := w.WriteString("\"" + str + "\""); err != nil {
 				return err
 			}
 		} else {
 			if _, err := w.WriteString(str); err != nil {
 				return err
 			}
+		}
+		if err := w.WriteByte(','); err != nil {
+			return err
 		}
 	}
 	return nil
