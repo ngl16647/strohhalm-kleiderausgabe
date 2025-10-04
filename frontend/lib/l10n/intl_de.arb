@@ -162,7 +162,7 @@
   "load_more": "{isLoading, select, true{Lade...} false{Mehr laden...} other{Alles geladen!}}",
   "closesIn": "Schließt in {countDown} Sekunden",
   "visit_added_success": "Besuch erfolgreich eingetragen!",
-  "visit_added_error": "Fehler beim Eintragen\nBesucher war {difference, plural, =0{Heute} =1{vor 1 Tag} other{vor {difference} Tagen}} bereits da",
+  "visit_added_error": "Fehler beim Eintragen\nBesucher war <bold>{difference, plural, =0{Heute} =1{vor 1 Tag} other{vor {difference} Tagen}}</bold> bereits da",
   "online_Database": "online Datenbank",
   "offline_Database": "offline Datenbank",
   "countryErrorMessage": "Das Land konnte nicht automatisch erkannt werden.\nBitte wähle ein Land aus der nachfolgenden Liste aus.\n\nWenn du keine genaueren Angaben machen möchtest, wähle <bold>Weltweit</bold>.",

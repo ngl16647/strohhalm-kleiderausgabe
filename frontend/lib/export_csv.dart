@@ -21,10 +21,11 @@ class DataBaseExportFunctions{
     "Geburtsdatum": ["Geburtsdatum", "Geburtstag", "birthday"],
     "Herkunftsland": ["Herkunftsland", "Land", "country"],
     "Notizen": ["Notizen", "Notes", "notes"],
-    "Datum": ["Besuche", "Datum", "Besuch", "visits"]
+    "Datum": ["Besuche", "Datum", "Besuch", "visits"],
+    "UUID": ["uuid","UuId", "uuId", "UUID"]
   };
 
-  DateTime normalize(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
+
 
   ///Save a CSV in a chosen place
   static Future<void> saveCsv({
@@ -64,6 +65,7 @@ class DataBaseExportFunctions{
 
       csvData.add([
         "id",
+        "uuid",
         "Vorname",
         "Nachname",
         "Geburtsdatum",
@@ -91,6 +93,7 @@ class DataBaseExportFunctions{
 
         var row = [
           user["id"],
+          user["uuid"],
           user["firstName"],
           user["lastName"],
           birthDayConverted,
@@ -99,7 +102,6 @@ class DataBaseExportFunctions{
           visitNumber,
         ];
         row.addAll(visitDates);
-
 
         csvData.add(row);
       }
@@ -197,15 +199,22 @@ class DataBaseExportFunctions{
     int total = rows.length;
     for (var row in rows) {
       count++;
-      final uuId = const Uuid().v4();
 
-      if(row[colIndex["Geburtsdatum"]!] != null && row[colIndex["Geburtsdatum"]!].toString().isNotEmpty){
-        debugPrint(tryParseCountry(row[colIndex["Herkunftsland"]!]));
+      //if(row[colIndex["Geburtsdatum"]!] != null && row[colIndex["Geburtsdatum"]!].toString().isNotEmpty){
+      //  debugPrint(tryParseCountry(row[colIndex["Herkunftsland"]!]));
+      //}
+
+      String uuid = colIndex["UUID"] != null && row[colIndex["UUID"]!] != null && row[colIndex["UUID"]!].toString().isNotEmpty
+          ? row[colIndex["UUID"]!]
+          : const Uuid().v4();
+
+      if(colIndex["UUID"] != null && row[colIndex["UUID"]!] != null && row[colIndex["UUID"]!].toString().isNotEmpty){
+        print(row[colIndex["UUID"]!]);
       }
 
       User userWithoutValidId = User(
         id: -1,
-        uuId: uuId,
+        uuId: uuid,
         firstName: row[colIndex["Vorname"]!] ?? "",
         lastName: row[colIndex["Nachname"]!] ?? "",
         birthDay: row[colIndex["Geburtsdatum"]!] != null && row[colIndex["Geburtsdatum"]!].toString().isNotEmpty
@@ -237,9 +246,9 @@ class DataBaseExportFunctions{
           User user = await DatabaseHelper().getUsers(id: result.id).then((item) => item.first);
 
           var existingVisits = await DatabaseHelper().getVisits(user.id);
-          var existingSet = existingVisits.map((item) => normalize(item.tookTime)).toSet();
+          var existingSet = existingVisits.map((item) => item.tookTime.dateOnly).toSet();
           for (DateTime d in dateTimeVisits) {
-            if(existingSet.contains(normalize(d))) continue;
+            if(existingSet.contains(d.dateOnly)) continue;
               Visit? visit = await DatabaseHelper().addVisit(user, d);
               if (visit != null && (user.lastVisit == null || user.lastVisit!.isBefore(visit.tookTime))) {
                 user.lastVisit = visit.tookTime;

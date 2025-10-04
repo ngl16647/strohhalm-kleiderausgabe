@@ -169,6 +169,7 @@ class DatabaseHelper {
 
   Future<void> addVisits(User user, List<DateTime> visits) async {
     final db = await database;
+    if(visits.isEmpty) return;
     await updateUserLastVisit(user.id, visits.last);
     await db.transaction((txn) async {
       for (DateTime t in visits) {
@@ -230,7 +231,6 @@ class DatabaseHelper {
       whereClauses.add("notes = ?");
       whereArgs.add(notes);
     }
-
     final result = await db.query(
       "customers",
       where: whereClauses.isNotEmpty ? whereClauses.join(" AND ") : null,
@@ -348,14 +348,14 @@ class DatabaseHelper {
   }
 
   ///Updates a user and checks if it already exists
-  Future<bool?> updateUser(User user) async {
+  Future<bool?> updateUser(User user, bool checkNotes) async {
     final db = await database;
     int exists = await checkIfUserExists(
         firstName: user.firstName,
         lastName: user.lastName,
         birthDay: user.birthDay,
         country: user.country,
-        notes: user.notes
+        notes: checkNotes ? user.notes : null
     );
     if(exists != -1) return false;
     try{

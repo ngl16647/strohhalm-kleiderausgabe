@@ -263,7 +263,6 @@ class CreateQRCode{
               label: Text(S.of(context).apply),
               style: ElevatedButton.styleFrom(
                 minimumSize: Size(50, double.infinity),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
               ),
             ),
           ],
@@ -290,7 +289,6 @@ class CreateQRCode{
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppSettingsManager.instance.settings.selectedColor?.withAlpha(140),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
                 ),
               ),
             ),

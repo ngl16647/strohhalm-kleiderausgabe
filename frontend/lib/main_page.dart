@@ -19,6 +19,7 @@ import 'package:strohhalm_app/stat_page.dart';
 import 'package:strohhalm_app/statistic_page.dart';
 import 'package:strohhalm_app/user_and_visit.dart';
 import 'package:strohhalm_app/utilities.dart';
+import 'package:styled_text/styled_text.dart';
 import 'package:window_manager/window_manager.dart';
 import 'app_settings.dart';
 import 'barcode_scanner_phone_camera.dart';
@@ -268,7 +269,15 @@ class MainPageState extends State<MainPage> {
 
     if(user != null && mounted){
       showUserInSearchBar(user); //TODO: Should this be?
-      Visit? newLastVisit = await Utilities.addVisit(user, context, false);
+
+      Visit? newLastVisit;
+      if(user.lastVisit?.isBeyondCutOffNumber ?? true){
+        newLastVisit = await Utilities.addVisit(
+            context: context,
+            user: user,
+            showToast:  false
+        );
+      }
       if (newLastVisit != null) {
         user.lastVisit = newLastVisit.tookTime;
         _userList.firstWhere((item) => item.id == user?.id).lastVisit = newLastVisit.tookTime;
@@ -290,12 +299,15 @@ class MainPageState extends State<MainPage> {
                   ? Colors.green
                   : Colors.red,
             ),
-            Text(
-              newLastVisit != null
+            StyledText(
+              text: newLastVisit != null
                   ? S.of(context).visit_added_success
                   : S.of(context).visit_added_error(DateTime.now().difference(user.lastVisit!).inDays),
               style: TextStyle(fontSize: 20),
               textAlign: TextAlign.center,
+              tags: {
+                "bold": StyledTextTag(style: TextStyle(fontWeight: FontWeight.bold)),
+              },
             ),
             TextButton(
               onPressed: () {
@@ -649,7 +661,7 @@ class MainPageState extends State<MainPage> {
                                         ),
                                         TextButton(
                                           onPressed: () {
-                                            if (con.text == "admin123") { //TODO: For testing: Other approach?
+                                            if (con.text == "admin123") {
                                               Navigator.of(context).pop(true);
                                             } else {
                                               setState(() {
