@@ -306,7 +306,6 @@ class AddUserDialogState extends State<AddUserDialog> {
                               isError: result == null || !result
                           );
                         }
-                        print(result);
                         setState(() {
                           uploading = false;
                         });
@@ -347,7 +346,6 @@ class AddUserDialogState extends State<AddUserDialog> {
                         }
 
                         setState(() => uploading = false);
-                        print(id);
                         if(context.mounted){
                           Utilities.showToast(
                               context: context,

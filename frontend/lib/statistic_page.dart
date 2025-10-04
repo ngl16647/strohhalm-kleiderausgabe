@@ -1,8 +1,14 @@
 import 'dart:collection';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:strohhalm_app/app_settings.dart';
 import 'package:strohhalm_app/check_connection.dart';
@@ -34,6 +40,7 @@ class StatisticPage extends StatefulWidget {
 }
 
 class StatisticPageState extends State<StatisticPage> {
+
   late var provider = context.read<ConnectionProvider>();
   bool _isMobile = false;
   int _touchedIndex = -1;
@@ -212,35 +219,8 @@ class StatisticPageState extends State<StatisticPage> {
       SizedBox(
         width: _isMobile ? constrains.maxWidth : constrains.maxWidth*0.4,
         height: _isMobile ? constrains.maxHeight*0.2 : constrains.maxWidth*0.4, //0.9
-        child: PieChart(
-          PieChartData(
-            pieTouchData: PieTouchData(
-              touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                setState(() {
-                  if (!event.isInterestedForInteractions ||
-                      pieTouchResponse == null ||
-                      pieTouchResponse.touchedSection == null) {
-                    _touchedIndex = -1;
-                    return;
-                  }
-                  _touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                  if(_touchedIndex != -1)legendScrollController.animateTo(_touchedIndex*40, duration: 300.ms, curve: Curves.easeInOut);
-                });
-              },
-            ),
-            borderData: FlBorderData(
-              show: true,
-            ),
-            startDegreeOffset: 270,
-            centerSpaceRadius: constrains.maxWidth*0.03, //0.05
-            sections: List.generate(_countryData!.length, (i) {
-              String countryName = _countryData!.keys.elementAt(i);
-              double value = _countryData![countryName][0] ?? 0;
-              return chartData(value, countryName, i, constrains);
-            }),
-          ),
+        child: buildPieChart(constrains, legendScrollController),
         ),
-      ),
       SizedBox(
         width:_isMobile ? constrains.maxWidth *0.7 : constrains.maxWidth*0.4,
         height:_isMobile ? constrains.maxHeight*0.25 : constrains.maxHeight*0.5, //0.8
@@ -371,6 +351,245 @@ class StatisticPageState extends State<StatisticPage> {
     ];
   }
 
+  Future<void> buildPrint(BuildContext pageContext) async {
+    final GlobalKey globalKeyPieChart = GlobalKey();
+    final GlobalKey globalKeyCustomerNumber = GlobalKey();
+    final GlobalKey globalKeyVisitsPerCustomer = GlobalKey();
+
+    Future<Uint8List?> captureWidget(GlobalKey key) async {
+      final renderObject = key.currentContext?.findRenderObject();
+      if (renderObject is! RenderRepaintBoundary) return null;
+
+      final image = await renderObject.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      return byteData?.buffer.asUint8List();
+    }
+
+    showDialog(
+        context: context,
+        builder: (context){
+          return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            child: LayoutBuilder(builder: (context, constrains){
+                  return SingleChildScrollView(
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height + 1300,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                              height: MediaQuery.of(context).size.height,
+                              child: Center(
+                                child: SizedBox(
+                                    height: 40,
+                                    width: 40,
+                                    child: CircularProgressIndicator()
+                                ),
+                              )
+                          ),
+                          Expanded(
+                            child: RepaintBoundary(
+                              key: globalKeyPieChart,
+                              child: buildPieChart(constrains, null),
+                            ),
+                          ),
+                          SizedBox(height: 12,),
+                          Divider(),
+                          SizedBox(height: 12),
+                          Text(
+                            S.of(context).statistic_page_visitsPerPeriod,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 8),
+                          Flexible(
+                            child: RepaintBoundary(
+                              key: globalKeyCustomerNumber,
+                              child: LineChart(lineData(constrains, true)) //buildVisitorStats(constrains, false),
+                            ),
+                          ),
+                          Divider(),
+                          SizedBox(height: 12),
+                          Text(
+                            S.of(context).statistic_page_visitsPerPerson,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 8),
+                          if(!_useServer)Flexible(
+                            child: RepaintBoundary(
+                              key: globalKeyVisitsPerCustomer,
+                              child: buildVisitsPerVisitorStats(true),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  );
+                })
+          );
+        });
+    
+    Future.delayed(Duration(seconds: 1), () async{
+      final pieChartImage = await captureWidget(globalKeyPieChart);
+      final visitorChartImage = await captureWidget(globalKeyCustomerNumber);
+      final visitsPerVisitorChartImage = await captureWidget(globalKeyVisitsPerCustomer);
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.Page(
+          //pageTheme: pw.PageTheme(
+          //  pageFormat: PdfPageFormat.a4,
+          //  margin: pw.EdgeInsets.all(32),
+          //),
+          build: (pw.Context context) {
+            final pageWidth = PdfPageFormat.a4.availableWidth;
+            final pageHeight = PdfPageFormat.a4.availableHeight;
+            return pw.Column(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+                children: [
+                  if (visitorChartImage != null) ...[
+                    pw.Column(
+                      children: [
+                        pw.Text(
+                          _buildPeriodLabel(pageContext), //Cant use context
+                          style: pw.TextStyle(
+                            fontSize: 16,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                        pw.SizedBox(height: 12),
+                        pw.Image(
+                          pw.MemoryImage(visitorChartImage),
+                          width: pageWidth * 0.8,
+                          height: pageHeight * 0.3,
+                          fit: pw.BoxFit.contain,
+                        ),
+                        pw.SizedBox(height: 20),
+                      ]
+                    ),
+                    pw.Divider()
+                  ],
+
+
+                  if (visitsPerVisitorChartImage != null && !_useServer) ...[
+                    pw.Column(
+                      children: [
+                        pw.Text(
+                          S.of(pageContext).statistic_page_visitsPerPerson, //Cant use context
+                          style: pw.TextStyle(
+                            fontSize: 16,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                        pw.SizedBox(height: 12),
+                        pw.Image(
+                          pw.MemoryImage(visitsPerVisitorChartImage),
+                          width: pageWidth * 0.8,
+                          height: pageHeight * 0.3,
+                          fit: pw.BoxFit.contain,
+                        ),
+                        pw.SizedBox(height: 20),
+                      ]
+                    ),
+                    pw.Divider()
+                  ],
+
+                  if (pieChartImage != null) ...[
+                    pw.Column(
+                      children: [
+                        pw.Text(
+                          S.of(pageContext).stat_page_country, //Cant use context
+                          style: pw.TextStyle(
+                            fontSize: 16,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                        pw.SizedBox(height: 12),
+                        pw.Center(
+                          child: pw.Container(
+                            width: pageWidth * 1,
+                            height: pageHeight * 0.4,
+                            child: pw.Image(
+                              pw.MemoryImage(pieChartImage),
+                              fit: pw.BoxFit.fitHeight,
+                            ),
+                          ),
+                        ),
+                        pw.SizedBox(height: 30),
+                      ]
+                    )
+                  ],
+                ]);
+          },
+        ),
+      );
+
+      pdf.addPage(
+        pw.MultiPage(
+          //pageTheme: pw.PageTheme(
+          //  pageFormat: PdfPageFormat.a4,
+          //  margin: pw.EdgeInsets.all(32),
+          //),
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          build: (pw.Context context) {
+            final entries = _countryData!.entries.toList();
+            return [
+              pw.Text(
+                S.of(pageContext).stat_page_country, //Cant use context
+                style: pw.TextStyle(
+                  fontSize: 16,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.SizedBox(height: 12),
+              pw.ListView.builder(
+                itemCount: entries.length,
+                itemBuilder: (context, i) {
+                  return pw.Container(
+                    height: 25,
+                    margin: pw.EdgeInsets.symmetric(vertical: 2),
+                    padding: pw.EdgeInsets.all(4),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColors.grey100,
+                      border: pw.Border.all(color: PdfColors.grey400, width: 0.5),
+                      borderRadius: pw.BorderRadius.circular(8),
+                    ),
+                    child: pw.Row(
+                      children: [
+                        pw.SizedBox(width: 8),
+                        pw.Expanded(
+                          child: pw.Text(
+                            "${entries[i].value[0].toStringAsFixed(2)}% ${entries[i].key}",
+                            style: pw.TextStyle(fontSize: 10),
+                          ),
+                        ),
+                        pw.Text("Total: ${entries[i].value[1].toString()}",
+                            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ];
+          },
+        ),
+      );
+
+      await Printing.sharePdf(
+        bytes: await pdf.save(),
+        filename: "${S.of(context).main_page_statistic(_useServer)}_${DateFormat("dd-MM-yyyy").format(DateTime.now())}.pdf",
+      );
+      if(mounted)Navigator.of(context).pop();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     ///whole page on Mobile, Dialog on Desktop
@@ -443,159 +662,11 @@ class StatisticPageState extends State<StatisticPage> {
                                   )))
                                   : CustomTabData(
                                   title: S.of(context).statistic_page_visitsPerPeriod,
-                                  child:  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if(_isMobile) ActionChip(
-                                        label: Text(S.of(context).statistic_page_switchYearDisplay(_showYear)),
-                                        avatar: Icon(_showYear ? Icons.calendar_view_month : Icons.calendar_month),
-                                        onPressed: () async {
-                                          _monthBackNumber = 0;
-                                          _showYear = !_showYear;
-                                          getVisits();
-                                          setState(() { });
-                                        },
-
-                                      ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          IconButton(
-                                              onPressed: () async {
-                                                _monthBackNumber++;
-                                                getVisits();
-                                                setState(() {});
-                                              },
-                                              icon: Icon(Icons.arrow_left)
-                                          ),
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            spacing: 10,
-                                            children: [
-                                              if(!_isMobile)ActionChip(
-                                                label: Text(S.of(context).statistic_page_switchYearDisplay(_showYear)),
-                                                avatar: Icon(_showYear ? Icons.calendar_view_month : Icons.calendar_month),
-                                                onPressed: () async {
-                                                  _showYear = !_showYear;
-                                                  _monthBackNumber = 0;
-                                                  getVisits();
-                                                  setState(() {});
-                                                },
-                                              ),
-                                              Text(_buildPeriodLabel(context)),
-                                            ],
-                                          ),
-                                          IconButton(
-                                              onPressed: () async {
-                                                _monthBackNumber--;
-                                                getVisits();
-                                                setState(() {});
-                                              },
-                                              icon: Icon(Icons.arrow_right)
-                                          )
-                                        ],
-                                      ),
-                                      Expanded(child: Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 18,
-                                          left: 12,
-                                          top: 24,
-                                          bottom: 12,
-                                        ),
-                                        child: LineChart(lineData(constrains)),
-                                      ))
-                                    ],
-                                  )
-                              ),
+                                  child:  buildVisitorStats(constrains)
+                            ),
                             if(!_useServer)CustomTabData(
                                 title: S.of(context).statistic_page_visitsPerPerson,
-                                child: Padding(
-                                  padding: EdgeInsets.only(top: 10),
-                                  child: FutureBuilder<List<Map<String, dynamic>>>(
-                                    future: DatabaseHelper().getVisitDistribution(),
-                                    builder: (context, snapshot) {
-                                      if (!snapshot.hasData) {
-                                        return Center(child: CircularProgressIndicator());
-                                      }
-                                      if(snapshot.data!.isEmpty) return Center(child: Text(S.of(context).no_data),);
-                                      final data = snapshot.data!;
-                                      var maxY = (data.map((item) => item["customers"] as int).reduce((a, b) => a > b ? a : b)).toDouble();
-                                      final maxX = (data.map((item) => item["visits"] as int).reduce((a,b) => a > b ? a : b)).toInt();
-                                      final mapData = data.toList();
-                                      List<int> customersList = [];
-                                      for (int i = 1; i <= maxX; i++) {
-                                        final element = mapData.firstWhere(
-                                              (item) => item["visits"] as int == i,
-                                          orElse: () => {"customers": 0},
-                                        );
-                                        customersList.add(element["customers"] as int);
-                                      }
-                                      return Padding(
-                                        padding: EdgeInsets.all(16),
-                                        child: BarChart(
-                                          BarChartData(
-                                            alignment: BarChartAlignment.spaceEvenly,
-                                            maxY: maxY + 2,
-                                            barTouchData: BarTouchData(
-                                                enabled: true,
-                                                touchTooltipData: BarTouchTooltipData(
-                                                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                                                    return BarTooltipItem(
-                                                      S.of(context).statistic_page_visitsPerVisitor(rod.toY.toInt(), groupIndex+1),//"${rod.toY.toInt()} Besucher\nhaben ${groupIndex+1} ${S.of(context).statistic_page_visit_plural(groupIndex+1)}",
-                                                      Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.white70),
-                                                    );
-                                                  },
-                                                )
-                                            ),
-                                            titlesData: FlTitlesData(
-                                              leftTitles: AxisTitles(
-                                                axisNameWidget: Text(S.of(context).statistic_page_visitsPerPerson_Persons),
-                                                sideTitles: SideTitles(
-                                                    showTitles: true,
-                                                    reservedSize: 40,
-                                                    interval: ((maxY/5).ceil().toDouble()-1 > 5) ? (maxY/5).ceil().toDouble()-1 : 1,
-                                                    maxIncluded: false
-                                                ),
-                                              ),
-                                              bottomTitles: AxisTitles(
-                                                axisNameWidget: Text(S.of(context).visit_plural(2)),
-                                                sideTitles: SideTitles(
-                                                    showTitles: true,
-                                                    getTitlesWidget: (value, meta){
-                                                      return Text((value+1).toInt().toString());
-                                                    },
-                                                    reservedSize: 40
-                                                ),
-                                              ),
-                                              rightTitles: AxisTitles(
-                                                sideTitles: SideTitles(showTitles: false), // rechts aus
-                                              ),
-                                              topTitles: AxisTitles(
-                                                sideTitles: SideTitles(showTitles: false), // oben aus
-                                              ),
-                                            ),
-                                            borderData: FlBorderData(show: false),
-                                            barGroups:  customersList.asMap().entries.map((entry) {
-                                              int index = entry.key;
-                                              final customers = entry.value;
-                                              return BarChartGroupData(
-                                                x: index,
-                                                barRods: [
-                                                  BarChartRodData(
-                                                    toY: customers.toDouble(),
-                                                    color: Colors.blue,
-                                                    width: 20,
-                                                    borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
-                                                  ),
-                                                ],
-                                              );
-                                            }).toList(),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                )
+                                child: buildVisitsPerVisitorStats(false)
                             ),
                           ],
                             switchTab: (index){})
@@ -609,6 +680,15 @@ class StatisticPageState extends State<StatisticPage> {
                     padding: EdgeInsets.all(5),
                     onPressed: ()=> navigatorKey.currentState!.pop(),
                     icon: Icon(Icons.close)),
+              ),
+              if(!_isMobile)Align(
+                alignment: AlignmentGeometry.topLeft,
+                child: IconButton(
+                    padding: EdgeInsets.all(5),
+                    onPressed: () {
+                      buildPrint(context);
+                    },
+                    icon: Icon(Icons.print)),
               ),
             ],
           );
@@ -633,7 +713,7 @@ class StatisticPageState extends State<StatisticPage> {
   }
 
   ///Data-Display for the month/year Display of Visits
-  LineChartData lineData(BoxConstraints constraints) {
+  LineChartData lineData(BoxConstraints constraints, bool showToolTipConstant) {
     var visitList = _visitsInPeriod!.entries.toList();
     int maxVisits = _visitsInPeriod!.values.reduce((a, b) => a > b ? a : b);
     int yAxisInterval = switch (maxVisits) {
@@ -654,8 +734,28 @@ class StatisticPageState extends State<StatisticPage> {
     };
     if(_isMobile && _showYear) xAxisInterval = 3;
 
+    List<FlSpot> spots = [];
+    for(int i = 0; i < visitList.length; i++) {
+      spots.add( FlSpot(i.toDouble(), visitList[i].value.toDouble()));
+    }
+
+    LineChartBarData lineChartBarData = LineChartBarData(
+      color: AppSettingsManager.instance.settings.selectedColor,
+      spots: spots,
+      isCurved: false,
+      barWidth: 4,
+      isStrokeCapRound: false,
+      dotData: const FlDotData(
+        show: false,
+      ),
+      belowBarData: BarAreaData(
+        show: true,
+      ),
+    );
+
     return LineChartData(
       backgroundColor: Theme.of(context).listTileTheme.tileColor!.withAlpha(100),
+
       gridData: FlGridData(
         show: true,
         drawVerticalLine: true,
@@ -724,26 +824,20 @@ class StatisticPageState extends State<StatisticPage> {
       maxX: visitList.length.toDouble()-1,
       minY: 0,
       maxY: (maxVisits + 1).toDouble(),
+      showingTooltipIndicators: spots.where((item) => item.y > 0).map((spot) {
+        return ShowingTooltipIndicators([
+          LineBarSpot(
+            lineChartBarData, 
+            0,    
+            spot,
+          )
+        ]);
+      }).toList(),
       lineBarsData: [
-        LineChartBarData(
-          color: AppSettingsManager.instance.settings.selectedColor,
-          spots: [
-            for (int i = 0; i < visitList.length; i++)
-              FlSpot(i.toDouble(), visitList[i].value.toDouble()),
-          ],
-          isCurved: false,
-          barWidth: 4,
-          isStrokeCapRound: false,
-          dotData: const FlDotData(
-            show: false,
-          ),
-          belowBarData: BarAreaData(
-            show: true,
-          ),
-        ),
+        lineChartBarData
       ],
       lineTouchData: LineTouchData(
-        enabled: true,
+        enabled: !showToolTipConstant,
         touchTooltipData: LineTouchTooltipData(
           getTooltipItems: (touchedSpots) {
             return touchedSpots.map((touchedSpot) {
@@ -751,15 +845,15 @@ class StatisticPageState extends State<StatisticPage> {
               final visit = visitList[index];
               return LineTooltipItem(
                 _showYear
-                    ? "${DateFormat("MMMM yyyy").format(DateFormat("MM.yyyy").parse(visit.key))}\n${S.of(context).stat_page_visits}: ${visit.value}"
-                    : "${visit.key}\n${S.of(context).stat_page_visits}: ${visit.value}",
+                    ? showToolTipConstant ? visit.value.toString() : "${DateFormat("MMMM yyyy").format(DateFormat("MM.yyyy").parse(visit.key))}\n${S.of(context).stat_page_visits}: ${visit.value}"
+                    : showToolTipConstant ? visit.value.toString() : "${visit.key}\n${S.of(context).stat_page_visits}: ${visit.value}",
                 TextStyle(color: Colors.white70),
                 textAlign: TextAlign.start
               );
             }).toList();
           },
         ),
-      )
+      ),
     );
   }
 
@@ -779,6 +873,206 @@ class StatisticPageState extends State<StatisticPage> {
       }
 
       return DateTime.parse(dateString);
+  }
+
+  Widget buildVisitorStats(BoxConstraints constrains) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if(_isMobile) ActionChip(
+          label: Text(S.of(context).statistic_page_switchYearDisplay(_showYear)),
+          avatar: Icon(_showYear ? Icons.calendar_view_month : Icons.calendar_month),
+          onPressed: () async {
+            _monthBackNumber = 0;
+            _showYear = !_showYear;
+            getVisits();
+            setState(() { });
+          },
+
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+                onPressed: () async {
+                  _monthBackNumber++;
+                  getVisits();
+                  setState(() {});
+                },
+                icon: Icon(Icons.arrow_left)
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 10,
+              children: [
+                if(!_isMobile)ActionChip(
+                  label: Text(S.of(context).statistic_page_switchYearDisplay(_showYear)),
+                  avatar: Icon(_showYear ? Icons.calendar_view_month : Icons.calendar_month),
+                  onPressed: () async {
+                    _showYear = !_showYear;
+                    _monthBackNumber = 0;
+                    getVisits();
+                    setState(() {});
+                  },
+                ),
+                Text(_buildPeriodLabel(context)),
+              ],
+            ),
+            IconButton(
+                onPressed: () async {
+                  _monthBackNumber--;
+                  getVisits();
+                  setState(() {});
+                },
+                icon: Icon(Icons.arrow_right)
+            )
+          ],
+        ),
+        Expanded(child: Padding(
+          padding: const EdgeInsets.only(
+            right: 18,
+            left: 12,
+            top: 24,
+            bottom: 12,
+          ),
+          child: LineChart(lineData(constrains, false)),
+        ))
+      ],
+    );
+  }
+
+  Widget buildVisitsPerVisitorStats(bool showTooltipsConstant){
+    return Padding(
+      padding: EdgeInsets.only(top: 10),
+      child: FutureBuilder<List<Map<String, dynamic>>>(
+        future: DatabaseHelper().getVisitDistribution(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if(snapshot.data!.isEmpty) return Center(child: Text(S.of(context).no_data),);
+          final data = snapshot.data!;
+          var maxY = (data.map((item) => item["customers"] as int).reduce((a, b) => a > b ? a : b)).toDouble();
+          final maxX = (data.map((item) => item["visits"] as int).reduce((a,b) => a > b ? a : b)).toInt();
+          final mapData = data.toList();
+          List<int> customersList = [];
+
+          for (int i = 1; i <= maxX; i++) {
+            final element = mapData.firstWhere(
+                  (item) => item["visits"] as int == i,
+              orElse: () => {"customers": 0},
+            );
+            customersList.add(element["customers"] as int);
+          }
+
+          int yAxisInterval = switch (maxY) {
+            > 500 => 100,
+            > 200 => 50,
+            > 100 => 25,
+            > 50 => 10,
+            > 20 => 5,
+            > 10 => 2,
+            _ => 1, // Default
+          };
+
+          return Padding(
+            padding: EdgeInsets.only(top: showTooltipsConstant ? 50 : 16, bottom: 16, left: 16, right: 16),
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceEvenly,
+                maxY: maxY + 2,
+                barTouchData: BarTouchData(
+                    enabled: !showTooltipsConstant,
+                    touchTooltipData: BarTouchTooltipData(
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        return BarTooltipItem(
+                          showTooltipsConstant ? rod.toY.toInt().toString() : S.of(context).statistic_page_visitsPerVisitor(rod.toY.toInt(), groupIndex+1),
+                          Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.white70),
+                        );
+                      },
+                    )
+                ),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    axisNameWidget: Text(S.of(context).statistic_page_visitsPerPerson_Persons),
+                    sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 40,
+                        interval: yAxisInterval.toDouble(),
+                        maxIncluded: false
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    axisNameWidget: Text(S.of(context).visit_plural(2)),
+                    sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta){
+                          return Text((value+1).toInt().toString());
+                        },
+                        reservedSize: 40
+                    ),
+                  ),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false), // rechts aus
+                  ),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false), // oben aus
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                barGroups:  customersList.asMap().entries.map((entry) {
+                  int index = entry.key;
+                  final customers = entry.value;
+                  return BarChartGroupData(
+                    x: index,
+                    barRods: [
+                      BarChartRodData(
+                        toY: customers.toDouble(),
+                        color: Colors.blue,
+                        width: 20,
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
+                      ),
+                    ],
+                    showingTooltipIndicators: showTooltipsConstant ? [0] : null
+                  );
+                }).toList(),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget buildPieChart(BoxConstraints constrains, ScrollController? legendScrollController) {
+    return PieChart(
+      PieChartData(
+        pieTouchData: PieTouchData(
+          touchCallback: (FlTouchEvent event, pieTouchResponse) {
+            setState(() {
+              if (!event.isInterestedForInteractions ||
+                  pieTouchResponse == null ||
+                  pieTouchResponse.touchedSection == null) {
+                _touchedIndex = -1;
+                return;
+              }
+              _touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+              if(_touchedIndex != -1 && legendScrollController != null) legendScrollController.animateTo(_touchedIndex*40, duration: 300.ms, curve: Curves.easeInOut);
+            });
+          },
+        ),
+        borderData: FlBorderData(
+          show: true,
+        ),
+        startDegreeOffset: 270,
+        centerSpaceRadius: constrains.maxWidth*0.03, //0.05
+        sections: List.generate(_countryData!.length, (i) {
+          String countryName = _countryData!.keys.elementAt(i);
+          double value = _countryData![countryName][0] ?? 0;
+          return chartData(value, countryName, i, constrains);
+        }),
+      ),
+    );
   }
 
 }

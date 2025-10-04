@@ -169,6 +169,7 @@ class DatabaseHelper {
 
   Future<void> addVisits(User user, List<DateTime> visits) async {
     final db = await database;
+    if(visits.isEmpty) return;
     await updateUserLastVisit(user.id, visits.last);
     await db.transaction((txn) async {
       for (DateTime t in visits) {
@@ -230,8 +231,6 @@ class DatabaseHelper {
       whereClauses.add("notes = ?");
       whereArgs.add(notes);
     }
-    print(notes);
-    print(whereClauses);
     final result = await db.query(
       "customers",
       where: whereClauses.isNotEmpty ? whereClauses.join(" AND ") : null,
