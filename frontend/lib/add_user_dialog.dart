@@ -287,10 +287,11 @@ class AddUserDialogState extends State<AddUserDialog> {
                           Navigator.of(context).pop(null);
                           return;
                         }
+                        bool justChangedNotes = widget.user!.equalsExceptNotes(user);
                         bool? result;
                         _useServer
                             ? result = await HttpHelper().updateCustomer(user)
-                            : result = await DatabaseHelper().updateUser(user, false);
+                            : result = await DatabaseHelper().updateUser(user, !justChangedNotes);
 
                         if(context.mounted) {
                           Utilities.showToast(

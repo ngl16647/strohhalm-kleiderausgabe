@@ -375,18 +375,26 @@ class StatisticPageState extends State<StatisticPage> {
             child: LayoutBuilder(builder: (context, constrains){
                   return SingleChildScrollView(
                     child: SizedBox(
-                      height: MediaQuery.of(context).size.height + 1300,
+                      height: MediaQuery.of(context).size.height + 1300, //coverUp + 1300 space for the widgets
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           SizedBox(
-                              height: MediaQuery.of(context).size.height,
+                              height: MediaQuery.of(context).size.height, //To cover up the widgets
                               child: Center(
-                                child: SizedBox(
-                                    height: 40,
-                                    width: 40,
-                                    child: CircularProgressIndicator()
-                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                        height: 40,
+                                        width: 40,
+                                        child: CircularProgressIndicator()
+                                    ),
+                                    SizedBox(height: 10,),
+                                    Text(S.of(context).pdf_preparing, textAlign: TextAlign.center,)
+                                  ],
+                                )
                               )
                           ),
                           Expanded(
@@ -584,7 +592,7 @@ class StatisticPageState extends State<StatisticPage> {
 
       await Printing.sharePdf(
         bytes: await pdf.save(),
-        filename: "${S.of(context).main_page_statistic(_useServer)}_${DateFormat("dd-MM-yyyy").format(DateTime.now())}.pdf",
+        filename: "${mounted ? S.of(context).main_page_statistic(_useServer) : "Stat"}_${DateFormat("dd-MM-yyyy").format(DateTime.now())}.pdf",
       );
       if(mounted)Navigator.of(context).pop();
     });
@@ -684,6 +692,7 @@ class StatisticPageState extends State<StatisticPage> {
               if(!_isMobile)Align(
                 alignment: AlignmentGeometry.topLeft,
                 child: IconButton(
+                    tooltip: S.of(context).print_pdf_tooltip,
                     padding: EdgeInsets.all(5),
                     onPressed: () {
                       buildPrint(context);

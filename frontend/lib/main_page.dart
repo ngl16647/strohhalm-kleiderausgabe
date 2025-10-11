@@ -27,7 +27,6 @@ import 'check_connection.dart';
 import 'generated/l10n.dart';
 import 'main.dart';
 
-
 ///Main/Start-Page
 class MainPage extends StatefulWidget {
   final void Function(Locale) onLocaleChange;
@@ -46,22 +45,20 @@ class MainPageState extends State<MainPage> {
   List<User> _userList = [];          //SearchResults
   List<User> oldUserList = [];        //Users older than a year
   ///UI-State-Variables
-  Icon _fullScreenIcon = Icon(Icons.fullscreen, size: 20,);
   Color _selectedColor = Color.fromRGBO(169, 171, 25, 1.0); //AccentColor defaults to lime
   bool _isListView = true;
   bool _isMobile = false;
-  bool _blockScan = false;            //blocks additional scans when a Dialog is open
   bool _isAdmin = false;
   ///Banner-Variables
   bool _useBannerDesigner = true;     //use a self-composed banner or just one image
-  File? _bannerImage;                 //the one image
-  BannerImage? _bannerMap;            //the Objekt with the self-composed elements
+  File? _bannerImage;                 //the one banner image
+  BannerImage? _bannerMap;            //the Objekt with two Images (left/right) and text in the middle
 
   ///Server-Variables
   bool _useServer = false;            //offline or online-Mode
-  static const int pageSize = 10;     //length of first results when searching online
+  static const int pageSize = 10;     //length of results when searching
   int _page = 1;                      //offset for online-search
-  final bool _isLoadingMore = false;
+  final bool _isLoadingMore = false;  //true while results are loading
 
   @override
   void initState(){
@@ -113,13 +110,13 @@ class MainPageState extends State<MainPage> {
   Future<void> checkForOldUsers() async {
   if(_useServer) {
     if(mounted){
-    oldUserList = await HttpHelper().searchCustomers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365)), size: 100) ?? [];
+    oldUserList = await HttpHelper().searchCustomers(lastVisitBefore: DateTime.now().subtract(365.days), size: 1000) ?? [];
     oldUserList.removeWhere((item) => item.lastVisit == null); //Check since HttpRequest also returns Customers where lastVisit == null
     }
   } else {
     if(mounted) context.read<ConnectionProvider>().cancelCheck();
     if(mounted) context.read<ConnectionProvider>().setStatus(ConnectionStatus.connected);
-    oldUserList = await DatabaseHelper().getUsers(lastVisitBefore: DateTime.now().subtract(Duration(days: 365)), size: 9999);
+    oldUserList = await DatabaseHelper().getUsers(lastVisitBefore: DateTime.now().subtract(365.days), size: 20000); //Limit size to 20000 to reduce RAM-usage to about 10-20MB
   }
   setState(() {
     oldUserList;
@@ -128,7 +125,11 @@ class MainPageState extends State<MainPage> {
 
 ///Starts listening for scanner-Input and displays results
   void listenForScanner(){
+    ///Gets called when successful scan is detected. Closes all open Dialogs, then opens Scan-Dialog
     void scanSuccess(scannedValue) async {
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
       openUserFromUuId(scannedValue);
     }
 
@@ -138,6 +139,7 @@ class MainPageState extends State<MainPage> {
           message: S.of(context).uuId_fail_keyboard,
           hasChoice: false);
     }
+
     socketListener = BarcodeScannerListener(
         context: context,
         onSuccessScan: scanSuccess,
@@ -158,7 +160,8 @@ class MainPageState extends State<MainPage> {
         _userList.clear();
       });
     }
-    _searchWaitTimer = Timer(Duration(milliseconds: 600), () {
+    //Waits 600 ms after typing and triggers only for queries longer than 3 characters to reduce requests.
+    _searchWaitTimer = Timer(600.ms, () {
       if(query.length > 3 || query == "*"){
         searchUsers(query);
       }
@@ -197,7 +200,6 @@ class MainPageState extends State<MainPage> {
 
   ///Adds or edits a User (if you want to edit, you have to give it the existing User)
   Future<void> addOrEditUser([User? user]) async {
-    _blockScan = true;
     AddUserReturn? result = await AddUserDialog.showAddUpdateUserDialog(
        context: context,
        user: user,
@@ -231,12 +233,10 @@ class MainPageState extends State<MainPage> {
           }
       }
     }
-    _blockScan = false;
   }
 
   ///Opens the page of a Customer with more Details
   Future<void> openStatPage(User user, [bool? addNewVisit]) async {
-    _blockScan = true;
     User? updatedUser = await StatPage.showStatPageDialog(
         context: context,
         user: user
@@ -246,7 +246,6 @@ class MainPageState extends State<MainPage> {
       _userList[i] = user.copyWith(lastVisit: updatedUser?.lastVisit, notes: updatedUser?.notes); //new Objekt so the ListView can update through ObjectKey(user)
     });
     checkIfUserGotOld(_userList[i]);
-    _blockScan = false;
   }
 
   ///clears the searchbar and displays a newly added or a Customer found by uuid on the mainPage
@@ -261,14 +260,13 @@ class MainPageState extends State<MainPage> {
 
   ///searches for a Customer by Uuid and opens its stat page
   Future<void> openUserFromUuId(String uuIdString) async {
-    if(_blockScan) return;
     User? user;
     _useServer
         ? user = await HttpHelper().getCustomerByUUID(uuIdString)
         : user = await DatabaseHelper().getUsers(uuid: uuIdString).then((item) =>  item.firstOrNull);
 
     if(user != null && mounted){
-      showUserInSearchBar(user); //TODO: Should this be?
+      showUserInSearchBar(user);
 
       Visit? newLastVisit;
       if(user.lastVisit?.isBeyondCutOffNumber ?? true){
@@ -283,7 +281,6 @@ class MainPageState extends State<MainPage> {
         _userList.firstWhere((item) => item.id == user?.id).lastVisit = newLastVisit.tookTime;
       }
       if(!mounted) return;
-      _blockScan = true;
       await AutoCloseDialog(
         durationInSeconds: newLastVisit != null ? 10 : null,
         child: Column(
@@ -314,12 +311,11 @@ class MainPageState extends State<MainPage> {
                 Navigator.of(context).pop();
                 openStatPage(user!);
               },
-              child: Text("Besucher Details anzeigen"),
+              child: Text(S.of(context).showVisitorDetails),
             )
           ],
         ),
       ).showAutoCloseDialog(context);
-      _blockScan = false;
     } else {
       if(mounted) {
         DialogHelper.dialogConfirmation(
@@ -404,7 +400,7 @@ class MainPageState extends State<MainPage> {
   ///Checks if a changes user now is older than a year again
   void checkIfUserGotOld(User user) {
     final index = oldUserList.indexWhere((item) => item.id == user.id);
-    final isOld = user.lastVisit != null && user.lastVisit!.isBefore(DateTime.now().subtract(Duration(days: 365)));
+    final isOld = user.lastVisit != null && user.lastVisit!.isBefore(DateTime.now().subtract(365.days));
 
     if (index != -1 && !isOld) { //If in oldUserList and not old anymore => remove
       setState(() => oldUserList.removeAt(index));
@@ -490,6 +486,7 @@ class MainPageState extends State<MainPage> {
                 spacing: 10,
                 children: [
                   if(!_useBannerDesigner && _bannerImage != null) Image.file(_bannerImage!),
+                  if(!_useBannerDesigner && _bannerImage == null) SizedBox.shrink(),
                   if(_useBannerDesigner && _bannerMap != null) BannerWidget(bannerImage: _bannerMap),
                   Container(
                     width: double.infinity, // Ensure finite width
@@ -498,20 +495,23 @@ class MainPageState extends State<MainPage> {
                       spacing: 8,
                       children: [
                         if (!_isMobile)
-                          ActionChip(
-                            avatar: showOnlyIcons ? null : _fullScreenIcon,
-                            label: showOnlyIcons
-                                ? _fullScreenIcon
-                                : Text(S.of(context).main_page_fullScreen),
-                            onPressed: () async {
-                              bool isFullScreen = await windowManager.isFullScreen();
-                              windowManager.setFullScreen(!isFullScreen);
-                              setState(() {
-                                _fullScreenIcon = !isFullScreen
-                                    ? Icon(Icons.close_fullscreen, size: 17)
-                                    : Icon(Icons.aspect_ratio, size: 17);
-                              });
-                            },
+                          FutureBuilder(
+                              future: windowManager.isFullScreen(),
+                              builder: (context, snapShot){
+                                bool isFullScreen = snapShot.data ?? false;
+                                return ActionChip(
+                                  avatar: showOnlyIcons ? null : Icon(isFullScreen ? Icons.close_fullscreen : Icons.aspect_ratio, size: 20,),
+                                  label: showOnlyIcons
+                                      ? Icon(isFullScreen ? Icons.close_fullscreen : Icons.aspect_ratio, size: 20,)
+                                      : Text(S.of(context).main_page_fullScreen),
+                                  onPressed: () async {
+                                    bool isFullScreen = await windowManager.isFullScreen();
+                                    setState(() {
+                                      windowManager.setFullScreen(!isFullScreen);
+                                    });
+                                  },
+                                );
+                              }
                           ),
                         Tooltip(
                           message: S.of(context).server_display_toolTip,
@@ -559,7 +559,6 @@ class MainPageState extends State<MainPage> {
                             avatar: showOnlyIcons ? null :Icon(Icons.settings),
                             onPressed: () async {
                               if(!mounted) return;
-                              _blockScan = true;
                                if(mounted){
                                   !_isMobile
                                      ? await SettingsPage.showSettingsAsDialog(
@@ -608,7 +607,6 @@ class MainPageState extends State<MainPage> {
                                  _selectedColor = AppSettingsManager.instance.settings.selectedColor ?? _selectedColor;
                                  MyApp.of(context).changeSeedColor(_selectedColor);
                                });
-                               _blockScan = false;
                             },
                         ),
                         ActionChip(
@@ -702,11 +700,12 @@ class MainPageState extends State<MainPage> {
                         children: [
                           Expanded(
                               flex: 2,
-                              child: !_isMobile && width > 850 ? TextButton.icon(
+                              child: !_isMobile && width > 850 ? ElevatedButton.icon(
                                 onPressed: (){
                                   addOrEditUser();
                                 },
-                                style: TextButton.styleFrom(
+                                style: ElevatedButton.styleFrom(
+                                  elevation: 3,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                     backgroundColor: _selectedColor, //Color.fromRGBO(169, 171, 25, 1.0),
                                     foregroundColor: Colors.black87,
@@ -772,6 +771,7 @@ class MainPageState extends State<MainPage> {
                                     icon: Icon(Icons.search),
                                     style: TextButton.styleFrom(
                                       backgroundColor: _selectedColor,
+                                      foregroundColor: Colors.black87,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.only(topRight: Radius.circular(12), bottomRight: Radius.circular(12)),
                                       ),
@@ -804,9 +804,7 @@ class MainPageState extends State<MainPage> {
                       ),
                       TextButton.icon(
                           onPressed: () async{
-                            _blockScan = true;
                             if(context.mounted) await StatisticPage.showStatisticDialog(context);
-                            _blockScan = false;
                           },
                           label: Text(S.of(context).main_page_statistic(_useServer)),
                           icon: Icon(Icons.bar_chart), //_statLoading ? SizedBox(width: 10, height: 10, child: CircularProgressIndicator()) : Icon(Icons.bar_chart),
@@ -816,12 +814,16 @@ class MainPageState extends State<MainPage> {
                   Expanded(
                     child: _userList.isEmpty
                         ? Center(
-                            child: Text(_searchController.text.length > 3 ? S.of(context).no_users_found : S.of(context).main_page_emptyUserListText , textAlign: TextAlign.center,),
+                            child: Text(_searchController.text.isNotEmpty && !_useServer ? S.of(context).no_users_found : S.of(context).main_page_emptyUserListText , textAlign: TextAlign.center,),
                           )
                         : LayoutBuilder(
                             builder: (context, constraints) {
                               final isList = constraints.maxWidth > 782 && _isListView;
-                              return ShaderMask(
+                              return Scrollbar(
+                                thumbVisibility: !_isMobile,
+                                trackVisibility: !_isMobile,
+                                controller: scrollController,
+                                child: ShaderMask(
                                   shaderCallback: (Rect bounds) {
                                     return LinearGradient(
                                       begin: Alignment.topCenter,
@@ -836,11 +838,7 @@ class MainPageState extends State<MainPage> {
                                     ).createShader(bounds);
                                   },
                                   blendMode: BlendMode.dstIn, // Wichtig für den Maskeneffekt
-                                  child: Scrollbar(
-                                    thumbVisibility: !_isMobile,
-                                    trackVisibility: !_isMobile,
-                                    controller: scrollController,
-                                    child: isList
+                                  child:  isList
                                         ? ListView.builder(
                                             padding: EdgeInsets.only(right: 15,bottom: 20),
                                             controller: scrollController,
@@ -883,6 +881,7 @@ class MainPageState extends State<MainPage> {
                         clipBehavior: Clip.none,
                         children: [
                           ActionChip(
+                            tooltip: S.of(context).deletion_request_toolTip(_useServer),
                             onPressed: () async {
                               if(oldUserList.isEmpty) return;
                               DeleteRequestReturn? result = await DeleteDialog.showDeleteDialog(context, oldUserList);

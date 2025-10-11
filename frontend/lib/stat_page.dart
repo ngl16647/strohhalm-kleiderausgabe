@@ -268,7 +268,15 @@ class StatPageState extends State<StatPage>{
                                                   borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
                                                   color: Colors.teal.withAlpha(120),
                                                 ),
-                                                child: Text(S.of(context).saved, textAlign: TextAlign.center),
+                                                child: Row(
+                                                  spacing: 5,
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                                  children: [
+                                                    Icon(Icons.done, size: 16,),
+                                                    Text(S.of(context).saved, textAlign: TextAlign.center)
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                             onEnd: () => setState(() => saving = false),
@@ -286,7 +294,7 @@ class StatPageState extends State<StatPage>{
                                               bool? result;
                                               _useServer
                                                   ? result = await HttpHelper().updateCustomer(widget.user)
-                                                  : result = await DatabaseHelper().updateUser(widget.user, true);
+                                                  : result = await DatabaseHelper().updateUser(widget.user, false);
                                               widget.user.notes = noteEditController.text;
                                               if(result != null) setState(() => saving = true);
                                             },
@@ -323,7 +331,7 @@ class StatPageState extends State<StatPage>{
                     children: getVisitTiles(),
                   ),
                   //If user should be able to book anyway: remove if-Statement
-                  if(_allowAdding ? !DateTime.now().isSameDay(widget.user.lastVisit!) : isPastDayLimit) Row(
+                  if(_allowAdding ? !DateTime.now().isSameDay(widget.user.lastVisit) : isPastDayLimit) Row(
                     spacing: 10,
                     children: [
                       Expanded(

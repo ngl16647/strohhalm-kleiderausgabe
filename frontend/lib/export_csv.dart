@@ -208,10 +208,6 @@ class DataBaseExportFunctions{
           ? row[colIndex["UUID"]!]
           : const Uuid().v4();
 
-      if(colIndex["UUID"] != null && row[colIndex["UUID"]!] != null && row[colIndex["UUID"]!].toString().isNotEmpty){
-        print(row[colIndex["UUID"]!]);
-      }
-
       User userWithoutValidId = User(
         id: -1,
         uuId: uuid,

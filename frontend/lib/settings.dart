@@ -680,6 +680,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   )
               ),
           ),
+          SizedBox(height: 15),
           ElevatedButton.icon(
             onPressed: saveSettings,
             icon:  Icon(Icons.save),
