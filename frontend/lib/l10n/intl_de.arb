@@ -43,7 +43,7 @@
   "customer_tile_addNewEntry": "{visitMoreThan14Days, select, true{Neuen Besuch vermerken} false{Trotzdem vermerken} other{ }}",
 
   "main_page_languages": "Sprachen",
-  "main_page_searchUsers": "{useServer, select, true{Personen durchsuchen (server)} false{Personen durchsuchen (lokal)} other{ }}",
+  "main_page_searchUsers": "{useServer, select, true{Personen durchsuchen (server, mindestens 4 Zeichen)} false{Personen durchsuchen (lokal)} other{ }}",
   "main_page_add": "Hinzufügen",
   "main_page_isListView": "{isListView, select, true{Als Kacheln anzeigen?} false{Als Liste anzeigen?} other{ }}",
   "main_page_statistic": "{useServer, select, true{Statistiken (server)} false{Statistiken (lokal)} other{ }}",
@@ -162,7 +162,7 @@
   "load_more": "{isLoading, select, true{Lade...} false{Mehr laden...} other{Alles geladen!}}",
   "closesIn": "Schließt in {countDown} Sekunden",
   "visit_added_success": "Besuch erfolgreich eingetragen!",
-  "visit_added_error": "Fehler beim Eintragen\nBesucher war {difference, plural, =0{Heute} =1{vor 1 Tag} other{vor {difference} Tagen}} bereits da",
+  "visit_added_error": "Fehler beim Eintragen\nBesucher war <bold>{difference, plural, =0{Heute} =1{vor 1 Tag} other{vor {difference} Tagen}}</bold> bereits da",
   "online_Database": "online Datenbank",
   "offline_Database": "offline Datenbank",
   "countryErrorMessage": "Das Land konnte nicht automatisch erkannt werden.\nBitte wähle ein Land aus der nachfolgenden Liste aus.\n\nWenn du keine genaueren Angaben machen möchtest, wähle <bold>Weltweit</bold>.",
@@ -179,5 +179,10 @@
   "days": "Tage",
   "no_users_found": "Keine Besucher gefunden",
   "settings_controlTitle": "Kontroll-Variablen",
-  "settings_controlToolTip": "Variablen für die steuerung von Tageslimit und der Möglichkeit zu Löschen/Hinzuzufügen"
+  "settings_controlToolTip": "Variablen für die steuerung von Tageslimit und der Möglichkeit zu Löschen/Hinzuzufügen",
+  "showVisitorDetails": "Besucher Details anzeigen",
+  "pdf_preparing": "Deine PDF wird vorbereitet. Bitte warte einen Moment, sie öffnet sich anschließend automatisch.",
+  "print_pdf_tooltip": "Öffnet die aktuell angezeigten Statistiken im Standard-PDF-Viewer.",
+  "limited_entries_warning": "Es werden jeweils {numberOfEntries} Einträge angezeigt! Lösche die aktuellen, um die nächsten zu laden",
+  "deletion_request_toolTip": "Löschungsanträge für Besucher, die seit einem Jahr nicht mehr da waren.\nBegrenzt auf {useServer, select, true{1.000} false{20.000} other{ }} Einträge."
 }

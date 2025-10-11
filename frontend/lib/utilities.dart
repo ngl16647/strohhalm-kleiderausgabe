@@ -9,17 +9,40 @@ import 'database_helper.dart';
 import 'generated/l10n.dart';
 import 'http_helper.dart';
 
+
+extension DateTimeUtils on DateTime {
+  ///Turns a dateTime to the date only (yeah, month, day)
+  DateTime get dateOnly => DateTime(year, month, day);
+
+  ///Checks if two Dates(with different times) are the same Day
+  bool isSameDay(DateTime? other) {
+    if(other == null) return false;
+    return dateOnly == other.dateOnly;
+  }
+
+  /// Checks if the difference between today and the dayLimit is reached
+  bool get isBeyondCutOffNumber {
+    final today = DateTime.now().dateOnly;
+    final cutOff = AppSettingsManager.instance.settings.cutOffDayNumber ?? 14;
+    final diff = today.difference(dateOnly).inDays;
+    return diff >= cutOff;
+  }
+}
+
 ///Class for functions needed across the application
 class Utilities{
-  static Future<Visit?> addVisit(User user, BuildContext context, bool showToast) async {
+  ///Adds a Visit (now) to a user. Optionally shows a toast
+  static Future<Visit?> addVisit({
+    required User user,
+    required BuildContext context,
+    required bool showToast,
+  }) async {
     bool? useServer = AppSettingsManager.instance.settings.useServer;
-    bool allowAdding = AppSettingsManager.instance.settings.allowAdding ?? false;
-    int cutOffNumber = AppSettingsManager.instance.settings.cutOffDayNumber ?? 14;
-    cutOffNumber -= 1;
+    bool? allowAddingAnyway = AppSettingsManager.instance.settings.allowAdding ?? false;
     if(useServer == null) return null;
 
     Visit? newLastVisit;
-    if(allowAdding || user.lastVisit == null || DateTime.now().difference(user.lastVisit!).inHours >cutOffNumber*24+12){
+    if(allowAddingAnyway || (user.lastVisit?.isBeyondCutOffNumber ?? true)){
       newLastVisit = useServer
           ? await HttpHelper().addVisit(userId: user.id)
           : await DatabaseHelper().addVisit(user);
@@ -33,14 +56,6 @@ class Utilities{
     }
 
     return newLastVisit;
-  }
-
-  ///Checks if two Dates(with different times) are the same Day
-  static bool isSameDay(DateTime? dateTimeOne, DateTime? dateTimeTwo){
-    if(dateTimeOne == null || dateTimeTwo == null) return false;
-    DateFormat dateFormat = DateFormat("dd.MM.yyyy");
-    if(dateFormat.format(dateTimeOne) == dateFormat.format(dateTimeTwo)) return true;
-    return false;
   }
 
   ///Turns a country-code into a localized String

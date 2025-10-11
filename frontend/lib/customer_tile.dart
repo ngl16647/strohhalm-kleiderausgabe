@@ -6,6 +6,7 @@ import 'package:strohhalm_app/database_helper.dart';
 import 'package:strohhalm_app/user_and_visit.dart';
 import 'package:strohhalm_app/utilities.dart';
 import 'package:styled_text/styled_text.dart';
+import 'dialog_helper.dart';
 import 'generated/l10n.dart';
 import 'http_helper.dart';
 
@@ -37,7 +38,6 @@ class CustomerTileState extends State<CustomerTile>{
 
   bool _allowAdding = false;
   bool _allowDeleting = false;
-  int _cutOffNumber = 14;
 
   @override
   void initState() {
@@ -45,12 +45,11 @@ class CustomerTileState extends State<CustomerTile>{
     _useServer = settings.useServer ?? false;
     _allowAdding = settings.allowAdding ?? false;
     _allowDeleting = settings.allowDeleting ?? false;
-    _cutOffNumber = settings.cutOffDayNumber ?? 14;
-    _cutOffNumber = _cutOffNumber-1;
     super.initState();
   }
 
-  bool get visitIsMoreThan14Days => widget.user.lastVisit != null ? DateTime.now().difference(widget.user.lastVisit!).inHours > _cutOffNumber*24+12 : true;
+
+  bool get isPastDayLimit => widget.user.lastVisit?.isBeyondCutOffNumber ?? true;
 
   ///Creates the Text that displays the lastVisit status
   String _buildLastVisitStyledText() {
@@ -60,7 +59,7 @@ class CustomerTileState extends State<CustomerTile>{
     if (widget.user.lastVisit == null) {
       // Never visited
       return S.of(context).customer_tile_lastVisit_never;
-    } else if (Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)) {
+    } else if (DateTime.now().isSameDay( widget.user.lastVisit!)) {
       // visited today
       return S.of(context).customer_tile_lastVisit_today;
     } else {
@@ -78,10 +77,15 @@ class CustomerTileState extends State<CustomerTile>{
       children: [
         //If user should be able to book anyway: if(!visitMoreThan14Days)
         if(_allowDeleting
-            ? !visitIsMoreThan14Days
-            : widget.user.lastVisit != null && Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)) Expanded(
+            ? !isPastDayLimit
+            : widget.user.lastVisit != null && DateTime.now().isSameDay(widget.user.lastVisit!)) Expanded(
           child:  TextButton(
             onPressed: () async {
+              bool? result = await DialogHelper.dialogConfirmation(
+              context: context,
+              message: S.of(context).stat_page_removeLastVisitConfirmation,
+              hasChoice: true);
+              if (result == null || !result) return;
               String? newLastTime;
               _useServer
                   ? newLastTime = await HttpHelper().deleteVisit(customerId: widget.user.id)
@@ -104,11 +108,11 @@ class CustomerTileState extends State<CustomerTile>{
           ),
         ),
 
-        if(_allowAdding && !visitIsMoreThan14Days && !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)) SizedBox(width: 5,),
+        if(_allowAdding && !isPastDayLimit && !DateTime.now().isSameDay(widget.user.lastVisit!)) SizedBox(width: 5,),
         //if(widget.user.lastVisit == null || visitIsMoreThan14Days) //If user should be able to book anyway: if(widget.user.lastVisit == null || !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!))
         if(_allowAdding
-            ? widget.user.lastVisit == null || !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!)
-            : widget.user.lastVisit == null || visitIsMoreThan14Days)
+            ? widget.user.lastVisit == null || !DateTime.now().isSameDay(widget.user.lastVisit!)
+            : widget.user.lastVisit == null || isPastDayLimit)
           Expanded(
             child: TextButton(
               onPressed: () async {
@@ -116,7 +120,10 @@ class CustomerTileState extends State<CustomerTile>{
                   _uploading = true;
                 });
 
-                Visit? newLastVisit = await Utilities.addVisit(widget.user, context, true);
+                Visit? newLastVisit = await Utilities.addVisit(
+                    context: context,
+                    user: widget.user,
+                    showToast: true);
                 setState(() {
                   if(newLastVisit != null){
                     widget.user.lastVisit = newLastVisit.tookTime;
@@ -137,7 +144,7 @@ class CustomerTileState extends State<CustomerTile>{
                 height: 24, // kleiner als 40
                 width: 24,
                 child: CircularProgressIndicator(strokeWidth: 2),
-              ) : Text(S.of(context).customer_tile_addNewEntry(visitIsMoreThan14Days), textAlign: TextAlign.center,),
+              ) : Text(S.of(context).customer_tile_addNewEntry(isPastDayLimit), textAlign: TextAlign.center,),
             ),
           ),
       ],
@@ -199,13 +206,13 @@ class CustomerTileState extends State<CustomerTile>{
                   padding: EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    color: visitIsMoreThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
+                    color: isPastDayLimit ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(visitIsMoreThan14Days ? Icons.check_circle : Icons.error),
+                      Icon(isPastDayLimit ? Icons.check_circle : Icons.error),
                       SizedBox(width: 5),
                       Flexible(
                         child: StyledText(
@@ -278,14 +285,14 @@ class CustomerTileState extends State<CustomerTile>{
           padding:  EdgeInsets.all(5),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: visitIsMoreThan14Days ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
+            color: isPastDayLimit ? Colors.green.withAlpha(170) : Colors.red.withAlpha(100),
           ),
           constraints: BoxConstraints(minHeight: 50),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(visitIsMoreThan14Days ? Icons.check_circle : Icons.error),
+              Icon(isPastDayLimit ? Icons.check_circle : Icons.error),
               SizedBox(width: 5),
               Expanded(
                 child: StyledText(

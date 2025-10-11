@@ -26,26 +26,26 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m3(dateString) =>
       "Был <bold>${dateString}</bold> в последний раз";
 
-  static String m5(isListView) =>
+  static String m7(isListView) =>
       "${Intl.select(isListView, {'true': 'Показывать как плитки?', 'false': 'Показывать как список?'})}";
 
-  static String m6(useServer) => "Поиск пользователей";
+  static String m8(useServer) => "Поиск пользователей";
 
-  static String m7(useServer) => "Статистика";
+  static String m9(useServer) => "Статистика";
 
-  static String m8(isDarkMode) =>
+  static String m10(isDarkMode) =>
       "${Intl.select(isDarkMode, {'true': 'Светлая тема', 'false': 'Тёмная тема'})}";
 
-  static String m9(cutOffNumber, overAllNumberOfCountries) =>
+  static String m11(cutOffNumber, overAllNumberOfCountries) =>
       "Показать топ ${cutOffNumber} стран из ${overAllNumberOfCountries}";
 
-  static String m10(showYear) =>
+  static String m12(showYear) =>
       "${Intl.select(showYear, {'true': 'к просмотру по месяцам', 'false': 'к просмотру по годам'})}";
 
-  static String m11(count) =>
+  static String m13(count) =>
       "${Intl.plural(count, one: 'Посещение', other: 'Посещения')}";
 
-  static String m13(showYear) =>
+  static String m15(showYear) =>
       "${Intl.select(showYear, {'true': 'Месяц', 'false': 'День'})}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -140,7 +140,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_fullScreen": MessageLookupByLibrary.simpleMessage(
       "Полноэкранный режим",
     ),
-    "main_page_isListView": m5,
+    "main_page_isListView": m7,
     "main_page_languages": MessageLookupByLibrary.simpleMessage("Языки"),
     "main_page_noUserWithUUID": MessageLookupByLibrary.simpleMessage(
       "Соответствующий пользователь не найден!",
@@ -148,9 +148,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_scanQrCode": MessageLookupByLibrary.simpleMessage(
       "Сканировать QR-код",
     ),
-    "main_page_searchUsers": m6,
-    "main_page_statistic": m7,
-    "main_page_theme": m8,
+    "main_page_searchUsers": m8,
+    "main_page_statistic": m9,
+    "main_page_theme": m10,
     "no": MessageLookupByLibrary.simpleMessage("Нет"),
     "number_fail": MessageLookupByLibrary.simpleMessage(
       "Неверное число!\nПожалуйста, введите правильное число",
@@ -215,10 +215,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Количество посещений",
     ),
-    "statistic_page_show_top_countries": m9,
-    "statistic_page_switchYearDisplay": m10,
-    "statistic_page_visits": m11,
-    "statistic_page_xAxis": m13,
+    "statistic_page_show_top_countries": m11,
+    "statistic_page_switchYearDisplay": m12,
+    "statistic_page_visits": m13,
+    "statistic_page_xAxis": m15,
     "success": MessageLookupByLibrary.simpleMessage("Успех"),
     "today": MessageLookupByLibrary.simpleMessage("сегодня"),
     "update_failed": MessageLookupByLibrary.simpleMessage(

@@ -47,9 +47,8 @@ class StatPageState extends State<StatPage>{
 
   bool _allowAdding = false;
   bool _allowDeleting = false;
-  int _cutOffNumber = 14;
 
-  bool get visitIsMoreThan14Days => widget.user.lastVisit != null ?  DateTime.now().difference(widget.user.lastVisit!).inHours > _cutOffNumber*24+12 : true;
+  bool get isPastDayLimit => widget.user.lastVisit?.isBeyondCutOffNumber ?? true;
 
   @override
   void initState() {
@@ -58,8 +57,6 @@ class StatPageState extends State<StatPage>{
     _useServer = settings.useServer ?? false;
     _allowAdding = settings.allowAdding ?? false;
     _allowDeleting = settings.allowDeleting ?? false;
-    _cutOffNumber = settings.cutOffDayNumber ?? 14;
-    _cutOffNumber = _cutOffNumber-1;
 
     noteEditController.text = widget.user.notes ?? "";
     getVisits();
@@ -76,13 +73,22 @@ class StatPageState extends State<StatPage>{
 
   ///returns Widgets for display of last Visit
   List<Widget> getVisitTiles(){
+
+    String visitString;
+    if(widget.user.lastVisit == null){
+      visitString = S.of(context).customer_tile_lastVisit_never;
+    } else {
+      bool showOnlyDate = _useServer || widget.user.lastVisit ==  widget.user.lastVisit!.dateOnly;
+      visitString = "${DateFormat(showOnlyDate ? "dd.MM.yyyy" : "dd.MM.yyyy HH:mm").format(widget.user.lastVisit!)} ${DateTime.now().isSameDay(widget.user.lastVisit!) && !_isMobile ? " (${S.of(context).today})" : ""}";
+    }
+
     return [
       Expanded(
         child: Container(
           decoration: BoxDecoration(
             color: widget.user.lastVisit == null
                 ? Colors.grey
-                : (visitIsMoreThan14Days)
+                : (isPastDayLimit)
                 ? Colors.green.withAlpha(170)
                 : Colors.red.withAlpha(170),
             borderRadius: BorderRadius.circular(12),
@@ -91,7 +97,7 @@ class StatPageState extends State<StatPage>{
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon((visitIsMoreThan14Days) ? Icons.check_circle : Icons.block),
+              Icon((isPastDayLimit) ? Icons.check_circle : Icons.block),
               SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -99,9 +105,7 @@ class StatPageState extends State<StatPage>{
                   children: [
                     Text(S.of(context).stat_page_lastTimeTookClothes),
                     StyledText(
-                      text: widget.user.lastVisit == null
-                          ? S.of(context).customer_tile_lastVisit_never
-                          : "${DateFormat(_useServer ? "dd.MM.yyyy" : "dd.MM.yyyy HH:mm").format(widget.user.lastVisit!)} ${Utilities.isSameDay(DateTime.now(), widget.user.lastVisit!) && !_isMobile ? " (${S.of(context).today})" : ""}",
+                      text: visitString,
                       style: TextStyle(fontSize: 18),
                     ),
                   ],
@@ -110,7 +114,7 @@ class StatPageState extends State<StatPage>{
               //If user should be able to book anyway: _allVisits.isNotEmpty && widget.user.lastVisit != null
               if(_allowDeleting
                   ? _allVisits.isNotEmpty && widget.user.lastVisit != null
-                  : widget.user.lastVisit != null && Utilities.isSameDay(widget.user.lastVisit!, DateTime.now()) &&  _allVisits.isNotEmpty)
+                  : widget.user.lastVisit != null && DateTime.now().isSameDay(widget.user.lastVisit!) &&  _allVisits.isNotEmpty)
               TextButton.icon(
                 onPressed: () async {
                   bool? result = await DialogHelper.dialogConfirmation(
@@ -264,7 +268,15 @@ class StatPageState extends State<StatPage>{
                                                   borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
                                                   color: Colors.teal.withAlpha(120),
                                                 ),
-                                                child: Text(S.of(context).saved, textAlign: TextAlign.center),
+                                                child: Row(
+                                                  spacing: 5,
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                                  children: [
+                                                    Icon(Icons.done, size: 16,),
+                                                    Text(S.of(context).saved, textAlign: TextAlign.center)
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                             onEnd: () => setState(() => saving = false),
@@ -282,7 +294,7 @@ class StatPageState extends State<StatPage>{
                                               bool? result;
                                               _useServer
                                                   ? result = await HttpHelper().updateCustomer(widget.user)
-                                                  : result = await DatabaseHelper().updateUser(widget.user);
+                                                  : result = await DatabaseHelper().updateUser(widget.user, false);
                                               widget.user.notes = noteEditController.text;
                                               if(result != null) setState(() => saving = true);
                                             },
@@ -307,7 +319,6 @@ class StatPageState extends State<StatPage>{
                               icon: Icon(Icons.qr_code),
                               label: Text(S.of(context).qr_code_print),
                               style: TextButton.styleFrom(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   backgroundColor: Theme.of(context).buttonTheme.colorScheme?.primaryFixed.withAlpha(120),
                                   minimumSize: Size(double.infinity, 64)
                               ),
@@ -320,21 +331,21 @@ class StatPageState extends State<StatPage>{
                     children: getVisitTiles(),
                   ),
                   //If user should be able to book anyway: remove if-Statement
-                  if(_allowAdding ? !Utilities.isSameDay(DateTime.now(), widget.user.lastVisit) : visitIsMoreThan14Days) Row(
+                  if(_allowAdding ? !DateTime.now().isSameDay(widget.user.lastVisit) : isPastDayLimit) Row(
                     spacing: 10,
                     children: [
                       Expanded(
                           flex: 2,
                           child: TextButton(
                               onPressed: ()async{
-                                if(widget.user.lastVisit != null && Utilities.isSameDay(widget.user.lastVisit!, DateTime.now())) {
+                                if(widget.user.lastVisit != null && DateTime.now().isSameDay(widget.user.lastVisit!)) {
                                   if(context.mounted) Utilities.showToast(context: context, title:  S.of(context).fail, description: S.of(context).stat_page_alreadyGotToday, isError: true);
                                   return;
                                 }
                                 setState(() {
                                   uploading = true;
                                 });
-                                Visit? newLastVisit = await Utilities.addVisit(widget.user, context, true);
+                                Visit? newLastVisit = await Utilities.addVisit(context: context, user: widget.user, showToast: true);
                                 setState(() {
                                   if(newLastVisit != null) {
                                     widget.user.lastVisit = newLastVisit.tookTime;
@@ -348,7 +359,7 @@ class StatPageState extends State<StatPage>{
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   minimumSize: Size(double.infinity, 75)
                               ),
-                              child: uploading ? Center(child: CircularProgressIndicator()) : Text( S.of(context).customer_tile_addNewEntry(visitIsMoreThan14Days))))
+                              child: uploading ? Center(child: CircularProgressIndicator()) : Text( S.of(context).customer_tile_addNewEntry(isPastDayLimit))))
                     ],
                   )
                 ],
