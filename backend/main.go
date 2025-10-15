@@ -8,7 +8,6 @@ import (
 	"strohhalm-backend/db"
 	"strohhalm-backend/middlewares"
 	"strohhalm-backend/routes"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -39,32 +38,34 @@ func runServer(r chi.Router) {
 	if !cfg.GlobalConfig.Tls.UseTls {
 		addr := Addr(cfg.GlobalConfig.Server.Host, cfg.GlobalConfig.Server.Port)
 		log.Println("WARNING: Server running without TLS")
-		log.Printf("Server started on port %s\n", addr)
+		log.Printf("Server started on %s\n", addr)
 		err = http.ListenAndServe(addr, r)
 	} else if cfg.GlobalConfig.Tls.Autocert.UseAutocert { // autocert with Let's Encrypt
 		addr := Addr(cfg.GlobalConfig.Server.Host, 443) // must serve backend on 443
 		acManager, tlsCfg := cfg.GenerateTlsConfig(cfg.GlobalConfig)
+
+		// listening for ACME challenges
+		httpServer := cfg.HttpServer(acManager)
+		go func() {
+			log.Print("Listening on port 80")
+			log.Fatal(httpServer.ListenAndServe())
+		}()
+
+		// check if certificates exist
+		// <-time.After(time.Second * 2)
+		// log.Print("Validating TLS certificate")
+		// cfg.ValidateAutocert(acManager, cfg.GlobalConfig.Tls.Autocert.Domains)
+
 		httpsServer := &http.Server{
 			Addr:      addr,
 			Handler:   r,
 			TLSConfig: tlsCfg,
 		}
-
-		// listening for ACME challenges
-		httpServer := cfg.HttpServer(acManager)
-		go func() {
-			log.Fatal(http.ListenAndServe(Addr(cfg.GlobalConfig.Server.Host, 80), httpServer))
-		}()
-
-		// check if certificates exist
-		<-time.After(time.Second * 2)
-		cfg.ValidateAutocert(acManager, cfg.GlobalConfig.Tls.Autocert.Domains)
-
-		log.Printf("Server started on port %s with autocert\n", addr)
+		log.Printf("Server started on %s with autocert\n", addr)
 		err = httpsServer.ListenAndServeTLS("", "")
 	} else { // manual TLS
 		addr := Addr(cfg.GlobalConfig.Server.Host, cfg.GlobalConfig.Server.Port)
-		log.Printf("Server started on port %s\n", addr)
+		log.Printf("Server started on %s\n", addr)
 		err = http.ListenAndServeTLS(
 			addr,
 			cfg.GlobalConfig.Tls.CertFile,

@@ -5,8 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -22,12 +20,11 @@ func GenerateTlsConfig(cfg *Config) (*autocert.Manager, *tls.Config) {
 	}
 }
 
-func HttpServer(m *autocert.Manager) *chi.Mux {
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Handle("/*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		m.HTTPHandler(nil).ServeHTTP(w, r)
-	}))
+func HttpServer(m *autocert.Manager) *http.Server {
+	r := &http.Server{
+		Addr:    ":80",
+		Handler: m.HTTPHandler(nil),
+	}
 	return r
 }
 
