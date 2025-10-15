@@ -40,7 +40,15 @@ func runServer(r chi.Router) {
 		log.Println("WARNING: Server running without TLS")
 		log.Printf("Server started on port %s\n", addr)
 		err = http.ListenAndServe(addr, r)
-	} else {
+	} else if cfg.GlobalConfig.Tls.Autocert.UseAutocert { // autocert with Let's Encrypt
+		httpsServer := &http.Server{
+			Addr:      addr,
+			Handler:   r,
+			TLSConfig: cfg.GenerateTlsConfig(cfg.GlobalConfig),
+		}
+		log.Printf("Server started on port %s\n", addr)
+		err = httpsServer.ListenAndServeTLS("", "")
+	} else { // manual TLS
 		log.Printf("Server started on port %s\n", addr)
 		err = http.ListenAndServeTLS(addr, cfg.GlobalConfig.Tls.CertFile, cfg.GlobalConfig.Tls.KeyFile, r)
 	}
