@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:strohhalm_app/app_settings.dart';
 import 'package:strohhalm_app/dialog_helper.dart';
@@ -207,6 +208,7 @@ class DeleteDialogState extends State<DeleteDialog>{
                               ),
                               SizedBox(height: 10,),
                               Row(
+                                spacing: 10,
                                 children: [
                                   ActionChip(
                                       avatar: Icon(Icons.delete_sweep),
@@ -227,12 +229,16 @@ class DeleteDialogState extends State<DeleteDialog>{
                                                 await DatabaseHelper().deleteUsers(oldUserList.map((u) => u.id).toList())
                                             );
                                           }
+                                          List<User> newOldUsers = _useServer
+                                              ? await HttpHelper().searchCustomers(lastVisitBefore: DateTime.now().subtract(365.days), size: 1000) ?? []
+                                              : await DatabaseHelper().getUsers(lastVisitBefore: DateTime.now().subtract(365.days), size: 20000);
                                           setState(() {
-                                             oldUserList.clear();
+                                            oldUserList = newOldUsers;
                                           });
                                         }
                                       },
                                   ),
+                                  if(oldUserList.length >= (_useServer ? 1000 : 20000))Text(S.of(context).limited_entries_warning(_useServer ? 1000 : 20000)),
                                   Spacer(),
                                 ],
                               ),

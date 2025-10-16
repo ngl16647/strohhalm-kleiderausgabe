@@ -169,6 +169,7 @@ class DatabaseHelper {
 
   Future<void> addVisits(User user, List<DateTime> visits) async {
     final db = await database;
+    if(visits.isEmpty) return;
     await updateUserLastVisit(user.id, visits.last);
     await db.transaction((txn) async {
       for (DateTime t in visits) {
@@ -230,7 +231,6 @@ class DatabaseHelper {
       whereClauses.add("notes = ?");
       whereArgs.add(notes);
     }
-
     final result = await db.query(
       "customers",
       where: whereClauses.isNotEmpty ? whereClauses.join(" AND ") : null,
@@ -308,7 +308,7 @@ class DatabaseHelper {
         whereArgs.add(lastVisitBefore.toIso8601String());
       }
 
-      size = size ?? 20; //default to 20
+      //size = size ?? 20; //default to 20
       page = page != null ? page-1 : 0; //so page index doesn't start with 0
 
       List<Map<String, dynamic>> maps = await db.query(
@@ -316,7 +316,7 @@ class DatabaseHelper {
         where: conditions.join(" AND "),
         whereArgs: whereArgs,
         limit: size,
-        offset: size * page,
+        offset: size == null ? null : size * page,
         orderBy: "lastVisit DESC", //firstName ASC
       );
 
@@ -348,16 +348,17 @@ class DatabaseHelper {
   }
 
   ///Updates a user and checks if it already exists
-  Future<bool?> updateUser(User user) async {
+  Future<bool?> updateUser(User user, bool checkForExisting) async {
     final db = await database;
-    int exists = await checkIfUserExists(
-        firstName: user.firstName,
-        lastName: user.lastName,
-        birthDay: user.birthDay,
-        country: user.country,
-        notes: user.notes
-    );
-    if(exists != -1) return false;
+    if(checkForExisting){
+      int exists = await checkIfUserExists(
+          firstName: user.firstName,
+          lastName: user.lastName,
+          birthDay: user.birthDay,
+          country: user.country,
+      );
+      if(exists != -1) return false;
+    }
     try{
       await db.update(
           "customers",

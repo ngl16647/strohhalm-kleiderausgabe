@@ -624,9 +624,14 @@ class _SettingsPageState extends State<SettingsPage> {
                                                     final convertedFile = File("${csvFile.parent.path}/converted.csv");
                                                     await convertedFile.writeAsString(converted, encoding: utf8);
 
-                                                    await HttpHelper().uploadCsv(convertedFile);
-
+                                                    bool? uploaded =await HttpHelper().uploadCsv(convertedFile);
                                                     convertedFile.delete();
+
+                                                    if(uploaded != null && uploaded){
+                                                      setState(() {
+                                                        _onlineDbIsEmpty = false;
+                                                      });
+                                                    }
                                                   }
                                                 },
                                                 child: Text(S.of(context).settings_uploadCsvToServer),
@@ -675,6 +680,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   )
               ),
           ),
+          SizedBox(height: 15),
           ElevatedButton.icon(
             onPressed: saveSettings,
             icon:  Icon(Icons.save),

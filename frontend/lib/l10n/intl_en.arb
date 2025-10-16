@@ -181,5 +181,10 @@
   "days": "Days",
   "no_users_found": "Didn't find anything",
   "settings_controlTitle": "Control-Variables",
-  "settings_controlToolTip": "Variables for control of the rules"
+  "settings_controlToolTip": "Variables for control of the rules",
+  "showVisitorDetails": "Show Visitor Details",
+  "pdf_preparing": "Your PDF is being prepared. Please wait a moment; it will open automatically once ready",
+  "print_pdf_tooltip": "Opens the currently displayed statistics in the default PDF viewer",
+  "limited_entries_warning": "Only {numberOfEntries} entries are shown at a time! Delete the current ones to see the next set",
+  "deletion_request_toolTip": "Deletion requests for visitors who haven’t been here for a year.\nLimited to {useServer, select, true{1.000} false{20.000} other{ }} entries."
 }
