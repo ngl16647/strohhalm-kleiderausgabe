@@ -292,8 +292,38 @@ class DatabaseHelper {
       List<dynamic> whereArgs = [];
 
       if (search != null && search.isNotEmpty) {
-        conditions.add("LOWER(firstName || ' ' || lastName) LIKE ?");
-        whereArgs.add("%${search.toLowerCase()}%");
+       final regExMatch = RegExp(r"^\d{1,2}\.\d{1,2}(?:\.)?(?:\d{2,4})?$");
+       if(regExMatch.hasMatch(search)){
+          List<String> parts = search.split(".");
+          if(parts.length > 2 && parts[2].isNotEmpty){
+            int year = int.parse(parts[2]);
+            //Ridiculous future proof
+            if(year < 100){
+              if(year < int.parse(DateTime.now().year.toString().substring(2))){
+                int yearPrefix = int.parse(DateTime.now().year.toString().substring(0,2));
+                year = int.parse("$yearPrefix$year");
+              } else{
+                int yearPrefix = int.parse(DateTime.now().year.toString().substring(0,2))-1;
+                year = int.parse("$yearPrefix$year");
+              }
+            }
+            int month = int.parse(parts[1]);
+            int day = int.parse(parts[0]);
+
+            DateTime d = DateTime(year, month, day);
+
+            conditions.add("birthday LIKE ?");
+            whereArgs.add(d.toIso8601String());
+          } else if(parts.length > 1) {
+            final monthStr = parts[1].padLeft(2, "0");
+            final dayStr = parts[0].padLeft(2, "0");
+            conditions.add("strftime('%m-%d', birthday) = ?");
+            whereArgs.add("$monthStr-$dayStr");
+          }
+       } else {
+         conditions.add("LOWER(firstName || ' ' || lastName) LIKE ?");
+         whereArgs.add("%${search.toLowerCase()}%");
+       }
       }
       if (id != null) {
         conditions.add("id = ?");
