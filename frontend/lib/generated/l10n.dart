@@ -1567,6 +1567,16 @@ class S {
       args: [useServer],
     );
   }
+
+  /// `Adjust the dimensions to match your medium (e.g., credit card size 91 × 55 mm, height of a label, etc.)\nto avoid distortions and make optimal use of the available space.\nTo keep your print dialog settings for future use, adjust your printer settings in your operating system. (Example: In Windows, search for “Printers” > select your printer > adjust the printer settings)`
+  String get print_toolTip {
+    return Intl.message(
+      'Adjust the dimensions to match your medium (e.g., credit card size 91 × 55 mm, height of a label, etc.)\nto avoid distortions and make optimal use of the available space.\nTo keep your print dialog settings for future use, adjust your printer settings in your operating system. (Example: In Windows, search for “Printers” > select your printer > adjust the printer settings)',
+      name: 'print_toolTip',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
