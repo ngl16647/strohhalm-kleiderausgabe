@@ -2,7 +2,6 @@ package routes
 
 import (
 	"bufio"
-	"fmt"
 	"net/http"
 	"strings"
 	"strohhalm-backend/db"
@@ -70,17 +69,17 @@ func ExportCsvHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	bw.Write([]byte("ID,Vorname,Nachname,Notizen,Geburtsdatum,Herkunftsland,Datum\n"))
+	bw.Write([]byte("UUID,Vorname,Nachname,Notizen,Geburtsdatum,Herkunftsland,Datum\n"))
 
 	for _, c := range data {
 		err := writeCsvLineWithTrailingComma(
 			bw,
-			fmt.Sprint(c.Id),
+			c.Uuid,
 			c.FirstName,
 			c.LastName,
+			c.Notes,
 			c.Birthday,
 			c.Country,
-			c.Notes,
 		)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

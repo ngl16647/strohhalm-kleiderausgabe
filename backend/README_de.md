@@ -18,13 +18,13 @@ Diese Methode ist schneller, verwende sie jedoch nicht, wenn du mit der Systemad
 curl -L -o server \
     https://github.com/ngl16647/strohhalm-kleiderausgabe/releases/latest/download/backend-ubuntu && \
     chmod +x server && \
-    ./server > server.log 2>&1 &
+    nohup ./server > server.log 2>&1 &
 ```
 
 Nach der Bereitstellung kannst du jederzeit
 
 ```bash
-./server > server.log 2>&1 &
+nohup ./server > server.log 2>&1 &
 ```
 
 ausführen, um das Backend erneut zu starten. Stelle sicher, dass die vorherige Instanz gestoppt ist, bevor du eine neue startest.

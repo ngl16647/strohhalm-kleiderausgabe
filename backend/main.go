@@ -29,7 +29,6 @@ func main() {
 }
 
 func runServer(r chi.Router) {
-	addr := fmt.Sprintf("%s:%d", cfg.GlobalConfig.Server.Host, cfg.GlobalConfig.Server.Port)
 
 	if !cfg.GlobalConfig.Api.UseApiKey {
 		log.Println("WARNING: Server running without API key verification")
@@ -37,15 +36,49 @@ func runServer(r chi.Router) {
 
 	var err error
 	if !cfg.GlobalConfig.Tls.UseTls {
+		addr := Addr(cfg.GlobalConfig.Server.Host, cfg.GlobalConfig.Server.Port)
 		log.Println("WARNING: Server running without TLS")
-		log.Printf("Server started on port %s\n", addr)
+		log.Printf("Server started on %s\n", addr)
 		err = http.ListenAndServe(addr, r)
-	} else {
-		log.Printf("Server started on port %s\n", addr)
-		err = http.ListenAndServeTLS(addr, cfg.GlobalConfig.Tls.CertFile, cfg.GlobalConfig.Tls.KeyFile, r)
+	} else if cfg.GlobalConfig.Tls.Autocert.UseAutocert { // autocert with Let's Encrypt
+		addr := Addr(cfg.GlobalConfig.Server.Host, 443) // must serve backend on 443
+		acManager, tlsCfg := cfg.GenerateTlsConfig(cfg.GlobalConfig)
+
+		// listening for ACME challenges
+		httpServer := cfg.HttpServer(acManager)
+		go func() {
+			log.Print("Listening on port 80")
+			log.Fatal(httpServer.ListenAndServe())
+		}()
+
+		// check if certificates exist
+		// <-time.After(time.Second * 2)
+		// log.Print("Validating TLS certificate")
+		// cfg.ValidateAutocert(acManager, cfg.GlobalConfig.Tls.Autocert.Domains)
+
+		httpsServer := &http.Server{
+			Addr:      addr,
+			Handler:   r,
+			TLSConfig: tlsCfg,
+		}
+		log.Printf("Server started on %s with autocert\n", addr)
+		err = httpsServer.ListenAndServeTLS("", "")
+	} else { // manual TLS
+		addr := Addr(cfg.GlobalConfig.Server.Host, cfg.GlobalConfig.Server.Port)
+		log.Printf("Server started on %s\n", addr)
+		err = http.ListenAndServeTLS(
+			addr,
+			cfg.GlobalConfig.Tls.CertFile,
+			cfg.GlobalConfig.Tls.KeyFile,
+			r,
+		)
 	}
 
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func Addr(host string, port int) string {
+	return fmt.Sprintf("%s:%d", host, port)
 }
