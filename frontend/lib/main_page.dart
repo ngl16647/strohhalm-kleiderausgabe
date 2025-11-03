@@ -152,9 +152,12 @@ class MainPageState extends State<MainPage> {
   void searchChanged(String query) {
     if (_searchWaitTimer?.isActive ?? false) _searchWaitTimer!.cancel();
     if(!_useServer){
-      searchUsers(query);
+      _searchWaitTimer = Timer(200.ms, () { //Makes search smoother
+          searchUsers(query);
+      });
       return;
     }
+    //Different online logic to reduce requests
     if(query.length <= 3){
       setState(() {
         _userList.clear();

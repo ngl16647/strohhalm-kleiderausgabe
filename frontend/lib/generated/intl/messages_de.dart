@@ -258,6 +258,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "print_pdf_tooltip": MessageLookupByLibrary.simpleMessage(
       "Öffnet die aktuell angezeigten Statistiken im Standard-PDF-Viewer.",
     ),
+    "print_toolTip": MessageLookupByLibrary.simpleMessage(
+      "Passe die Abmessungen an die Größe deines Mediums an (z. B. Kreditkartengröße 91 × 55 mm, Breite eines Labels, etc.),\num Verzerrungen zu vermeiden und den verfügbaren Platz optimal zu nutzen.\nUm Ihre Druckdialog-Einstellungen für zukünftige Druckvorgänge beizubehalten, passen Sie die Druckereinstellungen in Ihrem Betriebssystem an\n(Beispiel: In Windows „Drucker“ suchen > Ihren Drucker auswählen > Druckereinstellungen anpassen)",
+    ),
     "print_width": MessageLookupByLibrary.simpleMessage("Breite"),
     "qr_code_print": MessageLookupByLibrary.simpleMessage("QR-Code Drucken"),
     "qr_code_share": MessageLookupByLibrary.simpleMessage(
