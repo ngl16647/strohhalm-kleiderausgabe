@@ -12,7 +12,7 @@ import (
 )
 
 type CustomerJsonRow struct {
-	Id        int64    `json:"id"`
+	Uuid      string   `json:"uuid"`
 	FirstName string   `json:"firstname"`
 	LastName  string   `json:"lastname"`
 	Birthday  string   `json:"birthday"`
@@ -23,7 +23,7 @@ type CustomerJsonRow struct {
 
 func ExportJson() ([]CustomerJsonRow, error) {
 	rows, err := db.Query(`
-        SELECT c.id, c.first_name, c.last_name, c.birthday, c.country, c.notes, v.visit_date
+        SELECT c.uuid, c.first_name, c.last_name, c.birthday, c.country, c.notes, v.visit_date
         FROM customers c
         LEFT JOIN visits v ON v.customer_id = c.id
         ORDER BY c.id, v.visit_date
@@ -38,7 +38,7 @@ func ExportJson() ([]CustomerJsonRow, error) {
 
 	for rows.Next() {
 		var (
-			id       int64
+			uuid     string
 			first    string
 			last     string
 			birthday string
@@ -47,15 +47,15 @@ func ExportJson() ([]CustomerJsonRow, error) {
 			visit    *string
 		)
 
-		err := rows.Scan(&id, &first, &last, &birthday, &country, &notes, &visit)
+		err := rows.Scan(&uuid, &first, &last, &birthday, &country, &notes, &visit)
 		if err != nil {
 			return nil, err
 		}
 
 		// If new customer, append to result
-		if current == nil || current.Id != id {
+		if current == nil || current.Uuid != uuid {
 			current = &CustomerJsonRow{
-				Id:        id,
+				Uuid:      uuid,
 				FirstName: first,
 				LastName:  last,
 				Birthday:  birthday,
@@ -117,10 +117,23 @@ func ImportJson(data []CustomerJsonRow) error {
 	for i := range data {
 		row := &data[i]
 
+		// generate new UUID if necessary
+		if row.Uuid == "" {
+			row.Uuid = uuid.NewString()
+		}
+
+		// check birthday format
+		_, err := time.Parse(DateFormat, row.Birthday)
+		if err != nil {
+			log.Printf("WARNING: Invalid birthday for %s %s: %s\n",
+				row.FirstName, row.LastName, row.Birthday)
+			row.Birthday = ""
+		}
+
 		// import customer
 		var customerID int64
 		err = stmtCustomer.QueryRow(
-			uuid.NewString(),
+			row.Uuid,
 			row.FirstName,
 			row.LastName,
 			row.Birthday,
@@ -192,14 +205,18 @@ func ParseCSV(r io.Reader) ([]CustomerJsonRow, error) {
 		return nil, err
 	}
 
+	// check if there is UUID
+	_, csvContainsUuid := colIndex["UUID"]
+
 	var cs []CustomerJsonRow
 	for {
 		record, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
 		if err != nil {
-			return nil, fmt.Errorf("reading row: %w", ErrInvalidFormat)
+			if err == io.EOF {
+				break
+			} else {
+				return nil, fmt.Errorf("reading row: %w", ErrInvalidFormat)
+			}
 		}
 
 		c := CustomerJsonRow{
@@ -208,6 +225,10 @@ func ParseCSV(r io.Reader) ([]CustomerJsonRow, error) {
 			Birthday:  record[colIndex["Geburtsdatum"]],
 			Country:   record[colIndex["Herkunftsland"]],
 			Notes:     record[colIndex["Notizen"]],
+		}
+
+		if csvContainsUuid {
+			c.Uuid = record[colIndex["UUID"]]
 		}
 
 		c.Visits = record[colIndex["Datum"]:]

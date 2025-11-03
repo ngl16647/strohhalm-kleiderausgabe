@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_libserialport/flutter_libserialport.dart';
@@ -28,9 +29,11 @@ class BarcodeScannerListener {
 
   ///Starts serial-Port detection and HID
   void listenForScan() async {
-    var ports = SerialPort.availablePorts;
-    _lastPorts = ports;
-    checkForNewDevice();
+    if(!Platform.isIOS && !Platform.isMacOS) {
+      var ports = SerialPort.availablePorts;
+      _lastPorts = ports;
+      checkForNewDevice();
+    }
     HardwareKeyboard.instance.addHandler(onHDIScan);
   }
 

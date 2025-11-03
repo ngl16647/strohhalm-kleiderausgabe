@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:strohhalm_app/app_settings.dart';
 import 'package:strohhalm_app/banner_designer.dart';
 import 'package:strohhalm_app/main.dart';
@@ -146,7 +147,14 @@ class CreateQRCode{
   Future<void> printQrCode(BuildContext context, User user) async {
     bool isMobile = MyApp().getDeviceType() == DeviceType.mobile;
     //Map<String, PdfPageFormat> formatMap = {};
-
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    double? w = pref.getDouble("pdfWidth");
+    double? h = pref.getDouble("pdfHeight");
+    if(w != null && h != null){
+      pdfPageFormat = PdfPageFormat(w * PdfPageFormat.mm, h * PdfPageFormat.mm);
+      heightController.text = h.toString();
+      widthController.text = w.toString();
+    }
     if(context.mounted) {
       showDialog(
       context: context,
@@ -158,6 +166,7 @@ class CreateQRCode{
           maxHeight: isMobile ? MediaQuery.of(context).size.height * 0.8 : 700
         ),
         child: StatefulBuilder(builder: (context, setState){
+
           return Padding(
             padding: EdgeInsets.all(15),
               child: LayoutBuilder(
@@ -216,6 +225,11 @@ class CreateQRCode{
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Tooltip(
+              message: S.of(context).print_toolTip,
+              child: Icon(Icons.help_outline_rounded),
+            ),
+            SizedBox(width: 10,),
             Expanded(
                 child: TextField(
                   controller: widthController,
@@ -248,14 +262,17 @@ class CreateQRCode{
             )),
             SizedBox(width: 10,),
             ElevatedButton.icon(
-              onPressed: () {
+              onPressed: () async {
+                SharedPreferences pref = await SharedPreferences.getInstance();
                 final w = double.tryParse(widthController.text);
                 final h = double.tryParse(heightController.text);
                 if (w != null && h != null) {
                   setState(() {
                     pdfPageFormat = PdfPageFormat(w * PdfPageFormat.mm, h * PdfPageFormat.mm);
                   });
-                } else {
+                  pref.setDouble("pdfWidth", w);
+                  pref.setDouble("pdfHeight", h);
+                } else if(context.mounted) {
                   Utilities.showToast(context: context, title:  S.of(context).fail, description: S.of(context).number_fail, isError: true);
                 }
               },
@@ -263,7 +280,6 @@ class CreateQRCode{
               label: Text(S.of(context).apply),
               style: ElevatedButton.styleFrom(
                 minimumSize: Size(50, double.infinity),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
               ),
             ),
           ],
@@ -290,7 +306,6 @@ class CreateQRCode{
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppSettingsManager.instance.settings.selectedColor?.withAlpha(140),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
                 ),
               ),
             ),

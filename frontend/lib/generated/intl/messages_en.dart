@@ -30,40 +30,46 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m3(dateString) => "Last visited on <bold>${dateString}</bold>";
 
-  static String m4(isLoading) =>
+  static String m4(useServer) =>
+      "Deletion requests for visitors who haven’t been here for a year.\nLimited to ${Intl.select(useServer, {'true': '1.000', 'false': '20.000', 'other': ' '})} entries.";
+
+  static String m5(numberOfEntries) =>
+      "Only ${numberOfEntries} entries are shown at a time! Delete the current ones to see the next set";
+
+  static String m6(isLoading) =>
       "${Intl.select(isLoading, {'true': 'loading...', 'false': 'Load more...', 'other': 'Everything loaded!'})}";
 
-  static String m5(isListView) =>
+  static String m7(isListView) =>
       "${Intl.select(isListView, {'true': 'Show as tiles?', 'false': 'Show as list?', 'other': ' '})}";
 
-  static String m6(useServer) =>
+  static String m8(useServer) =>
       "${Intl.select(useServer, {'true': 'Search persons (server)', 'false': 'Search persons (lokal)', 'other': ' '})}";
 
-  static String m7(useServer) =>
+  static String m9(useServer) =>
       "${Intl.select(useServer, {'true': 'Statistics (server)', 'false': 'Statistics (lokal)', 'other': ' '})}";
 
-  static String m8(isDarkMode) =>
+  static String m10(isDarkMode) =>
       "${Intl.select(isDarkMode, {'true': 'Light Theme', 'false': 'Dark Theme', 'other': ' '})}";
 
-  static String m9(cutOffNumber, overAllNumberOfCountries) =>
+  static String m11(cutOffNumber, overAllNumberOfCountries) =>
       "Show top ${cutOffNumber} countries of ${overAllNumberOfCountries}";
 
-  static String m10(showYear) =>
+  static String m12(showYear) =>
       "${Intl.select(showYear, {'true': 'To month view', 'false': 'To year view', 'other': ' '})}";
 
-  static String m11(count) =>
+  static String m13(count) =>
       "${Intl.plural(count, one: 'Visit', other: 'Visits')}";
 
-  static String m12(visitorCount, visitCount) =>
+  static String m14(visitorCount, visitCount) =>
       "${Intl.plural(visitorCount, one: '${visitorCount} Visitor', other: '${visitorCount} Visitors')}\nhave ${visitCount} ${Intl.plural(visitCount, one: 'Visit', other: 'Visits')}";
 
-  static String m13(showYear) =>
+  static String m15(showYear) =>
       "${Intl.select(showYear, {'true': 'Month', 'false': 'Day', 'other': ' '})}";
 
-  static String m14(difference) =>
+  static String m16(difference) =>
       "Error adding visit\nVisitor was already here ${Intl.plural(difference, zero: 'today', one: '1 day', other: '${difference} days')} ago";
 
-  static String m15(count) =>
+  static String m17(count) =>
       "${Intl.plural(count, one: 'Visit', other: 'Visits')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -186,6 +192,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "deletion_request_page_title": MessageLookupByLibrary.simpleMessage(
       "inactive Visitors",
     ),
+    "deletion_request_toolTip": m4,
     "deletion_success": MessageLookupByLibrary.simpleMessage(
       "Deletion successful",
     ),
@@ -194,13 +201,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "language_de": MessageLookupByLibrary.simpleMessage("German"),
     "language_en": MessageLookupByLibrary.simpleMessage("English"),
     "language_ru": MessageLookupByLibrary.simpleMessage("Russian"),
-    "load_more": m4,
+    "limited_entries_warning": m5,
+    "load_more": m6,
     "main_page_add": MessageLookupByLibrary.simpleMessage("Add"),
     "main_page_emptyUserListText": MessageLookupByLibrary.simpleMessage(
       "Search by name or scan a code to display persons",
     ),
     "main_page_fullScreen": MessageLookupByLibrary.simpleMessage("Fullscreen"),
-    "main_page_isListView": m5,
+    "main_page_isListView": m7,
     "main_page_languages": MessageLookupByLibrary.simpleMessage("Languages"),
     "main_page_noUserWithUUID": MessageLookupByLibrary.simpleMessage(
       "No matching person found!",
@@ -208,9 +216,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "main_page_scanQrCode": MessageLookupByLibrary.simpleMessage(
       "Scan QR Code",
     ),
-    "main_page_searchUsers": m6,
-    "main_page_statistic": m7,
-    "main_page_theme": m8,
+    "main_page_searchUsers": m8,
+    "main_page_statistic": m9,
+    "main_page_theme": m10,
     "no": MessageLookupByLibrary.simpleMessage("No"),
     "no_data": MessageLookupByLibrary.simpleMessage("No data available"),
     "no_internet": MessageLookupByLibrary.simpleMessage(
@@ -233,8 +241,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "password_false": MessageLookupByLibrary.simpleMessage(
       "Incorrect Password",
     ),
+    "pdf_preparing": MessageLookupByLibrary.simpleMessage(
+      "Your PDF is being prepared. Please wait a moment; it will open automatically once ready",
+    ),
     "print": MessageLookupByLibrary.simpleMessage("Print"),
     "print_height": MessageLookupByLibrary.simpleMessage("Height"),
+    "print_pdf_tooltip": MessageLookupByLibrary.simpleMessage(
+      "Opens the currently displayed statistics in the default PDF viewer",
+    ),
+    "print_toolTip": MessageLookupByLibrary.simpleMessage(
+      "Adjust the dimensions to match your medium (e.g., credit card size 91 × 55 mm, height of a label, etc.)\nto avoid distortions and make optimal use of the available space.\nTo keep your print dialog settings for future use, adjust your printer settings in your operating system. (Example: In Windows, search for “Printers” > select your printer > adjust the printer settings)",
+    ),
     "print_width": MessageLookupByLibrary.simpleMessage("Width"),
     "qr_code_print": MessageLookupByLibrary.simpleMessage("Print QR Code"),
     "qr_code_share": MessageLookupByLibrary.simpleMessage("Share QR Code"),
@@ -336,6 +353,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "settings_uploadCsvToServerToolTip": MessageLookupByLibrary.simpleMessage(
       "Importiere a exported CSV-File to the Server. Online possible if server-Database is empty!",
     ),
+    "showVisitorDetails": MessageLookupByLibrary.simpleMessage(
+      "Show Visitor Details",
+    ),
     "stat_page_alreadyGotToday": MessageLookupByLibrary.simpleMessage(
       "Already received something today",
     ),
@@ -366,9 +386,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "statistic_page_numberOfVisits": MessageLookupByLibrary.simpleMessage(
       "Number of visits",
     ),
-    "statistic_page_show_top_countries": m9,
-    "statistic_page_switchYearDisplay": m10,
-    "statistic_page_visits": m11,
+    "statistic_page_show_top_countries": m11,
+    "statistic_page_switchYearDisplay": m12,
+    "statistic_page_visits": m13,
     "statistic_page_visitsPerPeriod": MessageLookupByLibrary.simpleMessage(
       "Visits per Month/Year",
     ),
@@ -379,8 +399,8 @@ class MessageLookup extends MessageLookupByLibrary {
         MessageLookupByLibrary.simpleMessage("Number of Visitors"),
     "statistic_page_visitsPerPerson_Visits":
         MessageLookupByLibrary.simpleMessage("Number of Visits"),
-    "statistic_page_visitsPerVisitor": m12,
-    "statistic_page_xAxis": m13,
+    "statistic_page_visitsPerVisitor": m14,
+    "statistic_page_xAxis": m15,
     "success": MessageLookupByLibrary.simpleMessage("Success"),
     "today": MessageLookupByLibrary.simpleMessage("Today"),
     "update": MessageLookupByLibrary.simpleMessage("Update"),
@@ -389,11 +409,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "uuId_fail_keyboard": MessageLookupByLibrary.simpleMessage(
       "Failed UuId Check!\nMake sure your Keyboard-Language (Left-Alt + Left-Shift) is the same as the Barcode-Scanner!",
     ),
-    "visit_added_error": m14,
+    "visit_added_error": m16,
     "visit_added_success": MessageLookupByLibrary.simpleMessage(
       "Visit added successfully!",
     ),
-    "visit_plural": m15,
+    "visit_plural": m17,
     "window_title": MessageLookupByLibrary.simpleMessage("Visitor Check-In"),
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
   };

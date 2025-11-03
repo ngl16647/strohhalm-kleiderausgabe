@@ -1517,6 +1517,66 @@ class S {
       args: [],
     );
   }
+
+  /// `Show Visitor Details`
+  String get showVisitorDetails {
+    return Intl.message(
+      'Show Visitor Details',
+      name: 'showVisitorDetails',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your PDF is being prepared. Please wait a moment; it will open automatically once ready`
+  String get pdf_preparing {
+    return Intl.message(
+      'Your PDF is being prepared. Please wait a moment; it will open automatically once ready',
+      name: 'pdf_preparing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Opens the currently displayed statistics in the default PDF viewer`
+  String get print_pdf_tooltip {
+    return Intl.message(
+      'Opens the currently displayed statistics in the default PDF viewer',
+      name: 'print_pdf_tooltip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Only {numberOfEntries} entries are shown at a time! Delete the current ones to see the next set`
+  String limited_entries_warning(Object numberOfEntries) {
+    return Intl.message(
+      'Only $numberOfEntries entries are shown at a time! Delete the current ones to see the next set',
+      name: 'limited_entries_warning',
+      desc: '',
+      args: [numberOfEntries],
+    );
+  }
+
+  /// `Deletion requests for visitors who haven’t been here for a year.\nLimited to {useServer, select, true{1.000} false{20.000} other{ }} entries.`
+  String deletion_request_toolTip(Object useServer) {
+    return Intl.message(
+      'Deletion requests for visitors who haven’t been here for a year.\nLimited to ${Intl.select(useServer, {'true': '1.000', 'false': '20.000', 'other': ' '})} entries.',
+      name: 'deletion_request_toolTip',
+      desc: '',
+      args: [useServer],
+    );
+  }
+
+  /// `Adjust the dimensions to match your medium (e.g., credit card size 91 × 55 mm, height of a label, etc.)\nto avoid distortions and make optimal use of the available space.\nTo keep your print dialog settings for future use, adjust your printer settings in your operating system. (Example: In Windows, search for “Printers” > select your printer > adjust the printer settings)`
+  String get print_toolTip {
+    return Intl.message(
+      'Adjust the dimensions to match your medium (e.g., credit card size 91 × 55 mm, height of a label, etc.)\nto avoid distortions and make optimal use of the available space.\nTo keep your print dialog settings for future use, adjust your printer settings in your operating system. (Example: In Windows, search for “Printers” > select your printer > adjust the printer settings)',
+      name: 'print_toolTip',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

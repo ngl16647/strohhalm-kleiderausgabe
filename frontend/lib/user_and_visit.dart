@@ -81,6 +81,14 @@ class User{
            user.notes == notes;
   }
 
+  bool equalsExceptNotes(User user){
+    return user.firstName == firstName &&
+        user.lastName == lastName &&
+        user.birthDay == birthDay &&
+        user.country == country &&
+        user.notes != notes;
+  }
+
   @override
   String toString() {
     return "User(id: $id, uuId: $uuId, firstName: $firstName, lastName: $lastName, "

@@ -3,9 +3,15 @@ server:
     port: 8080
 api:
     use_api_key: true
-    api_key: ""
+    api_key: 736W-QM7P-0FFG-426V
 tls:
-    use_tls: false
+    use_tls: true
     cert_file: cert/cert.pem
     key_file: cert/key.pem
+    autocert:
+        use_autocert: false
+        domains:
+            - "127.0.0.1"
+        cache: cert
+        email: ""
 data: data.db

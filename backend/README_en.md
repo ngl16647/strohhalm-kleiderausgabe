@@ -18,13 +18,13 @@ This method is faster, but do not use it if you are not familiar with system adm
 curl -L -o server \
     https://github.com/ngl16647/strohhalm-kleiderausgabe/releases/latest/download/backend-ubuntu && \
     chmod +x server && \
-    ./server > server.log 2>&1 &
+    nohup ./server > server.log 2>&1 &
 ```
 
 Once deployed, you can always run
 
 ```bash
-./server > server.log 2>&1 &
+nohup ./server > server.log 2>&1 &
 ```
 
 to start the backend again. Make sure the previous instance is stopped before starting a new one.

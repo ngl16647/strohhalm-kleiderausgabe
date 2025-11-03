@@ -169,6 +169,7 @@ class DatabaseHelper {
 
   Future<void> addVisits(User user, List<DateTime> visits) async {
     final db = await database;
+    if(visits.isEmpty) return;
     await updateUserLastVisit(user.id, visits.last);
     await db.transaction((txn) async {
       for (DateTime t in visits) {
@@ -230,7 +231,6 @@ class DatabaseHelper {
       whereClauses.add("notes = ?");
       whereArgs.add(notes);
     }
-
     final result = await db.query(
       "customers",
       where: whereClauses.isNotEmpty ? whereClauses.join(" AND ") : null,
@@ -292,8 +292,38 @@ class DatabaseHelper {
       List<dynamic> whereArgs = [];
 
       if (search != null && search.isNotEmpty) {
-        conditions.add("LOWER(firstName || ' ' || lastName) LIKE ?");
-        whereArgs.add("%${search.toLowerCase()}%");
+       final regExMatch = RegExp(r"^\d{1,2}\.\d{1,2}(?:\.)?(?:\d{2,4})?$");
+       if(regExMatch.hasMatch(search)){
+          List<String> parts = search.split(".");
+          if(parts.length > 2 && parts[2].isNotEmpty){
+            int year = int.parse(parts[2]);
+            //Ridiculous future proof
+            if(year < 100){
+              if(year < int.parse(DateTime.now().year.toString().substring(2))){
+                int yearPrefix = int.parse(DateTime.now().year.toString().substring(0,2));
+                year = int.parse("$yearPrefix$year");
+              } else{
+                int yearPrefix = int.parse(DateTime.now().year.toString().substring(0,2))-1;
+                year = int.parse("$yearPrefix$year");
+              }
+            }
+            int month = int.parse(parts[1]);
+            int day = int.parse(parts[0]);
+
+            DateTime d = DateTime(year, month, day);
+
+            conditions.add("birthday LIKE ?");
+            whereArgs.add(d.toIso8601String());
+          } else if(parts.length > 1) {
+            final monthStr = parts[1].padLeft(2, "0");
+            final dayStr = parts[0].padLeft(2, "0");
+            conditions.add("strftime('%m-%d', birthday) = ?");
+            whereArgs.add("$monthStr-$dayStr");
+          }
+       } else {
+         conditions.add("LOWER(firstName || ' ' || lastName) LIKE ?");
+         whereArgs.add("%${search.toLowerCase()}%");
+       }
       }
       if (id != null) {
         conditions.add("id = ?");
@@ -308,7 +338,7 @@ class DatabaseHelper {
         whereArgs.add(lastVisitBefore.toIso8601String());
       }
 
-      size = size ?? 20; //default to 20
+      //size = size ?? 20; //default to 20
       page = page != null ? page-1 : 0; //so page index doesn't start with 0
 
       List<Map<String, dynamic>> maps = await db.query(
@@ -316,7 +346,7 @@ class DatabaseHelper {
         where: conditions.join(" AND "),
         whereArgs: whereArgs,
         limit: size,
-        offset: size * page,
+        offset: size == null ? null : size * page,
         orderBy: "lastVisit DESC", //firstName ASC
       );
 
@@ -348,16 +378,17 @@ class DatabaseHelper {
   }
 
   ///Updates a user and checks if it already exists
-  Future<bool?> updateUser(User user) async {
+  Future<bool?> updateUser(User user, bool checkForExisting) async {
     final db = await database;
-    int exists = await checkIfUserExists(
-        firstName: user.firstName,
-        lastName: user.lastName,
-        birthDay: user.birthDay,
-        country: user.country,
-        notes: user.notes
-    );
-    if(exists != -1) return false;
+    if(checkForExisting){
+      int exists = await checkIfUserExists(
+          firstName: user.firstName,
+          lastName: user.lastName,
+          birthDay: user.birthDay,
+          country: user.country,
+      );
+      if(exists != -1) return false;
+    }
     try{
       await db.update(
           "customers",

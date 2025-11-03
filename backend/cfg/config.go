@@ -26,6 +26,13 @@ type Config struct {
 		UseTls   bool   `yaml:"use_tls"`
 		CertFile string `yaml:"cert_file"`
 		KeyFile  string `yaml:"key_file"`
+
+		Autocert struct { // use let's encrypt
+			UseAutocert bool     `yaml:"use_autocert"` // this is set to false if UseTls is false
+			Domains     []string `yaml:"domains"`
+			Cache       string   `yaml:"cache"`
+			Email       string   `yaml:"email"`
+		}
 	}
 	Data string
 }
@@ -42,6 +49,9 @@ func defaultConfig() *Config {
 	cfg.Tls.UseTls = false
 	cfg.Tls.CertFile = "cert/cert.pem"
 	cfg.Tls.KeyFile = "cert/key.pem"
+
+	cfg.Tls.Autocert.UseAutocert = false
+	cfg.Tls.Autocert.Cache = "cert"
 
 	cfg.Data = "data.db"
 	return cfg
@@ -99,6 +109,8 @@ func InitConfig() {
 		GlobalConfig.Tls.UseTls = *useTls
 	}
 
+	cleanConfig(GlobalConfig)
+
 }
 
 func loadConfig(path string, cfg *Config) {
@@ -109,6 +121,17 @@ func loadConfig(path string, cfg *Config) {
 
 	if err := yaml.Unmarshal(data, cfg); err != nil {
 		log.Fatalf("parsing config file: %s", err)
+	}
+}
+
+func cleanConfig(cfg *Config) {
+	if cfg.Tls.Autocert.UseAutocert && len(cfg.Tls.Autocert.Domains) == 0 {
+		log.Fatal("Invalid config: cannot use autocert without domain name")
+	}
+
+	// override TLS config
+	if !cfg.Tls.UseTls {
+		cfg.Tls.Autocert.UseAutocert = false
 	}
 }
 

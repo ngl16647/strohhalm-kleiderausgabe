@@ -12,7 +12,7 @@ import 'app_settings.dart';
 ///Helper Class for Http-Requests to the server. On fails starts connectivity-Checks
 class HttpHelper {
   static const String defaultPort = "8080";
-  static const String defaultScheme = "http";
+  static const String defaultScheme = "https";
 
   bool get useServer => AppSettingsManager.instance.settings.useServer!;
   String get baseUrl => AppSettingsManager.instance.settings.url!;
@@ -33,8 +33,10 @@ class HttpHelper {
 
   ///Checks for a response from server
   Future<bool> isServerOnline() async {
+    Uri uri = buildUri(path: "");
+
     try {
-      final socket = await Socket.connect(baseUrl, int.parse(defaultPort), timeout: Duration(seconds: 3));
+      final socket = await Socket.connect(uri.host, uri.port, timeout: Duration(seconds: 3));
       socket.destroy();
       return true;
     } catch (_) {
@@ -530,7 +532,7 @@ class HttpHelper {
     return Uri(
       scheme: parsed?.scheme.isNotEmpty == true ? parsed!.scheme : defaultScheme,
       host: parsed?.host.isNotEmpty == true ? parsed!.host : baseUrl,
-      port: parsed?.hasPort == true ? parsed!.port : int.parse(defaultPort),
+      port: parsed?.hasPort == true ? parsed!.port : null,
       path: path,
       queryParameters: queryParams,
     );
