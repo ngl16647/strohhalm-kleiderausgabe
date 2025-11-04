@@ -12,14 +12,14 @@ class AutoCloseDialog extends StatefulWidget {
   const AutoCloseDialog({
     super.key,
     this.durationInSeconds,
-    required this.child
+    required this.child,
   });
 
   Future<void> showAutoCloseDialog(BuildContext context)async{
     await showDialog(
         context: context,
         builder: (context){
-          return AutoCloseDialog(durationInSeconds: durationInSeconds, child: child);
+          return AutoCloseDialog(key: key, durationInSeconds: durationInSeconds, child: child);
         });
   }
 
@@ -30,6 +30,12 @@ class AutoCloseDialog extends StatefulWidget {
 class AutoCloseDialogState extends State<AutoCloseDialog> {
   int secondsLeft = 10;
   Timer? _timer;
+
+  void stopTimer(){
+    setState(() {
+      secondsLeft = 30;
+    });
+  }
 
   @override
   void initState() {
@@ -60,6 +66,7 @@ class AutoCloseDialogState extends State<AutoCloseDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      backgroundColor: Theme.of(context).listTileTheme.tileColor,
       constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height*0.5,
           maxWidth: MediaQuery.of(context).size.height*0.7

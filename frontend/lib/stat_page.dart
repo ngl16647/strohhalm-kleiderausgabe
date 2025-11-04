@@ -176,196 +176,221 @@ class StatPageState extends State<StatPage>{
               Navigator.of(context).pop(widget.user);
             }
           },
-          child: Padding(
-            padding: EdgeInsets.all(10),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 10,
-                children: [
-                  Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(15),
-                        child: Column(
-                          spacing: 20,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              spacing: 20,
-                              children: [
-                                Container(
-                                    height: 90,
-                                    width: 90,
-                                    padding: EdgeInsets.all(1),
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.fromBorderSide(BorderSide(width: 1, color: Colors.black87))
-                                    ),
-                                    child:Center(
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: QrImageView(
-                                          backgroundColor: Colors.white,
-                                          version: QrVersions.auto,
-                                          data: widget.user.uuId,
-                                        ),
-                                      ),
-                                    )
-                                ),
-                                Expanded(
-                                  child: Wrap(
+          child: IntrinsicHeight(
+            child: Stack(
+              alignment: AlignmentGeometry.center,
+              fit: StackFit.passthrough,
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(10),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      spacing: 10,
+                      children: [
+                        Card(
+                            child: Padding(
+                              padding: EdgeInsets.all(15),
+                              child: Column(
+                                spacing: 20,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     spacing: 20,
-                                    runSpacing: 15,
                                     children: [
-                                      buildInfo(
-                                          title: Text("${widget.user.firstName} ${widget.user.lastName}", softWrap: true,),
-                                          value: Text(DateFormat("dd.MM.yyyy").format(widget.user.birthDay), style: TextStyle(color: Colors.grey), softWrap: false, overflow: TextOverflow.visible,)
-                                      ),
-                                      // Birth Country
-                                      ConstrainedBox(
-                                          constraints: BoxConstraints(maxWidth: 150),
-                                          child: buildInfo(
-                                              title: Text(S.of(context).stat_page_country),
-                                              value: Text(Utilities.getLocalizedCountryNameFromCode(context, widget.user.country), style: TextStyle(color: Colors.grey))
+                                      Container(
+                                          height: 90,
+                                          width: 90,
+                                          padding: EdgeInsets.all(1),
+                                          decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.fromBorderSide(BorderSide(width: 1, color: Colors.black87))
+                                          ),
+                                          child:Center(
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(12),
+                                              child: QrImageView(
+                                                backgroundColor: Colors.white,
+                                                version: QrVersions.auto,
+                                                data: widget.user.uuId,
+                                              ),
+                                            ),
                                           )
                                       ),
-                                      //overallVisits
-                                      buildInfo(
-                                          title: Text(S.of(context).stat_page_visits),
-                                          value: Text(_allVisits.length.toString(), style: TextStyle(color: Colors.grey),)
-                                      ),
+                                      Expanded(
+                                        child: Wrap(
+                                          spacing: 20,
+                                          runSpacing: 15,
+                                          children: [
+                                            buildInfo(
+                                                title: Text("${widget.user.firstName} ${widget.user.lastName}", softWrap: true,),
+                                                value: Text(DateFormat("dd.MM.yyyy").format(widget.user.birthDay), style: TextStyle(color: Colors.grey), softWrap: false, overflow: TextOverflow.visible,)
+                                            ),
+                                            // Birth Country
+                                            ConstrainedBox(
+                                                constraints: BoxConstraints(maxWidth: 150),
+                                                child: buildInfo(
+                                                    title: Text(S.of(context).stat_page_country),
+                                                    value: Text(Utilities.getLocalizedCountryNameFromCode(context, widget.user.country), style: TextStyle(color: Colors.grey))
+                                                )
+                                            ),
+                                            //overallVisits
+                                            buildInfo(
+                                                title: Text(S.of(context).stat_page_visits),
+                                                value: Text(_allVisits.length.toString(), style: TextStyle(color: Colors.grey),)
+                                            ),
+                                          ],
+                                        ),
+                                      )
                                     ],
                                   ),
-                                )
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(S.of(context).stat_page_miscellaneous),
-                                Flexible(
-                                    child: Stack(
-                                      children: [
-                                        Positioned(
-                                          bottom: 5,
-                                          left: 0,
-                                          right: 0,
-                                          child: AnimatedOpacity(
-                                            opacity: saving ? 1.0 : 0.0,
-                                            duration: 3.seconds,
-                                            curve: Curves.fastLinearToSlowEaseIn,
-                                            child: AnimatedSlide(
-                                              duration: 3.seconds,
-                                              curve: Curves.fastLinearToSlowEaseIn,
-                                              offset: saving ? Offset( 0, 0.1) : Offset(0, 0),
-                                              child: Container(
-                                                height: 40,
-                                                alignment: Alignment.bottomCenter,
-                                                decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
-                                                  color: Colors.teal.withAlpha(120),
-                                                ),
-                                                child: Row(
-                                                  spacing: 5,
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                                  children: [
-                                                    Icon(Icons.done, size: 16,),
-                                                    Text(S.of(context).saved, textAlign: TextAlign.center)
-                                                  ],
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(S.of(context).stat_page_miscellaneous),
+                                      Flexible(
+                                          child: Stack(
+                                            children: [
+                                              Positioned(
+                                                bottom: 5,
+                                                left: 0,
+                                                right: 0,
+                                                child: AnimatedOpacity(
+                                                  opacity: saving ? 1.0 : 0.0,
+                                                  duration: 3.seconds,
+                                                  curve: Curves.fastLinearToSlowEaseIn,
+                                                  child: AnimatedSlide(
+                                                    duration: 3.seconds,
+                                                    curve: Curves.fastLinearToSlowEaseIn,
+                                                    offset: saving ? Offset( 0, 0.1) : Offset(0, 0),
+                                                    child: Container(
+                                                      height: 40,
+                                                      alignment: Alignment.bottomCenter,
+                                                      decoration: BoxDecoration(
+                                                        borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
+                                                        color: Colors.teal.withAlpha(120),
+                                                      ),
+                                                      child: Row(
+                                                        spacing: 5,
+                                                        mainAxisAlignment: MainAxisAlignment.center,
+                                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                                        children: [
+                                                          Icon(Icons.done, size: 16,),
+                                                          Text(S.of(context).saved, textAlign: TextAlign.center)
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  onEnd: () => setState(() => saving = false),
                                                 ),
                                               ),
-                                            ),
-                                            onEnd: () => setState(() => saving = false),
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: EdgeInsets.only(bottom: 20),
-                                          child: TextField(
-                                            selectionControls: materialTextSelectionControls,
-                                            scrollController: noteScrollController,
-                                            controller: noteEditController,
-                                            onTapOutside: (ev) async {
-                                              FocusScope.of(context).unfocus();
-                                              if(widget.user.notes == noteEditController.text) return;
-                                              bool? result;
-                                              _useServer
-                                                  ? result = await HttpHelper().updateCustomer(widget.user)
-                                                  : result = await DatabaseHelper().updateUser(widget.user, false);
-                                              widget.user.notes = noteEditController.text;
-                                              if(result != null) setState(() => saving = true);
-                                            },
-                                            minLines: 1,
-                                            maxLines: _isMobile ? 3 : 5,
-                                            decoration: InputDecoration(
-                                              fillColor: Theme.of(context).listTileTheme.tileColor,
-                                              filled: true,
-                                              border: OutlineInputBorder(
-                                                borderRadius: BorderRadius.circular(12),
+                                              Padding(
+                                                padding: EdgeInsets.only(bottom: 20),
+                                                child: TextField(
+                                                  mouseCursor: SystemMouseCursors.text,
+                                                  selectionControls: materialTextSelectionControls,
+                                                  scrollController: noteScrollController,
+                                                  controller: noteEditController,
+                                                  onTapOutside: (ev) async {
+                                                    FocusScope.of(context).unfocus();
+                                                    if(widget.user.notes == noteEditController.text) return;
+                                                    bool? result;
+                                                    widget.user.notes = noteEditController.text;
+                                                    _useServer
+                                                        ? result = await HttpHelper().updateCustomer(widget.user)
+                                                        : result = await DatabaseHelper().updateUser(widget.user, false);
+                                                    if(result != null) setState(() => saving = true);
+                                                  },
+                                                  minLines: 1,
+                                                  maxLines: _isMobile ? 3 : 5,
+                                                  decoration: InputDecoration(
+                                                    fillColor: Theme.of(context).listTileTheme.tileColor,
+                                                    filled: true,
+                                                    border: OutlineInputBorder(
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    )
+                                            ],
+                                          )
+                                      )
+                                    ],
+                                  ),
+                                  TextButton.icon(
+                                    onPressed: () => CreateQRCode().printQrCode(context, widget.user), //CreateQRCode().showQrCode(context, widget.user),
+                                    icon: Icon(Icons.qr_code),
+                                    label: Text(S.of(context).qr_code_print),
+                                    style: TextButton.styleFrom(
+                                        backgroundColor: Theme.of(context).buttonTheme.colorScheme?.primaryFixed.withAlpha(120),
+                                        minimumSize: Size(double.infinity, 64)
+                                    ),
+                                  )
+                                ],
+                              ),)
+                        ),
+                        Row(
+                          spacing: 10,
+                          children: getVisitTiles(),
+                        ),
+                        //If user should be able to book anyway: remove if-Statement
+                        if(_allowAdding ? !DateTime.now().isSameDay(widget.user.lastVisit) : isPastDayLimit) Row(
+                          spacing: 10,
+                          children: [
+                            Expanded(
+                                flex: 2,
+                                child: ElevatedButton.icon(
+                                    onPressed: ()async{
+                                      if(widget.user.lastVisit != null && DateTime.now().isSameDay(widget.user.lastVisit!)) {
+                                        if(context.mounted) Utilities.showToast(context: context, title:  S.of(context).fail, description: S.of(context).stat_page_alreadyGotToday, isError: true);
+                                        return;
+                                      }
+                                      setState(() {
+                                        uploading = true;
+                                      });
+                                      Visit? newLastVisit = await Utilities.addVisit(context: context, user: widget.user, showToast: true);
+                                      setState(() {
+                                        if(newLastVisit != null) {
+                                          widget.user.lastVisit = newLastVisit.tookTime;
+                                          _allVisits.insert(0, newLastVisit);
+                                        }
+                                        uploading = false;
+                                      });
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor: Theme.of(context).buttonTheme.colorScheme?.primaryFixed.withAlpha(120),
+                                        foregroundColor: AppSettingsManager.instance.settings.selectedColor,
+                                        textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        minimumSize: Size(double.infinity, 75)
+                                    ),
+                                    icon: Icon(Icons.more_time, size: 22,),
+                                    label: uploading ? Center(child: CircularProgressIndicator()) : Text( S.of(context).customer_tile_addNewEntry(isPastDayLimit))
                                 )
-                              ],
-                            ),
-                            TextButton.icon(
-                              onPressed: () => CreateQRCode().printQrCode(context, widget.user), //CreateQRCode().showQrCode(context, widget.user),
-                              icon: Icon(Icons.qr_code),
-                              label: Text(S.of(context).qr_code_print),
-                              style: TextButton.styleFrom(
-                                  backgroundColor: Theme.of(context).buttonTheme.colorScheme?.primaryFixed.withAlpha(120),
-                                  minimumSize: Size(double.infinity, 64)
-                              ),
                             )
                           ],
-                        ),)
+                        )
+                      ],
+                    ),
                   ),
-                  Row(
-                    spacing: 10,
-                    children: getVisitTiles(),
+                ).animate().fadeIn(duration: 500.ms),
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child:
+                      IconButton(
+                          onPressed: Navigator.of(context).pop,
+                          icon: Icon(Icons.close)
+                      )
                   ),
-                  //If user should be able to book anyway: remove if-Statement
-                  if(_allowAdding ? !DateTime.now().isSameDay(widget.user.lastVisit) : isPastDayLimit) Row(
-                    spacing: 10,
-                    children: [
-                      Expanded(
-                          flex: 2,
-                          child: TextButton(
-                              onPressed: ()async{
-                                if(widget.user.lastVisit != null && DateTime.now().isSameDay(widget.user.lastVisit!)) {
-                                  if(context.mounted) Utilities.showToast(context: context, title:  S.of(context).fail, description: S.of(context).stat_page_alreadyGotToday, isError: true);
-                                  return;
-                                }
-                                setState(() {
-                                  uploading = true;
-                                });
-                                Visit? newLastVisit = await Utilities.addVisit(context: context, user: widget.user, showToast: true);
-                                setState(() {
-                                  if(newLastVisit != null) {
-                                    widget.user.lastVisit = newLastVisit.tookTime;
-                                    _allVisits.insert(0, newLastVisit);
-                                  }
-                                  uploading = false;
-                                });
-                              },
-                              style: TextButton.styleFrom(
-                                  backgroundColor: Theme.of(context).buttonTheme.colorScheme?.primaryFixed.withAlpha(120),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  minimumSize: Size(double.infinity, 75)
-                              ),
-                              child: uploading ? Center(child: CircularProgressIndicator()) : Text( S.of(context).customer_tile_addNewEntry(isPastDayLimit))))
-                    ],
-                  )
-                ],
-              ),
+                ),
+              ],
             ),
-          ).animate().fadeIn(duration: 500.ms),
+          )
         )
     );
   }

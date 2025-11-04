@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:country_picker/country_picker.dart';
 import 'package:file_picker/file_picker.dart';
@@ -16,12 +17,12 @@ class DataBaseExportFunctions{
 
 
   final Map<String, List<String>> aliases = {
-    "Vorname": ["Vorname", "vorname", "firstName"],
-    "Nachname": ["Nachname", "nachname","lastName"],
-    "Geburtsdatum": ["Geburtsdatum", "Geburtstag", "birthday"],
-    "Herkunftsland": ["Herkunftsland", "Land", "country"],
-    "Notizen": ["Notizen", "Notes", "notes"],
-    "Datum": ["Besuche", "Datum", "Besuch", "visits"],
+    "Vorname": ["vorname", "firstName"],
+    "Nachname": ["nachname","lastName"],
+    "Geburtsdatum": ["geburtsdatum","geburtstag", "birthday"],
+    "Herkunftsland": ["herkunftsland" "Land", "country"],
+    "Notizen": ["notizen", "Notes", "notes","Sonstiges","sonstiges"],
+    "Datum": ["besuche", "datum", "Besuch", "visits"],
     "UUID": ["uuid","UuId", "uuId", "UUID"]
   };
 
@@ -175,7 +176,20 @@ class DataBaseExportFunctions{
       csvString = await HttpHelper().getCsv();
       if(csvString == null) return;
     } else {
-      csvString = await localCSVFile.readAsString();
+      final bytes = await localCSVFile.readAsBytes();
+      try {
+        //UTF-8
+        csvString = utf8.decode(bytes);
+      } catch (_) {
+        try {
+          // Windows-1252
+          csvString = latin1.decode(bytes);
+        } catch (e) {
+          //ASCII
+          csvString = ascii.decode(bytes, allowInvalid: true);
+        }
+      }
+      //csvString = await localCSVFile.readAsString();
       if(csvString.isEmpty) return;
     }
     final firstLine = csvString.split("\n").first;
@@ -263,7 +277,7 @@ class DataBaseExportFunctions{
   ///Matches offline/online headers
   String normalizeHeaderName(String headerName) {
     for (final entry in aliases.entries) {
-      if (entry.value.contains(headerName)) {
+      if (entry.value.contains(headerName.toLowerCase())) {
         return entry.key;
       }
     }
