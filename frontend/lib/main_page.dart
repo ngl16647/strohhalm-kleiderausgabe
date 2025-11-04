@@ -263,6 +263,9 @@ class MainPageState extends State<MainPage> {
 
   ///searches for a Customer by Uuid and opens its stat page
   Future<void> openUserFromUuId(String uuIdString) async {
+    bool saving = false;
+    TextEditingController noteEditController = TextEditingController();
+
     User? user;
     _useServer
         ? user = await HttpHelper().getCustomerByUUID(uuIdString)
@@ -270,6 +273,7 @@ class MainPageState extends State<MainPage> {
 
     if(user != null && mounted){
       showUserInSearchBar(user);
+      noteEditController.text = user.notes ?? "";
 
       Visit? newLastVisit;
       if(user.lastVisit?.isBeyondCutOffNumber ?? true){
@@ -283,41 +287,127 @@ class MainPageState extends State<MainPage> {
         user.lastVisit = newLastVisit.tookTime;
         _userList.firstWhere((item) => item.id == user?.id).lastVisit = newLastVisit.tookTime;
       }
-      if(!mounted) return;
+      if(!mounted || user.lastVisit == null) return;
+      final dialogKey = GlobalKey<AutoCloseDialogState>();
       await AutoCloseDialog(
-        durationInSeconds: newLastVisit != null ? 10 : null,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          spacing: 10,
-          children:  [
-            Icon(
-              newLastVisit != null
-                  ? Icons.check_circle
-                  : Icons.error_rounded,
-              size: 46,
-              color: newLastVisit != null
-                  ? Colors.green
-                  : Colors.red,
-            ),
-            StyledText(
-              text: newLastVisit != null
-                  ? S.of(context).visit_added_success
-                  : S.of(context).visit_added_error(DateTime.now().difference(user.lastVisit!).inDays),
-              style: TextStyle(fontSize: 20),
-              textAlign: TextAlign.center,
-              tags: {
-                "bold": StyledTextTag(style: TextStyle(fontWeight: FontWeight.bold)),
-              },
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                openStatPage(user!);
-              },
-              child: Text(S.of(context).showVisitorDetails),
-            )
-          ],
-        ),
+        key: dialogKey,
+        durationInSeconds: newLastVisit != null ? 30 : null,
+        child: StatefulBuilder(builder: (context, setState){
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 10,
+            children:  [
+              Icon(
+                newLastVisit != null
+                    ? Icons.check_circle
+                    : Icons.error_rounded,
+                size: 46,
+                color: newLastVisit != null
+                    ? Colors.green
+                    : Colors.red,
+              ),
+              StyledText(
+                text: newLastVisit != null
+                    ? S.of(context).visit_added_success
+                    : S.of(context).visit_added_error(DateTime.now().difference(user!.lastVisit!).inDays),
+                style: TextStyle(fontSize: 20),
+                textAlign: TextAlign.center,
+                tags: {
+                  "bold": StyledTextTag(style: TextStyle(fontWeight: FontWeight.bold)),
+                },
+              ),
+              Padding(
+                padding: EdgeInsets.all(15),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(S.of(context).stat_page_miscellaneous),
+                    Flexible(
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              bottom: 5,
+                              left: 0,
+                              right: 0,
+                              child: AnimatedOpacity(
+                                opacity: saving ? 1.0 : 0.0,
+                                duration: 3.seconds,
+                                curve: Curves.fastLinearToSlowEaseIn,
+                                child: AnimatedSlide(
+                                  duration: 3.seconds,
+                                  curve: Curves.fastLinearToSlowEaseIn,
+                                  offset: saving ? Offset( 0, 0.1) : Offset(0, 0),
+                                  child: Container(
+                                    height: 40,
+                                    alignment: Alignment.bottomCenter,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
+                                      color: Colors.teal.withAlpha(120),
+                                    ),
+                                    child: Row(
+                                      spacing: 5,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Icon(Icons.done, size: 16,),
+                                        Text(S.of(context).saved, textAlign: TextAlign.center)
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                onEnd: () => setState(() => saving = false),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(bottom: 20),
+                              child: TextField(
+                                mouseCursor: SystemMouseCursors.text,
+                                cursorColor: Colors.black87,
+                                selectionControls: materialTextSelectionControls,
+                                scrollController: ScrollController(),
+                                controller: noteEditController,
+                                onChanged: (ev){
+                                 dialogKey.currentState?.stopTimer();
+                                },
+                                onTapOutside: (ev) async {
+                                  FocusScope.of(context).unfocus();
+                                  if(user?.notes == noteEditController.text) return;
+                                  user!.notes = noteEditController.text;
+                                  _userList.firstWhere((item) => item.id == user?.id).notes = noteEditController.text;
+                                  bool? result;
+                                  _useServer
+                                      ? result = await HttpHelper().updateCustomer(user)
+                                      : result = await DatabaseHelper().updateUser(user, false);
+                                  if(result != null) setState(() => saving = true);
+                                },
+                                minLines: 1,
+                                maxLines: _isMobile ? 3 : 5,
+                                decoration: InputDecoration(
+                                  fillColor: Theme.of(context).listTileTheme.tileColor,
+                                  filled: true,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                    )
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  openStatPage(user!);
+                },
+                child: Text(S.of(context).showVisitorDetails),
+              )
+            ],
+          );
+        }),
       ).showAutoCloseDialog(context);
     } else {
       if(mounted) {
@@ -357,7 +447,7 @@ class MainPageState extends State<MainPage> {
         isListView: isList,
         key: ValueKey("${user.hashCode}-${settings.allowDeleting.hashCode}-${settings.allowAdding.hashCode}-${settings.cutOffDayNumber.hashCode}-${user.uuId}" ),
         user: user,
-        click: () =>  openStatPage(user), //openUserFromUuId(user.uuId),
+        click: () =>  openStatPage(user),
         updatedVisit: (){
           checkIfUserGotOld(user);
         },
@@ -647,6 +737,15 @@ class MainPageState extends State<MainPage> {
                                           labelText: S.of(context).password,
                                           errorText: error ? S.of(context).password_false : null,
                                         ),
+                                        onSubmitted: (ev){
+                                          if (con.text == "admin123") { //Hardcoded, just here so theres a tiny hurdle for helpers, doesn't really protect anything
+                                            Navigator.of(context).pop(true);
+                                          } else {
+                                            setState(() {
+                                              error = true;
+                                            });
+                                          }
+                                        },
                                         onChanged: (value) {
                                           if (error) {
                                             setState(() {

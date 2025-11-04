@@ -1577,6 +1577,66 @@ class S {
       args: [],
     );
   }
+
+  /// `Click to select country of origin`
+  String get country_enter {
+    return Intl.message(
+      'Click to select country of origin',
+      name: 'country_enter',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter a valid date`
+  String get addUser_dateError {
+    return Intl.message(
+      'Please enter a valid date',
+      name: 'addUser_dateError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Example format: (01/01/1970 or 1/1/70)`
+  String get addUser_dateExample {
+    return Intl.message(
+      'Example format: (01/01/1970 or 1/1/70)',
+      name: 'addUser_dateExample',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Open picker`
+  String get addUser_openDatePicker {
+    return Intl.message(
+      'Open picker',
+      name: 'addUser_openDatePicker',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select country of origin`
+  String get addUser_selectCountry {
+    return Intl.message(
+      'Select country of origin',
+      name: 'addUser_selectCountry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter a name`
+  String get addUser_nameError {
+    return Intl.message(
+      'Please enter a name',
+      name: 'addUser_nameError',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

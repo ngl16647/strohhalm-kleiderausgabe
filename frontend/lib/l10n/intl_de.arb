@@ -22,10 +22,10 @@
   "language_ru": "Russisch",
 
   "add_user_requiredFields": "* Pflicht Felder",
-  "add_user_firstName": "Vorname*",
-  "add_user_lastName": "Nachname*",
-  "add_user_birthDay": "Geburtsdatum wählen*",
-  "add_user_miscellaneous" : "Sonstiges",
+  "add_user_firstName": "Vorname eintragen*",
+  "add_user_lastName": "Nachname eintragen*",
+  "add_user_birthDay": "Geburtsdatum eintragen*",
+  "add_user_miscellaneous" : "Sonstige Notizen",
   "add_user_deleteMessage": "Bist du Sicher, dass du diese Person unwiderruflich löschen willst?",
   "add_user_requiredFieldMissing": "Eines der Pflichtfelder ist leer",
 
@@ -185,5 +185,12 @@
   "print_pdf_tooltip": "Öffnet die aktuell angezeigten Statistiken im Standard-PDF-Viewer.",
   "limited_entries_warning": "Es werden jeweils {numberOfEntries} Einträge angezeigt! Lösche die aktuellen, um die nächsten zu laden",
   "deletion_request_toolTip": "Löschungsanträge für Besucher, die seit einem Jahr nicht mehr da waren.\nBegrenzt auf {useServer, select, true{1.000} false{20.000} other{ }} Einträge.",
-  "print_toolTip": "Passe die Abmessungen an die Größe deines Mediums an (z. B. Kreditkartengröße 91 × 55 mm, Breite eines Labels, etc.),\num Verzerrungen zu vermeiden und den verfügbaren Platz optimal zu nutzen.\nUm Ihre Druckdialog-Einstellungen für zukünftige Druckvorgänge beizubehalten, passen Sie die Druckereinstellungen in Ihrem Betriebssystem an\n(Beispiel: In Windows „Drucker“ suchen > Ihren Drucker auswählen > Druckereinstellungen anpassen)"
+  "print_toolTip": "Passe die Abmessungen an die Größe deines Mediums an (z. B. Kreditkartengröße 91 × 55 mm, Breite eines Labels, etc.),\num Verzerrungen zu vermeiden und den verfügbaren Platz optimal zu nutzen.\nUm die Druckdialog-Einstellungen für zukünftige Druckvorgänge beizubehalten, passe die Druckereinstellungen in deinem Betriebssystem an\n(Beispiel: In Windows „Drucker“ suchen > deinen Drucker auswählen > Druckereinstellungen anpassen)",
+
+  "country_enter": "Klicken um Herkunftsland auszuwählen",
+  "addUser_dateError": "Bitte gültiges Datum eingeben",
+  "addUser_dateExample": "Bsp-Format: (01.01.1970 oder 1.1.70)",
+  "addUser_openDatePicker": "Picker öffnen",
+  "addUser_selectCountry": "Herkunftsland auswählen",
+  "addUser_nameError": "Bitte Namen eingeben"
 }

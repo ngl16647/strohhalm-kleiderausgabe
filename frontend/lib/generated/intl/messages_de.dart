@@ -76,6 +76,21 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "accept": MessageLookupByLibrary.simpleMessage("Akzeptieren"),
+    "addUser_dateError": MessageLookupByLibrary.simpleMessage(
+      "Bitte gültiges Datum eingeben",
+    ),
+    "addUser_dateExample": MessageLookupByLibrary.simpleMessage(
+      "Bsp-Format: (01.01.1970 oder 1.1.70)",
+    ),
+    "addUser_nameError": MessageLookupByLibrary.simpleMessage(
+      "Bitte Namen eingeben",
+    ),
+    "addUser_openDatePicker": MessageLookupByLibrary.simpleMessage(
+      "Picker öffnen",
+    ),
+    "addUser_selectCountry": MessageLookupByLibrary.simpleMessage(
+      "Herkunftsland auswählen",
+    ),
     "add_failed": MessageLookupByLibrary.simpleMessage(
       "Hinzufügen fehlgeschlagen",
     ),
@@ -83,14 +98,20 @@ class MessageLookup extends MessageLookupByLibrary {
       "Hinzufügen erfolgreich",
     ),
     "add_user_birthDay": MessageLookupByLibrary.simpleMessage(
-      "Geburtsdatum wählen*",
+      "Geburtsdatum eintragen*",
     ),
     "add_user_deleteMessage": MessageLookupByLibrary.simpleMessage(
       "Bist du Sicher, dass du diese Person unwiderruflich löschen willst?",
     ),
-    "add_user_firstName": MessageLookupByLibrary.simpleMessage("Vorname*"),
-    "add_user_lastName": MessageLookupByLibrary.simpleMessage("Nachname*"),
-    "add_user_miscellaneous": MessageLookupByLibrary.simpleMessage("Sonstiges"),
+    "add_user_firstName": MessageLookupByLibrary.simpleMessage(
+      "Vorname eintragen*",
+    ),
+    "add_user_lastName": MessageLookupByLibrary.simpleMessage(
+      "Nachname eintragen*",
+    ),
+    "add_user_miscellaneous": MessageLookupByLibrary.simpleMessage(
+      "Sonstige Notizen",
+    ),
     "add_user_requiredFieldMissing": MessageLookupByLibrary.simpleMessage(
       "Eines der Pflichtfelder ist leer",
     ),
@@ -155,6 +176,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "country_Name_worldWideReplacement": MessageLookupByLibrary.simpleMessage(
       "Keine Angabe",
+    ),
+    "country_enter": MessageLookupByLibrary.simpleMessage(
+      "Klicken um Herkunftsland auszuwählen",
     ),
     "csv_conversion_failed": MessageLookupByLibrary.simpleMessage(
       "Fehler beim Konvertieren zu CSV",
@@ -259,7 +283,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Öffnet die aktuell angezeigten Statistiken im Standard-PDF-Viewer.",
     ),
     "print_toolTip": MessageLookupByLibrary.simpleMessage(
-      "Passe die Abmessungen an die Größe deines Mediums an (z. B. Kreditkartengröße 91 × 55 mm, Breite eines Labels, etc.),\num Verzerrungen zu vermeiden und den verfügbaren Platz optimal zu nutzen.\nUm Ihre Druckdialog-Einstellungen für zukünftige Druckvorgänge beizubehalten, passen Sie die Druckereinstellungen in Ihrem Betriebssystem an\n(Beispiel: In Windows „Drucker“ suchen > Ihren Drucker auswählen > Druckereinstellungen anpassen)",
+      "Passe die Abmessungen an die Größe deines Mediums an (z. B. Kreditkartengröße 91 × 55 mm, Breite eines Labels, etc.),\num Verzerrungen zu vermeiden und den verfügbaren Platz optimal zu nutzen.\nUm die Druckdialog-Einstellungen für zukünftige Druckvorgänge beizubehalten, passe die Druckereinstellungen in deinem Betriebssystem an\n(Beispiel: In Windows „Drucker“ suchen > deinen Drucker auswählen > Druckereinstellungen anpassen)",
     ),
     "print_width": MessageLookupByLibrary.simpleMessage("Breite"),
     "qr_code_print": MessageLookupByLibrary.simpleMessage("QR-Code Drucken"),
