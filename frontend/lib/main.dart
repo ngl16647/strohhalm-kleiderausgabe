@@ -19,7 +19,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   connectionProvider = ConnectionProvider();
 
-
   if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.windows ||
       defaultTargetPlatform == TargetPlatform.linux ||
       defaultTargetPlatform == TargetPlatform.macOS)) {
@@ -93,7 +92,7 @@ class MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Besucher Check-In", //TODO: Change to Strohhalm for their version
+      title: "Besucher Check-In",
       navigatorKey: navigatorKey,
       locale: _locale,
       localizationsDelegates: [

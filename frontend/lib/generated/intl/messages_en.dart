@@ -75,6 +75,21 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "accept": MessageLookupByLibrary.simpleMessage("Accept"),
+    "addUser_dateError": MessageLookupByLibrary.simpleMessage(
+      "Please enter a valid date",
+    ),
+    "addUser_dateExample": MessageLookupByLibrary.simpleMessage(
+      "Example format: (01/01/1970 or 1/1/70)",
+    ),
+    "addUser_nameError": MessageLookupByLibrary.simpleMessage(
+      "Please enter a name",
+    ),
+    "addUser_openDatePicker": MessageLookupByLibrary.simpleMessage(
+      "Open picker",
+    ),
+    "addUser_selectCountry": MessageLookupByLibrary.simpleMessage(
+      "Select country of origin",
+    ),
     "add_failed": MessageLookupByLibrary.simpleMessage("Adding failed"),
     "add_success": MessageLookupByLibrary.simpleMessage("Adding successful"),
     "add_user_birthDay": MessageLookupByLibrary.simpleMessage(
@@ -150,6 +165,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "country_Name_worldWideReplacement": MessageLookupByLibrary.simpleMessage(
       "Not specified",
+    ),
+    "country_enter": MessageLookupByLibrary.simpleMessage(
+      "Click to select country of origin",
     ),
     "csv_conversion_failed": MessageLookupByLibrary.simpleMessage(
       "Failed to convert to CSV",
