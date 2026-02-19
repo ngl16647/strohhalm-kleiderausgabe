@@ -870,7 +870,7 @@ class StatisticPageState extends State<StatisticPage> {
   ///parses Strings to dates for month/Year display
   DateTime tryParseForCalendar(String dateString){
       try{
-        DateFormat("dd.MM.yyyy").parse(dateString);
+        return DateFormat("dd.MM.yyyy").parse(dateString);
       } catch(ex){
         //debugPrint("$ex");
       }
